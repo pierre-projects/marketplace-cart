@@ -1,0 +1,84 @@
+<li class="item-card">
+    <div class="card-grid">
+      
+      <!-- Left Side: Thumbnail -->
+      <div class="item-thumb">
+        <% if (item.imageLinks && item.imageLinks[0]) { %>
+          <img src="<%= item.imageLinks[0] %>" alt="Item Image">
+        <% } else { %>
+          <div class="no-img">No Image</div>
+        <% } %>
+      </div>
+  
+      <!-- Center: Info -->
+      <div class="item-info">
+        <p class="title">
+          <a href="<%= item.link %>" target="_blank" rel="noopener noreferrer">
+            <%= item.title %> 🔗
+          </a>
+        </p>
+        <p><strong>Price:</strong> <%= item.price || 'N/A' %></p>
+        <p><strong>Condition:</strong> <%= item.condition || 'N/A' %></p>
+        <p><strong>Description:</strong> <%= item.description || 'N/A' %></p>
+        <p><strong>Location:</strong> <%= item.location || 'N/A' %></p>
+        <p><strong>Platform:</strong> <%= item.platform || 'N/A' %></p>
+        <p><strong>Available:</strong> <%= item.available ? 'Yes' : 'No' %></p>
+  
+        <% if (showCategories && categories) { %>
+          <p><strong>Currently in:</strong>
+            <% categories.forEach(cat => { 
+                const match = cat.items.some(i => {
+                  const iId = i.item ? i.item._id : i._id;
+                  return iId.toString() === item._id.toString();
+                });
+                if (cat.name !== 'All Listings' && match) { %>
+              <span class="category-label"><%= cat.name %></span>
+            <% }}) %>
+          </p>
+        <% } %>
+  
+        <% if (showAddedBy && addedBy && addedBy.username) { %>
+          <p class="added-by-badge">
+            added by <%= user && addedBy._id.toString() === user._id.toString() ? "You" : addedBy.username %>
+          </p>
+        <% } %>
+      </div>
+  
+      <!-- Right Side: Actions -->
+      <div class="item-actions">
+        <% if (allowEdit && categories) { %>
+          <form class="move-category-form" data-item-id="<%= item._id %>">
+            <label>Assign to categories:</label>
+            <select name="categories" multiple size="4">
+              <% categories.forEach(cat => {
+                  if (cat.name !== 'All Listings') {
+                    const selected = cat.items.some(i => {
+                      const iId = i.item ? i.item._id : i._id;
+                      return iId.toString() === item._id.toString();
+                    });
+              %>
+                <option value="<%= cat._id %>" <%= selected ? 'selected' : '' %>><%= cat.name %></option>
+              <% }}) %>
+            </select>
+            <button type="submit">Update</button>
+          </form>
+        <% } %>
+  
+        <% if (categoryId && user && (isOwner || (addedBy && addedBy._id.toString() === user._id.toString()))) { %>
+          <form method="POST" action="/categories/<%= categoryId %>/remove-item" style="margin-top: 10px;">
+            <input type="hidden" name="itemId" value="<%= item._id %>">
+            <button type="submit" onclick="return confirm('Remove this listing from this category?')">
+              Remove from Category
+            </button>
+          </form>
+        <% } else if (!categoryId && allowDelete && isOwner) { %>
+          <form method="POST" action="/items/<%= item._id %>?_method=DELETE" style="margin-top: 10px;">
+            <button type="submit" onclick="return confirm('Are you sure you want to delete this listing?')">
+              Delete Listing
+            </button>
+          </form>
+        <% } %>
+      </div>
+    </div>
+  </li>
+  

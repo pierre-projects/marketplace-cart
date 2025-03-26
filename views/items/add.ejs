@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add Item</title>
+  <link rel="stylesheet" href="/css/style.css"> <!-- optional -->
+</head>
+<body>
+  <h1>Add a New Item</h1>
+
+  <form action="/items/add" method="POST">
+    <div>
+      <label for="link">OfferUp Link:</label><br>
+      <input type="url" name="link" id="link" placeholder="https://offerup.com/item/detail/..." required>
+    </div>
+
+    <div>
+      <label for="category">Category:</label><br>
+      <select name="category" id="category" required>
+        <% if (categories.length === 0) { %>
+          <option disabled>No categories found. Create one first!</option>
+        <% } else { %>
+          <% categories.forEach(category => { %>
+            <option value="<%= category._id %>"><%= category.name %></option>
+          <% }) %>
+        <% } %>
+      </select>
+    </div>
+
+    <div>
+      <button type="submit">Add Item</button>
+    </div>
+  </form>
+
+  <a href="/dashboard">← Back to Dashboard</a>
+</body>
+</html>

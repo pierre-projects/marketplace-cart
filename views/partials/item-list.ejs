@@ -1,0 +1,27 @@
+<% const showAddedBy = typeof locals.showAddedBy !== 'undefined' ? locals.showAddedBy : false; %>
+<% const _maxItems = typeof maxItems !== 'undefined' ? maxItems : null; %>
+<% const isWrapped = items[0] && items[0].item; %>
+
+<% const displayItems = _maxItems ? items.slice(-_maxItems).reverse() : items.slice().reverse(); %>
+<% const thisCategoryId = typeof categoryId !== 'undefined' ? categoryId : null; %>
+
+<ul class="item-list">
+  <% displayItems.forEach(entry => { %>
+    <% const item = isWrapped ? entry.item : entry; %>
+    <% const addedBy = isWrapped ? entry.addedBy : null; %>
+
+    <%- include('./item-card', {
+        item,
+        addedBy,
+        categories,
+        allowEdit,
+        allowDelete,
+        showCategories,
+        categoryId: thisCategoryId,
+        user,
+        isOwner,
+        showAddedBy
+      }) %>
+      
+  <% }) %>
+</ul>

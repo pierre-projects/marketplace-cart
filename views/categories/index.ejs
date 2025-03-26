@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Categories</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+
+  <main class="container">
+    <h1>My Categories</h1>
+
+    <!-- Create New Category -->
+    <form action="/categories/create" method="POST" style="margin-bottom: 2rem;">
+      <input type="text" name="name" placeholder="New category name" required>
+      <button type="submit">+ Create Category</button>
+    </form>
+
+    <!-- ========== Your Categories ========== -->
+    <% const userCategories = categories.filter(c => c.name !== 'All Listings'); %>
+
+    <% if (userCategories.length === 0) { %>
+      <p>You haven't created any categories yet.</p>
+    <% } else { %>
+      <% userCategories.forEach(category => { %>
+        <section class="category-block">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>
+              <a href="/categories/<%= category._id %>"><%= category.name %></a>
+            </h2>
+            <div>
+              <form action="/categories/<%= category._id %>/edit" method="POST" style="display:inline;">
+                <input type="text" name="name" placeholder="New name" required>
+                <button type="submit">Rename</button>
+              </form>
+              <form action="/categories/<%= category._id %>?_method=DELETE" method="POST" style="display:inline;">
+                <button onclick="return confirm('Delete this category?')" type="submit">Delete</button>
+              </form>
+            </div>
+          </div>
+
+          <% if (category.items.length === 0) { %>
+            <p>No items in this category yet.</p>
+          <% } else { %>
+            
+          <% } %>
+        </section>
+      <% }) %>
+    <% } %>
+
+    <!-- ========== Shared With Me ========== -->
+    <% if (sharedCategories && sharedCategories.length > 0) { %>
+      <h2>Shared With Me</h2>
+      <% sharedCategories.forEach(category => { %>
+        <section class="category-block">
+          <h3><a href="/categories/<%= category._id %>"><%= category.name %></a></h3>
+
+          <% if (category.items.length === 0) { %>
+            <p>No items yet.</p>
+          <% } else { %>
+           
+          <% } %>
+        </section>
+      <% }) %>
+    <% } %>
+  </main>
+
+  <script src="/js/assign-categories.js"></script>
+</body>
+</html>

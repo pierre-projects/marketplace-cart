@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title><%= category.name %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+
+  <main class="container">
+    <h1><%= category.name %></h1>
+
+    <!-- Owner: Public Visibility Toggle -->
+    <% if (user && category.user.toString() === user._id.toString()) { %>
+      <form action="/categories/<%= category._id %>/visibility" method="POST" style="margin-bottom: 1em;">
+        <label>
+          <input type="checkbox" name="isPublic" value="true" onchange="this.form.submit()" <%= category.isPublic ? 'checked' : '' %>>
+          Make this category public
+        </label>
+      </form>
+    <% } %>
+
+    <!-- Share Form (owner only) -->
+    <% if (isOwner) { %>
+      <h3>Share this category</h3>
+      <form action="/categories/<%= category._id %>/share" method="POST" style="margin-top: 1em;">
+        <input type="email" name="email" placeholder="Add user by email" required>
+        <select name="access">
+          <option value="viewer">Viewer</option>
+          <option value="editor">Editor</option>
+        </select>
+        <button type="submit">Share</button>
+      </form>
+    <% } %>
+
+    <!-- Manage shared users (owner only) -->
+    <% if (isOwner && category.usersAdded && category.usersAdded.length > 0) { %>
+      <h3>Shared With</h3>
+      <ul>
+        <% category.usersAdded.forEach(entry => { %>
+          <li>
+            <%= entry.user.username %> —
+            <form action="/categories/<%= category._id %>/update-role" method="POST" style="display:inline;">
+              <input type="hidden" name="userId" value="<%= entry.user._id %>">
+              <select name="newRole" onchange="this.form.submit()">
+                <option value="viewer" <%= entry.role === 'viewer' ? 'selected' : '' %>>Viewer</option>
+                <option value="editor" <%= entry.role === 'editor' ? 'selected' : '' %>>Editor</option>
+              </select>
+            </form>
+            <form action="/categories/<%= category._id %>/remove-user" method="POST" style="display:inline;">
+              <input type="hidden" name="userId" value="<%= entry.user._id %>">
+              <button type="submit" onclick="return confirm('Remove access from this user?')">Remove</button>
+            </form>
+          </li>
+        <% }) %>
+      </ul>
+    <% } %>
+
+
+    <% if (canEdit) { %>
+        <h3>Add a New Item to This Category</h3>
+        <form action="/categories/<%= category._id %>/add-item" method="POST">
+          <input type="url" name="link" placeholder="OfferUp item link" required>
+          <button type="submit">Add</button>
+        </form>
+      <% } %>
+
+      
+    <h3>Items in this Category</h3>
+
+    
+    <% if (category.items.length === 0) { %>
+      <p>No items in this category.</p>
+    <% } else { %>
+      <%- include('../partials/item-list', {
+        items: category.items,
+        categories,
+        allowEdit: canEdit,
+        allowDelete: canEdit,
+        showCategories: false,
+        categoryId: category._id,
+        user: user,
+        isOwner: isOwner,
+        showAddedBy: true
+      }) %>
+    <% } %>
+    
+  </main>
+
+  <script src="/js/assign-categories.js"></script>
+  <script>
+    const itemData = <%- JSON.stringify(category.items) %>;
+  </script>
+  <script src="/js/totals.js"></script>
+  
+
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <%- include('partials/navbar') %>
+
+  <main class="container">
+    <h1>Welcome, <%= user.username %> </h1>
+
+    <h2>Add Listing</h2>
+
+    <!-- Add Listing Button -->
+    <button id="openAddForm">+ Add Listing</button>
+
+    <!-- Add Listing Form -->
+    <div id="addForm" style="display: none; border:1px solid #ccc; padding:1em; margin-top:1em;">
+      <form id="previewForm">
+        <label for="link">OfferUp Link:</label>
+        <input type="url" name="link" id="link" required>
+        <button type="submit">Preview</button>
+      </form>
+
+      <div id="previewContainer" style="margin-top:1em; display:none;">
+        <h3>Preview:</h3>
+        <p><strong>Title:</strong> <span id="previewTitle"></span></p>
+        <img id="previewImage" src="" width="120"><br><br>
+        <p><strong>Price:</strong> <span id="previewPrice"></span></p>
+        <p><strong>Condition:</strong> <span id="previewCondition"></span></p>
+        <p><strong>Description:</strong> <span id="previewDesc"></span></p>
+        <p><strong>Location:</strong> <span id="previewLocation"></span></p>
+        <p><strong>Available:</strong> <span id="previewAvailable"></span></p>
+
+        <form id="finalAddForm" method="POST" action="/items/add">
+          <input type="hidden" name="link" id="finalLink">
+          <input type="hidden" name="defaultCategoryId" value="<%= categories.find(c => c.name === 'All Listings')._id %>">
+
+          <% if (categories.length > 1) { %>
+            <label for="category">Also add to:</label>
+            <select name="category">
+              <% categories.forEach(category => { %>
+                <% if (category.name !== 'All Listings') { %>
+                  <option value="<%= category._id %>"><%= category.name %></option>
+                <% } %>
+              <% }) %>
+            </select>
+          <% } %>
+
+          <button type="submit">Add Listing</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ===================== -->
+    <!-- Section: All Listings -->
+    <!-- ===================== -->
+    <section class="dashboard-section">
+      <div class="dashboard-header">
+        <h2>All My Listings</h2>
+        <a href="/listings">View All Listings</a>
+      </div>
+
+      <% const allListings = categories.find(c => c.name === 'All Listings'); %>
+      <% if (!allListings || allListings.items.length === 0) { %>
+        <p>No listings yet.</p>
+      <% } else { %>
+        <%- include('partials/item-list', {
+          items: allListings.items,
+          categories,
+          maxItems: 3,
+          allowEdit: true,
+          allowDelete: true,
+          showCategories: true,
+          user: user,
+          isOwner: true
+        }) %>
+      <% } %>
+    </section>
+
+    <!-- ===================== -->
+    <!-- Section: Categories -->
+    <!-- ===================== -->
+    <section class="dashboard-section">
+      <div class="dashboard-header">
+        <h2>My Categories</h2>
+        <a href="/categories">View All Categories</a>
+                        <!-- Create New Category -->
+    <form action="/categories/create" method="POST" style="margin-bottom: 2rem;">
+        <input type="text" name="name" placeholder="New category name" required>
+        <button type="submit">+ Create Category</button>
+      </form>
+      
+      </div>
+
+      <% categories
+        .filter(c => c.name !== 'All Listings')
+        .slice(0, 2)
+        .forEach(category => { %>
+
+        <div class="category-preview">
+
+
+          <h3><a href="/categories/<%= category._id %>"><%= category.name %></a></h3>
+
+          <% if (category.items.length === 0) { %>
+            <p>No items in this category.</p>
+          <% } else { %>
+            <%- include('partials/item-list', {
+              items: category.items,
+              categories,
+              maxItems: 1,
+              allowEdit: false,
+              allowDelete: false,
+              showCategories: false,
+              user: user,
+              isOwner: true,
+              categoryId: category._id
+            }) %>
+          <% } %>
+        </div>
+      <% }) %>
+    </section>
+  </main>
+
+  <!-- Load JS -->
+  <script src="/js/dashboard.js"></script>
+  <script src="/js/assign-categories.js"></script>
+
+</body>
+</html>

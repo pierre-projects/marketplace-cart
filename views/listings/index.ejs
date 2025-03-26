@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>All Listings</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <%- include('../partials/navbar') %>
+
+  <main class="container">
+    <h1>All My Listings</h1>
+
+    <% if (listings.length === 0) { %>
+      <p>No listings found.</p>
+    <% } else { %>
+      <%- include('../partials/item-list', {
+        items: listings,
+        categories,
+        allowEdit: true,
+        allowDelete: true,
+        showCategories: true,
+        user: user,
+        isOwner: true
+      }) %>
+    <% } %>
+
+    <script>
+        const itemData = <%- JSON.stringify(listings) %>;
+      </script>
+      <script src="/js/totals.js"></script>
+
+      
+  </main>
+
+  <script src="/js/assign-categories.js"></script>
+  
+</body>
+</html>

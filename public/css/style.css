@@ -1,0 +1,289 @@
+
+/* main  */
+:root {
+    --bg: #121212;
+    --surface: #1e1e1e;
+    --text: #ffffff;
+    --muted: #b3b3b3;
+    --accent: #1db954;
+  }
+  
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: 'Helvetica Neue', sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+  
+  a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  a:hover {
+    text-decoration: underline;
+  }
+  
+    /* navbar*/
+/* Navbar container */
+.navbar {
+    background-color: #000;
+    border-bottom: 1px solid #222;
+    padding: 1rem 0;
+    font-family: 'Helvetica Neue', sans-serif;
+    color: #fff;
+  }
+  
+  /* Flex container for layout */
+  .nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+  
+  /* Shared list styles */
+  .nav-left,
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  /* Link styling */
+  .navbar a {
+    color: #dbf7d8;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+  
+  .navbar a:hover {
+    color: #1ed760;
+  }
+  
+  /* User info area */
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .logout-btn {
+    background-color: #1db954;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    color: black;
+    border-radius: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .logout-btn:hover {
+    background-color: #1ed760;
+  }
+  
+  /* Auth Form Styling */
+.form-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 80vh;
+    background: #121212;
+  }
+  
+  .form-box {
+    background: #181818;
+    padding: 2rem 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    width: 100%;
+    max-width: 400px;
+    color: white;
+  }
+  
+  .form-box h1 {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    color: #1db954;
+  }
+  
+  .form-box form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .form-box input {
+    background-color: #282828;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    color: #fff;
+  }
+  
+  .form-box input:focus {
+    border-color: #1db954;
+    outline: none;
+  }
+  
+  .form-box button {
+    margin-top: 1rem;
+  }
+  
+  .form-footer {
+    margin-top: 1rem;
+    text-align: center;
+    font-size: 0.9rem;
+  }
+  
+  .form-footer a {
+    color: #1db954;
+    text-decoration: none;
+  }
+  
+  .error-msg {
+    background: #ff4c4c;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+
+  
+
+  /*category and  item cards*/
+
+  .item-list {
+    margin-top: 1rem;
+    border-top: 1px solid #2a2a2a;
+  }
+  .card-grid {
+    display: flex;
+    gap: 2rem;
+  }
+  
+  .item-thumb img {
+    width: 100px;
+    border-radius: 6px;
+  }
+  
+  .no-img {
+    width: 100px;
+    height: 100px;
+    background: #333;
+    color: #777;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 0.8rem;
+  }
+  
+  .item-info {
+    flex: 1;
+    font-size: 0.9rem;
+  }
+  
+  .item-info .title {
+    font-size: 1.1rem;
+    font-weight: bold;
+  }
+  
+  .item-actions {
+    min-width: 200px;
+  }
+  
+  .category-label {
+    display: inline-block;
+    background: #282828;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    margin: 0.2rem 0.2rem 0 0;
+  }
+  
+  .view-link {
+    color: #1db954;
+    text-decoration: underline;
+  }
+  
+  .added-by-badge {
+    font-size: 0.8rem;
+    color: #999;
+  }
+  
+  
+/* Buttons */
+button {
+    background: #1db954;
+    color: #000;
+    border: none;
+    padding: 0.5rem 1.2rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.95rem;
+    transition: background 0.2s ease;
+  }
+  
+  button:hover {
+    background: #1ed760;
+  }
+  
+  /* Inputs and Selects */
+  input[type="text"],
+  input[type="url"],
+  input[type="email"],
+  select {
+    background-color: #181818;
+    color: #fff;
+    padding: 0.6rem 1rem;
+    margin: 0.5rem 0;
+    width: 100%;
+    max-width: 350px;
+    border: 1px solid #333;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: border 0.2s;
+  }
+  
+  input:focus,
+  select:focus {
+    border-color: #1db954;
+    outline: none;
+  }
+  
+  /* Price Summary */
+  .price-summary {
+    background: #121212;
+    color: #fff;
+    padding: 1rem 1.5rem;
+    border: 1px solid #333;
+    margin-top: 2rem;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Category label badges */
+  .category-label {
+    background: #333;
+    color: #fff;
+    padding: 0.25rem 0.6rem;
+    margin: 0 0.3rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    display: inline-block;
+  }
+  
+  
+  
+  
