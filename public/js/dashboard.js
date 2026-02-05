@@ -28,14 +28,23 @@ document.addEventListener('DOMContentLoaded', () => {
   
         // Fill preview content
         document.getElementById('previewTitle').textContent = data.title || 'N/A';
-        document.getElementById('previewImage').src = data.imageLinks[0] || '';
+        document.getElementById('previewImage').src = data.imageLinks?.[0] || '';
         document.getElementById('previewPrice').textContent = data.price || 'N/A';
         document.getElementById('previewCondition').textContent = data.condition || 'N/A';
         document.getElementById('previewDesc').textContent = data.description || 'N/A';
         document.getElementById('previewLocation').textContent = data.location || 'N/A';
         document.getElementById('previewAvailable').textContent = data.available ? 'Yes' : 'No';
-  
+
+        // Cache preview data in hidden fields to avoid re-scraping
         document.getElementById('finalLink').value = link;
+        document.getElementById('cachedTitle').value = data.title || '';
+        document.getElementById('cachedPrice').value = data.price || '';
+        document.getElementById('cachedCondition').value = data.condition || '';
+        document.getElementById('cachedDescription').value = data.description || '';
+        document.getElementById('cachedLocation').value = data.location || '';
+        document.getElementById('cachedImageLinks').value = JSON.stringify(data.imageLinks || []);
+        document.getElementById('cachedAvailable').value = data.available ? 'true' : 'false';
+
         document.getElementById('previewContainer').style.display = 'block';
       });
     }

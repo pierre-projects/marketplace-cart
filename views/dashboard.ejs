@@ -38,6 +38,14 @@
         <form id="finalAddForm" method="POST" action="/items/add">
           <input type="hidden" name="link" id="finalLink">
           <input type="hidden" name="defaultCategoryId" value="<%= categories.find(c => c.name === 'All Listings')._id %>">
+          <!-- Cached preview data to avoid double scraping -->
+          <input type="hidden" name="cachedTitle" id="cachedTitle">
+          <input type="hidden" name="cachedPrice" id="cachedPrice">
+          <input type="hidden" name="cachedCondition" id="cachedCondition">
+          <input type="hidden" name="cachedDescription" id="cachedDescription">
+          <input type="hidden" name="cachedLocation" id="cachedLocation">
+          <input type="hidden" name="cachedImageLinks" id="cachedImageLinks">
+          <input type="hidden" name="cachedAvailable" id="cachedAvailable">
 
           <% if (categories.length > 1) { %>
             <label for="category">Also add to:</label>

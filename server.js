@@ -8,6 +8,7 @@ const methodOverride = require('method-override');
 const morgan = require('morgan');
 const path = require('path');
 const flash = require('connect-flash');
+const logger = require('./utils/logger');
 
 // Load Passport config
 require('./config/passport')(passport);
@@ -23,12 +24,9 @@ const MONGO_URI = process.env.MONGO_URI;
 app.use(express.static(path.join(__dirname, 'public')));
 
 // DB Connection
-mongoose.connect(MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-  .then(() => console.log(' MongoDB Connected'))
-  .catch(err => console.error(' MongoDB Connection Error:', err));
+mongoose.connect(MONGO_URI)
+  .then(() => console.log('MongoDB Connected'))
+  .catch(err => console.error('MongoDB Connection Error:', err));
 
 // Core Middleware
 app.use(express.urlencoded({ extended: true }));
@@ -68,6 +66,12 @@ app.use('/auth', require('./routes/auth'));       // Signup/Login
 app.use('/items', require('./routes/items'));     // Add/view item links
 app.use('/listings', require('./routes/listings'));
 app.use('/categories', require('./routes/categories'));
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+  logger.error('Unhandled error:', err.stack);
+  res.status(500).render('error', { message: 'Something went wrong. Please try again.' });
+});
 
 // Server Start
 app.listen(PORT, () => {

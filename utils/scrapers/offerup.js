@@ -1,7 +1,8 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
+const logger = require('../logger');
 
-async function scrapeOfferUp(url) {
+async function scrape(url) {
   try {
     const { data: html } = await axios.get(url, {
       headers: {
@@ -14,21 +15,18 @@ async function scrapeOfferUp(url) {
 
     const title = $('h1').first().text().trim();
 
-    const price = $('p.MuiTypography-h4').first().text().trim();
+    const priceText = $('p.MuiTypography-h4').first().text().trim();
+    const price = parseFloat(priceText.replace(/[^0-9.]/g, '')) || 0;
 
-    const rawDescription = $('[data-testid="listing-description"]').text().trim();
-    // Get the first p.MuiTypography-body1 that doesn't include 'Condition:' or 'in '
-const description = $('h2.MuiTypography-h5')
-  .filter((i, el) => $(el).text().trim() === 'Description')
-  .parent()                            // div.MuiGrid-item
-  .next()                              // div containing the <p> with actual description
-  .find('p.MuiTypography-body1')
-  .first()
-  .text()
-  .replace(/\s*\n\s*/g, ' ')
-  .trim() || null;
-
-
+    const description = $('h2.MuiTypography-h5')
+      .filter((i, el) => $(el).text().trim() === 'Description')
+      .parent()
+      .next()
+      .find('p.MuiTypography-body1')
+      .first()
+      .text()
+      .replace(/\s*\n\s*/g, ' ')
+      .trim() || null;
 
     const conditionText = $('p.MuiTypography-body1')
       .filter((i, el) => $(el).text().includes('Condition:'))
@@ -37,21 +35,27 @@ const description = $('h2.MuiTypography-h5')
       .replace('Condition: ', '')
       .trim();
 
-      const location = $('span.MuiTypography-body1')
+    const location = $('span.MuiTypography-body1')
       .filter((i, el) => $(el).text().trim().match(/^in /))
       .first()
       .text()
       .replace(/^in /, '')
       .trim();
-    
 
     const imageLinks = [];
+    const allImages = [];
+
     $('img').each((i, el) => {
       const src = $(el).attr('src');
       if (src && src.includes('offerup.com')) {
-        imageLinks.push(src);
+        allImages.push(src);
       }
     });
+    if (allImages.length === 1) {
+      imageLinks.push(allImages[0]);
+    } else if (allImages.length > 1) {
+      imageLinks.push(...allImages.slice(1));
+    }
 
     const available = !html.includes('This item is no longer available');
 
@@ -65,12 +69,12 @@ const description = $('h2.MuiTypography-h5')
       available,
     };
 
-    console.log('Scraped OfferUp Item:', item);
+    logger.debug('Scraped OfferUp Item:', item);
     return item;
   } catch (err) {
-    console.error('Scraping error:', err.message);
+    logger.error('OfferUp scraping error:', err.message);
     return null;
   }
 }
 
-module.exports = { scrapeOfferUp };
+module.exports = { scrape };

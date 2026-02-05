@@ -1,48 +1,29 @@
 const express = require('express');
 const router = express.Router();
-const Item = require('../models/Items');
 const Category = require('../models/Category');
-const { scrapeOfferUp } = require('../utils/scraper');
+const { createItem, previewItem } = require('../services/itemService');
+const { ensureAuthenticated } = require('../middleware/authMiddleware');
+const { validateItemLink } = require('../middleware/validation');
 
 // POST /items/preview — AJAX preview scraper
-router.post('/preview', async (req, res) => {
-  const { link } = req.body;
-
-  if (!link.includes('offerup.com/item/detail')) {
-    return res.status(400).json({ error: 'Only OfferUp links are supported.' });
-  }
-
+router.post('/preview', ensureAuthenticated, validateItemLink, async (req, res) => {
   try {
-    const data = await scrapeOfferUp(link);
-    if (!data || !data.title) {
-      return res.status(500).json({ error: 'Could not scrape item.' });
-    }
+    const data = await previewItem(req.body.link);
     res.json(data);
   } catch (err) {
     console.error('Preview scrape failed:', err);
-    res.status(500).json({ error: 'Server error scraping item.' });
+    res.status(400).json({ error: err.message });
   }
 });
 
 // POST /items/add — Save listing to default and optional category
-router.post('/add', async (req, res) => {
-  const { link, category, defaultCategoryId } = req.body;
+router.post('/add', ensureAuthenticated, validateItemLink, async (req, res) => {
+  const { link, category, defaultCategoryId, ...cachedFields } = req.body;
 
   try {
-    const scrapedData = await scrapeOfferUp(link);
-    if (!scrapedData || !scrapedData.title) {
-      return res.status(400).send('Failed to scrape item data.');
-    }
-
-    const platform = link.includes('offerup.com') ? 'OfferUp' : 'Unknown';
-
-    const newItem = new Item({
-      ...scrapedData,
-      link,
-      platform,
-    });
-
-    await newItem.save();
+    // Pass cached fields if they exist (from preview)
+    const cachedData = cachedFields.cachedTitle ? cachedFields : null;
+    const newItem = await createItem(link, cachedData);
 
     // Add to All Listings
     await Category.findByIdAndUpdate(defaultCategoryId, {
@@ -74,7 +55,7 @@ router.post('/add', async (req, res) => {
 });
 
 // DELETE /items/:id — Remove item from DB and clean from all categories
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', ensureAuthenticated, async (req, res) => {
   try {
     const itemId = req.params.id;
 
@@ -94,7 +75,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // POST /items/:id/assign-categories — Reassign item to selected categories
-router.post('/:id/assign-categories', async (req, res) => {
+router.post('/:id/assign-categories', ensureAuthenticated, async (req, res) => {
   const itemId = req.params.id;
   const { categoryIds } = req.body;
 

@@ -5,7 +5,7 @@
     --surface: #1e1e1e;
     --text: #ffffff;
     --muted: #b3b3b3;
-    --accent: #1db954;
+    --accent: #c43d8c;
   }
   
   body {
@@ -64,7 +64,7 @@
   }
   
   .navbar a:hover {
-    color: #1ed760;
+    color: #ffffff;
   }
   
   /* User info area */
@@ -75,7 +75,7 @@
   }
   
   .logout-btn {
-    background-color: #1db954;
+    background-color: #c43d8c;
     border: none;
     padding: 0.4rem 0.8rem;
     color: black;
@@ -86,7 +86,7 @@
   }
   
   .logout-btn:hover {
-    background-color: #1ed760;
+    background-color: #c4177c;
   }
   
   /* Auth Form Styling */
@@ -111,7 +111,7 @@
   .form-box h1 {
     font-size: 2rem;
     margin-bottom: 1.5rem;
-    color: #1db954;
+    color: #d6288d;
   }
   
   .form-box form {
@@ -129,7 +129,7 @@
   }
   
   .form-box input:focus {
-    border-color: #1db954;
+    border-color: #c43d8c;
     outline: none;
   }
   
@@ -144,7 +144,7 @@
   }
   
   .form-footer a {
-    color: #1db954;
+    color: #b91d73;
     text-decoration: none;
   }
   
@@ -223,7 +223,7 @@
   
 /* Buttons */
 button {
-    background: #1db954;
+    background: #ce308c;
     color: #000;
     border: none;
     padding: 0.5rem 1.2rem;
@@ -257,7 +257,7 @@ button {
   
   input:focus,
   select:focus {
-    border-color: #1db954;
+    border-color: #c43d8c;
     outline: none;
   }
   

@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { ensureAuthenticated } = require('../middleware/authMiddleware');
 const Category = require('../models/Category');
-const Item = require('../models/Items');
 const User = require('../models/User');
 
 // GET /categories
@@ -192,8 +191,9 @@ router.post('/:id/update-role', ensureAuthenticated, async (req, res) => {
   
 
 
-  //code is almost duplicate of whats used in items.js 
-  const { scrapeOfferUp } = require('../utils/scraper');
+// Add item to category (uses shared itemService)
+const { createItem } = require('../services/itemService');
+
 router.post('/:id/add-item', ensureAuthenticated, async (req, res) => {
   const { link } = req.body;
   const category = await Category.findById(req.params.id);
@@ -210,20 +210,7 @@ router.post('/:id/add-item', ensureAuthenticated, async (req, res) => {
   }
 
   try {
-    const scraped = await scrapeOfferUp(link);
-    if (!scraped || !scraped.title) {
-      return res.status(400).send('Failed to scrape data.');
-    }
-
-    const platform = link.includes('offerup.com') ? 'OfferUp' : 'Unknown';
-
-    const newItem = new Item({
-      ...scraped,
-      link,
-      platform
-    });
-
-    await newItem.save();
+    const newItem = await createItem(link);
 
     category.items.push({ item: newItem._id, addedBy: req.user._id });
     await category.save();
@@ -231,7 +218,7 @@ router.post('/:id/add-item', ensureAuthenticated, async (req, res) => {
     res.redirect(`/categories/${category._id}`);
   } catch (err) {
     console.error('Error adding item to shared category:', err);
-    res.status(500).send('Error adding item');
+    res.status(400).send(err.message || 'Error adding item');
   }
 });
 

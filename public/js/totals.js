@@ -7,14 +7,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const item = entry.item;
       const link = item.link;
       const title = item.title || 'Untitled';
-      const priceText = item.price || '';
+      const price = typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0;
       const platform = item.platform || 'Unknown';
       const addedAt = new Date(entry.addedAt || entry.item.addedAt || Date.now());
-  
-      if (!link || !priceText) return;
-  
-      const price = parseFloat(priceText.replace(/[^0-9.]/g, ''));
-      if (isNaN(price)) return;
+
+      if (!link || price === 0) return;
   
       // Only keep most recent version of a duplicate link
       if (!deduped[link] || addedAt > deduped[link].addedAt) {
