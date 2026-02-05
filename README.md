@@ -1,6 +1,6 @@
 # MarketplaceCart
 
-Create and share lists of items from secondhand marketplaces. Scrape listings from OfferUp, organize them into categories, calculate totals, and share with others.
+Create and share lists of items from secondhand marketplaces. Use listings from marketplaces like OfferUp, organize them into categories, calculate totals, and share with others.
 
 ## Features
 
