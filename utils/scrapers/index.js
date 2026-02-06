@@ -1,7 +1,9 @@
 const offerupScraper = require('./offerup');
+const facebookScraper = require('./facebook');
 
 const scrapers = [
   { pattern: /offerup\.com\/item/, scraper: offerupScraper },
+  { pattern: /facebook\.com\/marketplace/, scraper: facebookScraper },
   // Future scrapers:
   // { pattern: /ebay\.com\/itm/, scraper: require('./ebay') },
   // { pattern: /mercari\.com\//, scraper: require('./mercari') },
@@ -21,7 +23,12 @@ async function scrapeItem(url) {
   if (!scraper) {
     throw new Error('Unsupported marketplace');
   }
-  return scraper.scrape(url);
+  const platform = scrapers.find(s => s.pattern.test(url))?.pattern.source || 'unknown';
+  const label = `Scrape [${platform}]`;
+  console.time(label);
+  const result = await scraper.scrape(url);
+  console.timeEnd(label);
+  return result;
 }
 
 module.exports = { scrapeItem, getScraper, isSupported };

@@ -9,6 +9,7 @@ const morgan = require('morgan');
 const path = require('path');
 const flash = require('connect-flash');
 const logger = require('./utils/logger');
+const { closeBrowser } = require('./utils/browser');
 
 // Load Passport config
 require('./config/passport')(passport);
@@ -71,6 +72,16 @@ app.use('/categories', require('./routes/categories'));
 app.use((err, req, res, next) => {
   logger.error('Unhandled error:', err.stack);
   res.status(500).render('error', { message: 'Something went wrong. Please try again.', user: req.user || null });
+});
+
+// Shutdown hooks — close shared Puppeteer browser on exit
+process.on('SIGINT', async () => {
+  await closeBrowser();
+  process.exit(0);
+});
+process.on('SIGTERM', async () => {
+  await closeBrowser();
+  process.exit(0);
 });
 
 // Server Start

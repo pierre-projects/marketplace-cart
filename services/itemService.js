@@ -1,6 +1,7 @@
 const Item = require('../models/Items');
 const { scrapeItem, isSupported } = require('../utils/scrapers');
 const logger = require('../utils/logger');
+const { normalizeCondition } = require('../utils/conditionMap');
 
 /**
  * Normalize item data to ensure consistent types
@@ -12,7 +13,7 @@ function normalizeItemData(data) {
     price: typeof data.price === 'number'
       ? data.price
       : parseFloat(data.price || data.cachedPrice) || 0,
-    condition: data.condition || data.cachedCondition || null,
+    condition: normalizeCondition(data.condition || data.cachedCondition) || null,
     description: data.description || data.cachedDescription || null,
     location: data.location || data.cachedLocation || '',
     imageLinks: Array.isArray(data.imageLinks)
@@ -40,7 +41,7 @@ function detectPlatform(link) {
  */
 async function previewItem(link) {
   if (!isSupported(link)) {
-    throw new Error('Unsupported marketplace. Currently only OfferUp is supported.');
+    throw new Error('Unsupported marketplace.');
   }
   const data = await scrapeItem(link);
   if (!data || !data.title) {
@@ -68,7 +69,7 @@ async function createItem(link, cachedData = null) {
   } else {
     // Scrape fresh data
     if (!isSupported(link)) {
-      throw new Error('Unsupported marketplace. Currently only OfferUp is supported.');
+      throw new Error('Unsupported marketplace.');
     }
     itemData = await scrapeItem(link);
     if (!itemData || !itemData.title) {

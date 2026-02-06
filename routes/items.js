@@ -1,16 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const Category = require('../models/Category');
+const Item = require('../models/Items');
 const { createItem, previewItem } = require('../services/itemService');
 const { ensureAuthenticated } = require('../middleware/authMiddleware');
 const { validateItemLink } = require('../middleware/validation');
 
 // POST /items/preview — AJAX preview scraper
 router.post('/preview', ensureAuthenticated, validateItemLink, async (req, res) => {
+  const start = Date.now();
   try {
     const data = await previewItem(req.body.link);
+    console.log(`Preview complete: ${Date.now() - start}ms`);
     res.json(data);
   } catch (err) {
+    console.log(`Preview failed: ${Date.now() - start}ms`);
     console.error('Preview scrape failed:', err);
     res.status(400).json({ error: err.message });
   }
@@ -18,6 +22,7 @@ router.post('/preview', ensureAuthenticated, validateItemLink, async (req, res) 
 
 // POST /items/add — Save listing to default and optional category
 router.post('/add', ensureAuthenticated, validateItemLink, async (req, res) => {
+  const start = Date.now();
   const { link, category, defaultCategoryId, ...cachedFields } = req.body;
 
   try {
@@ -47,9 +52,11 @@ router.post('/add', ensureAuthenticated, validateItemLink, async (req, res) => {
       });
     }
 
+    console.log(`Add listing complete: ${Date.now() - start}ms`);
     res.redirect('/dashboard');
   } catch (err) {
-    console.error('❌ Error adding item:', err);
+    console.log(`Add listing failed: ${Date.now() - start}ms`);
+    console.error('Error adding item:', err);
     res.status(500).send('Something went wrong.');
   }
 });

@@ -55,10 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
         matchesFilter = available === 'true';
       } else if (activeFilter === 'sold') {
         matchesFilter = available === 'false';
-      } else if (activeFilter === 'new') {
-        matchesFilter = condition === 'new';
-      } else if (activeFilter === 'used') {
-        matchesFilter = condition === 'used';
+      } else if (['new', 'like new', 'good', 'fair', 'poor'].includes(activeFilter)) {
+        matchesFilter = condition === activeFilter;
       }
 
       card.style.display = (matchesSearch && matchesFilter) ? '' : 'none';
@@ -80,6 +78,12 @@ document.addEventListener('DOMContentLoaded', () => {
           return (parseFloat(a.dataset.price) || 0) - (parseFloat(b.dataset.price) || 0);
         case 'title':
           return (a.dataset.title || '').localeCompare(b.dataset.title || '');
+        case 'condition': {
+          const condOrder = ['new', 'like new', 'good', 'fair', 'poor'];
+          const aIdx = condOrder.indexOf(a.dataset.condition);
+          const bIdx = condOrder.indexOf(b.dataset.condition);
+          return (aIdx === -1 ? 99 : aIdx) - (bIdx === -1 ? 99 : bIdx);
+        }
         case 'oldest':
           // Reverse the current DOM order (items are newest-first by default)
           return -1;
