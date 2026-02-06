@@ -31,10 +31,29 @@ router.get('/dashboard', ensureAuthenticated, async (req, res) => {
       .populate('items.addedBy')
       .populate('usersAdded.user');
 
+    // Compute dashboard stats
+    const allListings = myCategories.find(c => c.name === 'All Listings');
+    const allItems = allListings ? allListings.items : [];
+    let totalValue = 0;
+    let availableCount = 0;
+    allItems.forEach(entry => {
+      const item = entry.item;
+      if (item) {
+        totalValue += (typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0);
+        if (item.available) availableCount++;
+      }
+    });
+
     res.render('dashboard', {
       user: req.user,
       categories: myCategories,
-      sharedCategories
+      sharedCategories,
+      stats: {
+        totalItems: allItems.length,
+        totalValue,
+        availableCount,
+        categoryCount: myCategories.filter(c => c.name !== 'All Listings').length
+      }
     });
   } catch (err) {
     console.error('Dashboard load error:', err);

@@ -70,7 +70,7 @@ app.use('/categories', require('./routes/categories'));
 // Global Error Handler
 app.use((err, req, res, next) => {
   logger.error('Unhandled error:', err.stack);
-  res.status(500).render('error', { message: 'Something went wrong. Please try again.' });
+  res.status(500).render('error', { message: 'Something went wrong. Please try again.', user: req.user || null });
 });
 
 // Server Start

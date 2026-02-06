@@ -6,75 +6,116 @@
 </head>
 <body>
 
-  <!-- Navbar -->
   <%- include('partials/navbar') %>
 
   <main class="container">
-    <h1>Welcome, <%= user.username %> </h1>
 
-    <h2>Add Listing</h2>
+    <!-- Welcome Row -->
+    <div class="dashboard-welcome">
+      <h1>Welcome, <%= user.username %></h1>
+      <button id="openAddModal" class="btn-primary">+ Add Listing</button>
+    </div>
 
-    <!-- Add Listing Button -->
-    <button id="openAddForm">+ Add Listing</button>
+    <!-- Add Listing Modal -->
+    <div id="addListingModal" class="modal-overlay" style="display:none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Add New Listing</h2>
+          <button type="button" class="modal-close">&times;</button>
+        </div>
 
-    <!-- Add Listing Form -->
-    <div id="addForm" style="display: none; border:1px solid #ccc; padding:1em; margin-top:1em;">
-      <form id="previewForm">
-        <label for="link">OfferUp Link:</label>
-        <input type="url" name="link" id="link" required>
-        <button type="submit">Preview</button>
-      </form>
+        <div class="modal-body">
+          <!-- Step 1: URL Input -->
+          <div id="step1" class="modal-step">
+            <form id="previewForm">
+              <label for="link">Paste OfferUp URL:</label>
+              <input type="url" name="link" id="link" placeholder="https://offerup.com/item/..." required>
+              <button type="submit" class="btn-primary">Preview</button>
+            </form>
+            <div id="previewError" class="error-msg" style="display:none;"></div>
+          </div>
 
-      <div id="previewContainer" style="margin-top:1em; display:none;">
-        <h3>Preview:</h3>
-        <p><strong>Title:</strong> <span id="previewTitle"></span></p>
-        <img id="previewImage" src="" width="120"><br><br>
-        <p><strong>Price:</strong> <span id="previewPrice"></span></p>
-        <p><strong>Condition:</strong> <span id="previewCondition"></span></p>
-        <p><strong>Description:</strong> <span id="previewDesc"></span></p>
-        <p><strong>Location:</strong> <span id="previewLocation"></span></p>
-        <p><strong>Available:</strong> <span id="previewAvailable"></span></p>
+          <!-- Step 2: Preview & Confirm -->
+          <div id="step2" class="modal-step" style="display:none;">
+            <div class="preview-card">
+              <img id="previewImage" src="" alt="Item">
+              <div class="preview-info">
+                <h3 id="previewTitle"></h3>
+                <p class="price" id="previewPrice"></p>
+                <p><strong>Condition:</strong> <span id="previewCondition"></span></p>
+                <p><strong>Location:</strong> <span id="previewLocation"></span></p>
+                <p class="description" id="previewDesc"></p>
+              </div>
+            </div>
 
-        <form id="finalAddForm" method="POST" action="/items/add">
-          <input type="hidden" name="link" id="finalLink">
-          <input type="hidden" name="defaultCategoryId" value="<%= categories.find(c => c.name === 'All Listings')._id %>">
-          <!-- Cached preview data to avoid double scraping -->
-          <input type="hidden" name="cachedTitle" id="cachedTitle">
-          <input type="hidden" name="cachedPrice" id="cachedPrice">
-          <input type="hidden" name="cachedCondition" id="cachedCondition">
-          <input type="hidden" name="cachedDescription" id="cachedDescription">
-          <input type="hidden" name="cachedLocation" id="cachedLocation">
-          <input type="hidden" name="cachedImageLinks" id="cachedImageLinks">
-          <input type="hidden" name="cachedAvailable" id="cachedAvailable">
+            <form id="finalAddForm" method="POST" action="/items/add">
+              <input type="hidden" name="link" id="finalLink">
+              <input type="hidden" name="defaultCategoryId" value="<%= categories.find(c => c.name === 'All Listings')._id %>">
+              <input type="hidden" name="cachedTitle" id="cachedTitle">
+              <input type="hidden" name="cachedPrice" id="cachedPrice">
+              <input type="hidden" name="cachedCondition" id="cachedCondition">
+              <input type="hidden" name="cachedDescription" id="cachedDescription">
+              <input type="hidden" name="cachedLocation" id="cachedLocation">
+              <input type="hidden" name="cachedImageLinks" id="cachedImageLinks">
+              <input type="hidden" name="cachedAvailable" id="cachedAvailable">
 
-          <% if (categories.length > 1) { %>
-            <label for="category">Also add to:</label>
-            <select name="category">
-              <% categories.forEach(category => { %>
-                <% if (category.name !== 'All Listings') { %>
-                  <option value="<%= category._id %>"><%= category.name %></option>
-                <% } %>
-              <% }) %>
-            </select>
-          <% } %>
+              <% if (categories.length > 1) { %>
+                <label for="category">Add to category:</label>
+                <select name="category">
+                  <option value="">None (All Listings only)</option>
+                  <% categories.forEach(category => { %>
+                    <% if (category.name !== 'All Listings') { %>
+                      <option value="<%= category._id %>"><%= category.name %></option>
+                    <% } %>
+                  <% }) %>
+                </select>
+              <% } %>
 
-          <button type="submit">Add Listing</button>
-        </form>
+              <div class="modal-actions">
+                <button type="button" id="backToStep1" class="btn-secondary">Back</button>
+                <button type="submit" class="btn-primary">Add Listing</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+      <div class="stat">
+        <span class="stat-value"><%= stats.totalItems %></span>
+        <span class="stat-label">listings</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value">$<%= stats.totalValue.toFixed(2) %></span>
+        <span class="stat-label">total value</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value"><%= stats.availableCount %></span>
+        <span class="stat-label">available</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value"><%= stats.categoryCount %></span>
+        <span class="stat-label">categories</span>
       </div>
     </div>
 
     <!-- ===================== -->
-    <!-- Section: All Listings -->
+    <!-- Section: Recent Listings -->
     <!-- ===================== -->
     <section class="dashboard-section">
       <div class="dashboard-header">
-        <h2>All My Listings</h2>
-        <a href="/listings">View All Listings</a>
+        <h2>Recent Listings</h2>
+        <a href="/listings">View All</a>
       </div>
 
       <% const allListings = categories.find(c => c.name === 'All Listings'); %>
       <% if (!allListings || allListings.items.length === 0) { %>
-        <p>No listings yet.</p>
+        <div class="empty-state">
+          <p>No listings yet.</p>
+          <p class="muted">Click "+ Add Listing" above to save your first item.</p>
+        </div>
       <% } else { %>
         <%- include('partials/item-list', {
           items: allListings.items,
@@ -90,51 +131,61 @@
     </section>
 
     <!-- ===================== -->
-    <!-- Section: Categories -->
+    <!-- Section: My Categories -->
     <!-- ===================== -->
     <section class="dashboard-section">
       <div class="dashboard-header">
         <h2>My Categories</h2>
-        <a href="/categories">View All Categories</a>
-                        <!-- Create New Category -->
-    <form action="/categories/create" method="POST" style="margin-bottom: 2rem;">
-        <input type="text" name="name" placeholder="New category name" required>
-        <button type="submit">+ Create Category</button>
-      </form>
-      
+        <a href="/categories">View All</a>
       </div>
 
-      <% categories
-        .filter(c => c.name !== 'All Listings')
-        .slice(0, 2)
-        .forEach(category => { %>
+      <% const userCategories = categories.filter(c => c.name !== 'All Listings'); %>
 
-        <div class="category-preview">
+      <div class="category-grid">
+        <% userCategories.slice(0, 5).forEach(category => { %>
+          <div class="category-card">
+            <a href="/categories/<%= category._id %>" class="category-card-link">
+              <h3 class="category-name"><%= category.name %></h3>
+              <p class="category-meta"><%= category.items.length %> item<%= category.items.length !== 1 ? 's' : '' %></p>
+            </a>
+          </div>
+        <% }) %>
 
-
-          <h3><a href="/categories/<%= category._id %>"><%= category.name %></a></h3>
-
-          <% if (category.items.length === 0) { %>
-            <p>No items in this category.</p>
-          <% } else { %>
-            <%- include('partials/item-list', {
-              items: category.items,
-              categories,
-              maxItems: 1,
-              allowEdit: false,
-              allowDelete: false,
-              showCategories: false,
-              user: user,
-              isOwner: true,
-              categoryId: category._id
-            }) %>
-          <% } %>
+        <!-- Create New Category Card -->
+        <div class="category-card create-card">
+          <form action="/categories/create" method="POST" class="create-card-form">
+            <input type="text" name="name" placeholder="Category name" required>
+            <button type="submit" class="btn-primary">+ Create</button>
+          </form>
         </div>
-      <% }) %>
+      </div>
     </section>
+
+    <!-- ===================== -->
+    <!-- Section: Shared With Me -->
+    <!-- ===================== -->
+    <% if (sharedCategories && sharedCategories.length > 0) { %>
+      <section class="dashboard-section">
+        <div class="dashboard-header">
+          <h2>Shared With Me</h2>
+        </div>
+
+        <div class="category-grid">
+          <% sharedCategories.forEach(category => { %>
+            <div class="category-card category-card--shared">
+              <a href="/categories/<%= category._id %>" class="category-card-link">
+                <span class="shared-badge">Shared</span>
+                <h3 class="category-name"><%= category.name %></h3>
+                <p class="category-meta"><%= category.items.length %> item<%= category.items.length !== 1 ? 's' : '' %></p>
+              </a>
+            </div>
+          <% }) %>
+        </div>
+      </section>
+    <% } %>
+
   </main>
 
-  <!-- Load JS -->
   <script src="/js/dashboard.js"></script>
   <script src="/js/assign-categories.js"></script>
 

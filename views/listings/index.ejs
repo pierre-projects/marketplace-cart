@@ -8,11 +8,66 @@
   <%- include('../partials/navbar') %>
 
   <main class="container">
-    <h1>All My Listings</h1>
+    <div class="page-header">
+      <h1>All My Listings</h1>
+    </div>
 
     <% if (listings.length === 0) { %>
-      <p>No listings found.</p>
+      <div class="empty-state">
+        <p>No listings yet.</p>
+        <p class="muted">Add your first listing from the Dashboard.</p>
+      </div>
     <% } else { %>
+
+      <!-- Stats Bar -->
+      <div class="stats-bar">
+        <div class="stat">
+          <span class="stat-value" id="statCount"><%= listings.length %></span>
+          <span class="stat-label">listings</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="statTotal">$0</span>
+          <span class="stat-label">total value</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="statAvailable">0</span>
+          <span class="stat-label">available</span>
+        </div>
+      </div>
+
+      <!-- Toolbar: Search + Sort -->
+      <div class="listings-toolbar">
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Search listings..." class="search-input">
+        </div>
+        <div class="sort-box">
+          <label for="sortSelect">Sort:</label>
+          <select id="sortSelect">
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="price-high">Price: High to Low</option>
+            <option value="price-low">Price: Low to High</option>
+            <option value="title">Title A-Z</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Filter Chips -->
+      <div class="filter-chips">
+        <button class="chip active" data-filter="all">All</button>
+        <button class="chip" data-filter="available">Available</button>
+        <button class="chip" data-filter="sold">Sold</button>
+        <span class="chip-divider"></span>
+        <button class="chip" data-filter="new">New</button>
+        <button class="chip" data-filter="used">Used</button>
+      </div>
+
+      <!-- No Results Message -->
+      <div id="noResults" class="empty-state" style="display:none;">
+        <p>No listings match your filters.</p>
+      </div>
+
+      <!-- Item List -->
       <%- include('../partials/item-list', {
         items: listings,
         categories,
@@ -22,17 +77,11 @@
         user: user,
         isOwner: true
       }) %>
+
     <% } %>
-
-    <script>
-        const itemData = <%- JSON.stringify(listings) %>;
-      </script>
-      <script src="/js/totals.js"></script>
-
-      
   </main>
 
+  <script src="/js/listings.js"></script>
   <script src="/js/assign-categories.js"></script>
-  
 </body>
 </html>

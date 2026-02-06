@@ -1,4 +1,10 @@
-<li class="item-card">
+<li class="item-card"
+    data-title="<%= (item.title || '').toLowerCase() %>"
+    data-description="<%= (item.description || '').toLowerCase() %>"
+    data-price="<%= item.price || 0 %>"
+    data-condition="<%= (item.condition || '').toLowerCase() %>"
+    data-platform="<%= (item.platform || '').toLowerCase() %>"
+    data-available="<%= item.available ? 'true' : 'false' %>">
     <div class="card-grid">
       
       <!-- Left Side: Thumbnail -->
@@ -47,21 +53,37 @@
       <!-- Right Side: Actions -->
       <div class="item-actions">
         <% if (allowEdit && categories) { %>
-          <form class="move-category-form" data-item-id="<%= item._id %>">
-            <label>Assign to categories:</label>
-            <select name="categories" multiple size="4">
-              <% categories.forEach(cat => {
-                  if (cat.name !== 'All Listings') {
-                    const selected = cat.items.some(i => {
-                      const iId = i.item ? i.item._id : i._id;
-                      return iId.toString() === item._id.toString();
-                    });
-              %>
-                <option value="<%= cat._id %>" <%= selected ? 'selected' : '' %>><%= cat.name %></option>
-              <% }}) %>
-            </select>
-            <button type="submit">Update</button>
-          </form>
+          <%
+            const catCount = categories.filter(c =>
+              c.name !== 'All Listings' &&
+              c.items.some(i => {
+                const iId = i.item ? i.item._id : i._id;
+                return iId.toString() === item._id.toString();
+              })
+            ).length;
+          %>
+          <div class="category-picker">
+            <button type="button" class="picker-toggle" data-item-id="<%= item._id %>">
+              Categories (<span class="cat-count"><%= catCount %></span>)
+            </button>
+            <div class="picker-dropdown" style="display:none;">
+              <form class="category-checkbox-form" data-item-id="<%= item._id %>">
+                <% categories.forEach(cat => {
+                    if (cat.name !== 'All Listings') {
+                      const isChecked = cat.items.some(i => {
+                        const iId = i.item ? i.item._id : i._id;
+                        return iId.toString() === item._id.toString();
+                      });
+                %>
+                  <label class="checkbox-item">
+                    <input type="checkbox" name="categories" value="<%= cat._id %>" <%= isChecked ? 'checked' : '' %>>
+                    <span><%= cat.name %></span>
+                  </label>
+                <% }}) %>
+                <button type="submit" class="save-btn">Save</button>
+              </form>
+            </div>
+          </div>
         <% } %>
   
         <% if (categoryId && user && (isOwner || (addedBy && addedBy._id.toString() === user._id.toString()))) { %>

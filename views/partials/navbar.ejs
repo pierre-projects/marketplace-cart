@@ -1,15 +1,15 @@
 <nav class="navbar">
     <div class="nav-container">
       <ul class="nav-left">
-        <% if (user) { %>
+        <% if (typeof user !== 'undefined' && user) { %>
           <li><a href="/dashboard">Dashboard</a></li>
           <li><a href="/listings">My Listings</a></li>
           <li><a href="/categories">Categories</a></li>
         <% } %>
       </ul>
-  
+
       <ul class="nav-right">
-        <% if (user) { %>
+        <% if (typeof user !== 'undefined' && user) { %>
           <li class="user-info">
             <span><strong><%= user.username %></strong></span>
             <a href="/auth/logout" class="logout-btn">Logout</a>
