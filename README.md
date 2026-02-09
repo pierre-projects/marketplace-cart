@@ -275,4 +275,4 @@ See [SCRAPER_DOCS.md](SCRAPER_DOCS.md) for detailed documentation on the scraper
 
 ## License
 
-MIT
+All Rights Reserved. See `LICENSE.md`.
