@@ -13,8 +13,24 @@
     <div class="form-box">
       <h1>Login</h1>
 
-      <% if (error_msg) { %>
-        <p class="error-msg"><%= error_msg %></p>
+      <%
+        const loginSuccess = Array.isArray(success_msg)
+          ? success_msg
+          : (success_msg ? [success_msg] : []);
+        const loginErrors = Array.isArray(error_msg)
+          ? error_msg
+          : (error_msg ? [error_msg] : []);
+      %>
+
+      <% if (loginSuccess.length || loginErrors.length) { %>
+        <div class="form-alerts" aria-live="polite">
+          <% loginSuccess.forEach((message) => { %>
+            <p class="alert alert-success"><%= message %></p>
+          <% }) %>
+          <% loginErrors.forEach((message) => { %>
+            <p class="alert alert-error"><%= message %></p>
+          <% }) %>
+        </div>
       <% } %>
 
       <form action="/auth/login" method="POST">

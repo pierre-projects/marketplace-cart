@@ -10,14 +10,24 @@
   <%- include('partials/navbar') %>
 
   <main class="landing-container">
-    <div class="landing-content">
-      <h1>Marketplace Cart</h1>
-      <p>Save and organize listings from your favorite platforms like OfferUp, eBay, and more.</p>
-      <div class="cta-buttons">
-        <a href="/auth/register" class="btn">Get Started</a>
-        <a href="/auth/login" class="btn-secondary">Login</a>
-      </div>
-    </div>
+    <section class="landing-content" aria-labelledby="hero-title">
+      <% if (typeof user !== 'undefined' && user) { %>
+        <p class="hero-eyebrow">Welcome back</p>
+        <h1 id="hero-title">Ready to keep building your cart?</h1>
+        <p>Jump into your dashboard to add fresh listings, organize categories, and track everything in one place.</p>
+        <div class="hero-ctas">
+          <a href="/dashboard" class="hero-btn hero-btn-primary">Go to Dashboard</a>
+        </div>
+      <% } else { %>
+        <p class="hero-eyebrow">Marketplace Cart</p>
+        <h1 id="hero-title">Sign in to manage your saved marketplace finds</h1>
+        <p>Save and organize listings from OfferUp, eBay, and more. Log in to keep your cart synced and easy to browse.</p>
+        <div class="hero-ctas">
+          <a href="/auth/login" class="hero-btn hero-btn-primary">Login</a>
+          <a href="/auth/register" class="hero-btn hero-btn-secondary">Sign Up</a>
+        </div>
+      <% } %>
+    </section>
   </main>
 </body>
 </html>

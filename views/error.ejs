@@ -1,18 +1,37 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Error</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-
   <%- include('partials/navbar') %>
 
-  <main class="container">
-    <h1>Something went wrong</h1>
-    <p><%= typeof message !== 'undefined' ? message : 'An unexpected error occurred.' %></p>
-    <a href="/dashboard" class="btn">Back to Dashboard</a>
-  </main>
+  <%
+    const code = typeof statusCode !== 'undefined' ? statusCode : 500;
+    const heading = typeof title !== 'undefined'
+      ? title
+      : (code === 404 ? 'Page not found' : code === 403 ? 'Access denied' : 'Something went wrong');
+    const description = typeof message !== 'undefined'
+      ? message
+      : 'An unexpected error occurred.';
+    const defaultActionHref = user ? '/dashboard' : '/';
+    const defaultActionLabel = user ? 'Back to Dashboard' : 'Back to Home';
+  %>
 
+  <main class="error-page">
+    <section class="error-card" role="alert" aria-live="polite" aria-labelledby="error-title">
+      <p class="error-code"><%= code %></p>
+      <h1 id="error-title"><%= heading %></h1>
+      <p class="error-description"><%= description %></p>
+      <div class="error-actions">
+        <a href="<%= typeof actionHref !== 'undefined' ? actionHref : defaultActionHref %>" class="btn">
+          <%= typeof actionLabel !== 'undefined' ? actionLabel : defaultActionLabel %>
+        </a>
+      </div>
+    </section>
+  </main>
 </body>
 </html>

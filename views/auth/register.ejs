@@ -13,13 +13,43 @@
     <div class="form-box">
       <h1>Register</h1>
 
-      <% if (error_msg) { %>
-        <p class="error-msg"><%= error_msg %></p>
+      <%
+        const safeFormData = (typeof formData !== 'undefined' && formData) ? formData : {};
+        const safeErrorMessage = (typeof errorMessage !== 'undefined') ? errorMessage : null;
+        const registerErrors = [];
+        if (safeErrorMessage) registerErrors.push(safeErrorMessage);
+        if (Array.isArray(error_msg)) {
+          registerErrors.push(...error_msg);
+        } else if (error_msg) {
+          registerErrors.push(error_msg);
+        }
+      %>
+
+      <% if (registerErrors.length) { %>
+        <div class="form-alerts" aria-live="polite">
+          <% registerErrors.forEach((message) => { %>
+            <p class="alert alert-error"><%= message %></p>
+          <% }) %>
+        </div>
       <% } %>
 
       <form action="/auth/register" method="POST">
-        <input type="text" name="username" placeholder="Username" required>
-        <input type="email" name="email" placeholder="Email" required>
+        <input
+          type="text"
+          name="username"
+          placeholder="Username"
+          value="<%= safeFormData.username || '' %>"
+          autocomplete="username"
+          required
+        >
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value="<%= safeFormData.email || '' %>"
+          autocomplete="email"
+          required
+        >
         <input type="password" name="password" placeholder="Password" required>
         <button type="submit">Register</button>
       </form>

@@ -1,0 +1,20 @@
+<%
+  const successMessages = Array.isArray(success_msg)
+    ? success_msg
+    : (success_msg ? [success_msg] : []);
+  const errorMessages = Array.isArray(error_msg)
+    ? error_msg
+    : (error_msg ? [error_msg] : []);
+%>
+
+<% if (successMessages.length || errorMessages.length) { %>
+  <section class="flash-stack" aria-live="polite">
+    <% successMessages.forEach((message) => { %>
+      <p class="alert alert-success"><%= message %></p>
+    <% }) %>
+    <% errorMessages.forEach((message) => { %>
+      <p class="alert alert-error"><%= message %></p>
+    <% }) %>
+  </section>
+<% } %>
+
