@@ -71,7 +71,16 @@ app.use('/categories', require('./routes/categories'));
 // Global Error Handler
 app.use((err, req, res, next) => {
   logger.error('Unhandled error:', err.stack);
-  res.status(500).render('error', { message: 'Something went wrong. Please try again.', user: req.user || null });
+  const statusCode = err.status || 500;
+  const message = statusCode >= 500
+    ? 'Something went wrong. Please try again.'
+    : (err.message || 'Something went wrong.');
+
+  res.status(statusCode).render('error', {
+    message,
+    statusCode,
+    user: req.user || null
+  });
 });
 
 // Shutdown hooks — close shared Puppeteer browser on exit

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { ensureAuthenticated } = require('../middleware/authMiddleware');
 const Category = require('../models/Category');
+const { renderHtmlError } = require('../utils/httpResponses');
 
 // GET /
 router.get('/', (req, res) => {
@@ -57,7 +58,10 @@ router.get('/dashboard', ensureAuthenticated, async (req, res) => {
     });
   } catch (err) {
     console.error('Dashboard load error:', err);
-    res.status(500).send('Failed to load dashboard.');
+    return renderHtmlError(req, res, 500, 'Failed to load dashboard.', {
+      actionHref: '/',
+      actionLabel: 'Back to Home'
+    });
   }
 });
 

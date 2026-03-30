@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { ensureAuthenticated } = require('../middleware/authMiddleware');
 const Category = require('../models/Category');
+const { renderHtmlError } = require('../utils/httpResponses');
 
 // GET /listings - all listings from "All Listings" category
 router.get('/', ensureAuthenticated, async (req, res) => {
@@ -25,7 +26,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
     });
   } catch (err) {
     console.error('Failed to load listings:', err);
-    res.status(500).send('Error loading listings');
+    return renderHtmlError(req, res, 500, 'Error loading listings.');
   }
 });
 

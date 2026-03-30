@@ -5,6 +5,7 @@ const Item = require('../models/Items');
 const { createItem, previewItem } = require('../services/itemService');
 const { ensureAuthenticated } = require('../middleware/authMiddleware');
 const { validateItemLink } = require('../middleware/validation');
+const { redirectWithFlashError } = require('../utils/httpResponses');
 
 // POST /items/preview — AJAX preview scraper
 router.post('/preview', ensureAuthenticated, validateItemLink, async (req, res) => {
@@ -57,7 +58,7 @@ router.post('/add', ensureAuthenticated, validateItemLink, async (req, res) => {
   } catch (err) {
     console.log(`Add listing failed: ${Date.now() - start}ms`);
     console.error('Error adding item:', err);
-    res.status(500).send('Something went wrong.');
+    return redirectWithFlashError(req, res, 'Something went wrong while adding that listing.', '/dashboard');
   }
 });
 
@@ -77,7 +78,7 @@ router.delete('/:id', ensureAuthenticated, async (req, res) => {
     res.redirect('/dashboard');
   } catch (err) {
     console.error('Error deleting item:', err);
-    res.status(500).send('Failed to delete item.');
+    return redirectWithFlashError(req, res, 'Failed to delete that item. Please try again.', '/dashboard');
   }
 });
 
