@@ -1,24 +1,56 @@
-<nav class="navbar">
-    <div class="nav-container">
-      <ul class="nav-left">
-        <% if (typeof user !== 'undefined' && user) { %>
-          <li><a href="/dashboard" class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'dashboard' ? 'active' : '' %>">Dashboard</a></li>
-          <li><a href="/listings" class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'listings' ? 'active' : '' %>">My Listings</a></li>
-          <li><a href="/categories" class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'categories' ? 'active' : '' %>">Categories</a></li>
-        <% } %>
-      </ul>
+<nav class="navbar" role="navigation" aria-label="Primary">
+  <div class="nav-container">
+    <a href="/" class="nav-brand" aria-label="Marketplace Cart Home">
+      <span class="nav-brand-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="16" height="16">
+          <path d="M3 5h2l1.3 8.1a2 2 0 0 0 2 1.7h8.6a2 2 0 0 0 2-1.6L20 8H7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="10" cy="19" r="1.5" fill="currentColor"/>
+          <circle cx="17" cy="19" r="1.5" fill="currentColor"/>
+        </svg>
+      </span>
+      <span class="nav-brand-text">Marketplace Cart</span>
+    </a>
 
-      <ul class="nav-right">
-        <% if (typeof user !== 'undefined' && user) { %>
-          <li class="user-info">
-            <span><strong><%= user.username %></strong></span>
-            <a href="/auth/logout" class="logout-btn">Sign out</a>
-          </li>
-        <% } else { %>
-          <li><a href="/auth/login" class="nav-login-link">Login</a></li>
-          <li><a href="/auth/register">Sign Up</a></li>
-        <% } %>
+    <% if (typeof user !== 'undefined' && user) { %>
+      <ul class="nav-center">
+        <li><a href="/dashboard" class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'dashboard' ? 'active' : '' %>">Dashboard</a></li>
+        <li><a href="/listings" class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'listings' ? 'active' : '' %>">My Listings</a></li>
+        <li><a href="/categories" class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'categories' ? 'active' : '' %>">Categories</a></li>
       </ul>
+    <% } else { %>
+      <div class="nav-center nav-center--empty" aria-hidden="true"></div>
+    <% } %>
+
+    <div class="nav-right">
+      <% if (typeof user !== 'undefined' && user) { %>
+        <% const username = user.username || 'User'; %>
+        <% const avatarInitial = username.charAt(0).toUpperCase(); %>
+        <div class="account-menu" data-account-menu>
+          <button
+            type="button"
+            class="account-trigger"
+            data-account-trigger
+            aria-haspopup="menu"
+            aria-expanded="false"
+          >
+            <span class="account-avatar" aria-hidden="true"><%= avatarInitial %></span>
+            <span class="account-name"><%= username %></span>
+            <span class="account-chevron" aria-hidden="true">▾</span>
+          </button>
+
+          <div class="account-dropdown" data-account-dropdown role="menu" hidden>
+            <p class="account-dropdown-label">Signed in as</p>
+            <p class="account-dropdown-name"><%= username %></p>
+            <a href="/auth/logout" class="account-signout-btn" role="menuitem">Sign out</a>
+          </div>
+        </div>
+      <% } else { %>
+        <div class="nav-auth">
+          <a href="/auth/login" class="nav-auth-link nav-auth-link--primary">Login</a>
+          <a href="/auth/register" class="nav-auth-link nav-auth-link--secondary">Sign Up</a>
+        </div>
+      <% } %>
     </div>
-  </nav>
-  
+  </div>
+</nav>
+<script src="/js/navbar.js" defer></script>

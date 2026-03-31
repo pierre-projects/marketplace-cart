@@ -32,16 +32,46 @@
     <% } else { %>
       <div class="category-grid">
         <% userCategories.forEach(category => { %>
+          <%
+            const previewItems = category.items
+              .filter(ci => ci.item && ci.item.imageLinks && ci.item.imageLinks.length > 0)
+              .slice(0, 3);
+            const availCount = category.items.filter(ci => ci.item && ci.item.available).length;
+          %>
           <div class="category-card">
-            <a href="/categories/<%= category._id %>" class="category-card-link">
-              <h3 class="category-name"><%= category.name %></h3>
-              <p class="category-meta"><%= category.items.length %> item<%= category.items.length !== 1 ? 's' : '' %></p>
+            <a href="/categories/<%= category._id %>" class="category-preview-link" tabindex="-1" aria-hidden="true">
+              <div class="category-preview">
+                <% if (previewItems.length === 0) { %>
+                  <div class="category-preview-empty">No preview yet</div>
+                <% } else { %>
+                  <% previewItems.forEach(ci => { %>
+                    <div class="category-preview-slot">
+                      <img src="<%= ci.item.imageLinks[0] %>" alt="<%= ci.item.title %>" class="category-preview-img" loading="lazy">
+                    </div>
+                  <% }) %>
+                  <% for (let i = previewItems.length; i < 3; i++) { %>
+                    <div class="category-preview-slot category-preview-slot--empty"></div>
+                  <% } %>
+                <% } %>
+              </div>
             </a>
-            <button type="button" class="manage-btn"
-              data-id="<%= category._id %>"
-              data-name="<%= category.name %>">
-              Manage
-            </button>
+            <div class="category-card-footer">
+              <a href="/categories/<%= category._id %>" class="category-card-link">
+                <h3 class="category-name"><%= category.name %></h3>
+                <div class="category-meta-row">
+                  <span class="category-meta"><%= category.items.length %> item<%= category.items.length !== 1 ? 's' : '' %></span>
+                  <% if (category.items.length > 0) { %>
+                    <span class="category-meta-sep">·</span>
+                    <span class="category-meta"><%= availCount %> available</span>
+                  <% } %>
+                </div>
+              </a>
+              <button type="button" class="manage-btn"
+                data-id="<%= category._id %>"
+                data-name="<%= category.name %>">
+                Manage
+              </button>
+            </div>
           </div>
         <% }) %>
       </div>
@@ -52,12 +82,44 @@
       <h2 class="section-title">Shared With Me</h2>
       <div class="category-grid">
         <% sharedCategories.forEach(category => { %>
+          <%
+            const previewItems = category.items
+              .filter(ci => ci.item && ci.item.imageLinks && ci.item.imageLinks.length > 0)
+              .slice(0, 3);
+            const availCount = category.items.filter(ci => ci.item && ci.item.available).length;
+          %>
           <div class="category-card category-card--shared">
-            <a href="/categories/<%= category._id %>" class="category-card-link">
-              <span class="shared-badge">Shared</span>
-              <h3 class="category-name"><%= category.name %></h3>
-              <p class="category-meta"><%= category.items.length %> item<%= category.items.length !== 1 ? 's' : '' %></p>
+            <a href="/categories/<%= category._id %>" class="category-preview-link" tabindex="-1" aria-hidden="true">
+              <div class="category-preview">
+                <% if (previewItems.length === 0) { %>
+                  <div class="category-preview-empty">No preview yet</div>
+                <% } else { %>
+                  <% previewItems.forEach(ci => { %>
+                    <div class="category-preview-slot">
+                      <img src="<%= ci.item.imageLinks[0] %>" alt="<%= ci.item.title %>" class="category-preview-img" loading="lazy">
+                    </div>
+                  <% }) %>
+                  <% for (let i = previewItems.length; i < 3; i++) { %>
+                    <div class="category-preview-slot category-preview-slot--empty"></div>
+                  <% } %>
+                <% } %>
+              </div>
             </a>
+            <div class="category-card-footer">
+              <a href="/categories/<%= category._id %>" class="category-card-link">
+                <div class="category-name-row">
+                  <span class="shared-badge">Shared</span>
+                  <h3 class="category-name"><%= category.name %></h3>
+                </div>
+                <div class="category-meta-row">
+                  <span class="category-meta"><%= category.items.length %> item<%= category.items.length !== 1 ? 's' : '' %></span>
+                  <% if (category.items.length > 0) { %>
+                    <span class="category-meta-sep">·</span>
+                    <span class="category-meta"><%= availCount %> available</span>
+                  <% } %>
+                </div>
+              </a>
+            </div>
           </div>
         <% }) %>
       </div>
