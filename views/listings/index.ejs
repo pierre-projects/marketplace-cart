@@ -5,6 +5,7 @@
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
+  <% const currentPage = 'listings'; %>
   <%- include('../partials/navbar') %>
 
   <main class="container">
@@ -12,12 +13,15 @@
 
     <div class="page-header">
       <h1>All My Listings</h1>
+      <button id="openAddModal" type="button" class="btn-primary listings-add-btn">Add listing</button>
     </div>
+
+    <%- include('../partials/add-listing-modal', { categories, returnTo: '/listings', defaultCategoryId: null }) %>
 
     <% if (listings.length === 0) { %>
       <div class="empty-state">
         <p>No listings yet.</p>
-        <p class="muted">Add your first listing from the Dashboard.</p>
+        <p class="muted">Click "Add listing" above to save your first item.</p>
       </div>
     <% } else { %>
 
@@ -88,6 +92,7 @@
   </main>
 
   <script src="/js/listings.js"></script>
+  <script src="/js/dashboard.js"></script>
   <script src="/js/assign-categories.js"></script>
 </body>
 </html>

@@ -16,13 +16,44 @@ function showToast(message, type = 'success') {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Toggle dropdown on button click
+  // Kebab menu toggle
+  document.querySelectorAll('.kebab-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const menu = btn.closest('.kebab-menu');
+      const dropdown = menu.querySelector('.kebab-dropdown');
+
+      // Close all other kebab dropdowns
+      document.querySelectorAll('.kebab-menu').forEach(m => {
+        if (m !== menu) {
+          m.classList.remove('open');
+          m.querySelector('.kebab-dropdown').style.display = 'none';
+        }
+      });
+
+      const isOpen = dropdown.style.display !== 'none';
+      dropdown.style.display = isOpen ? 'none' : 'block';
+      menu.classList.toggle('open', !isOpen);
+    });
+  });
+
+  // Close kebab when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.kebab-menu')) {
+      document.querySelectorAll('.kebab-menu').forEach(m => {
+        m.classList.remove('open');
+        m.querySelector('.kebab-dropdown').style.display = 'none';
+      });
+    }
+  });
+
+  // Toggle category picker dropdown on button click
   document.querySelectorAll('.picker-toggle').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const dropdown = btn.nextElementSibling;
 
-      // Close all other dropdowns first
+      // Close all other picker dropdowns first
       document.querySelectorAll('.picker-dropdown').forEach(d => {
         if (d !== dropdown) d.style.display = 'none';
       });
@@ -31,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Close dropdown when clicking outside
+  // Close picker dropdown when clicking outside
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.category-picker')) {
       document.querySelectorAll('.picker-dropdown').forEach(d => {

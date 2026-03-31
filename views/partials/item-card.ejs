@@ -20,19 +20,35 @@
       <div class="item-info">
         <p class="title">
           <a href="<%= item.link %>" target="_blank" rel="noopener noreferrer">
-            <%= item.title %> 🔗
+            <%= item.title %> <span style="opacity:0.4">&#x1F517;</span>
           </a>
         </p>
-        <p><strong>Price:</strong> <%= item.price || 'N/A' %></p>
-        <p><strong>Condition:</strong> <%= item.condition || 'N/A' %></p>
-        <p><strong>Description:</strong> <%= item.description || 'N/A' %></p>
-        <p><strong>Location:</strong> <%= item.location || 'N/A' %></p>
-        <p><strong>Platform:</strong> <%= item.platform || 'N/A' %></p>
-        <p><strong>Available:</strong> <%= item.available ? 'Yes' : 'No' %></p>
-  
+
+        <div class="badge-row">
+          <% if (item.platform) { %>
+            <span class="badge badge-platform"><%= item.platform %></span>
+          <% } %>
+          <span class="badge <%= item.available ? 'badge-available' : 'badge-unavailable' %>">
+            <%= item.available ? 'Available' : 'Sold' %>
+          </span>
+        </div>
+
+        <dl class="meta-grid">
+          <dt>Price</dt>
+          <dd><%= item.price || 'N/A' %></dd>
+          <dt>Condition</dt>
+          <dd><%= item.condition || 'N/A' %></dd>
+          <dt>Location</dt>
+          <dd><%= item.location || 'N/A' %></dd>
+        </dl>
+
+        <% if (item.description) { %>
+          <p class="item-description"><%= item.description %></p>
+        <% } %>
+
         <% if (showCategories && categories) { %>
-          <p><strong>Currently in:</strong>
-            <% categories.forEach(cat => { 
+          <p style="margin-top:0.5rem">
+            <% categories.forEach(cat => {
                 const match = cat.items.some(i => {
                   const iId = i.item ? i.item._id : i._id;
                   return iId.toString() === item._id.toString();
@@ -42,7 +58,7 @@
             <% }}) %>
           </p>
         <% } %>
-  
+
         <% if (showAddedBy && addedBy && addedBy.username) { %>
           <p class="added-by-badge">
             added by <%= user && addedBy._id.toString() === user._id.toString() ? "You" : addedBy.username %>
@@ -50,56 +66,70 @@
         <% } %>
       </div>
   
-      <!-- Right Side: Actions -->
-      <div class="item-actions">
-        <% if (allowEdit && categories) { %>
-          <%
-            const catCount = categories.filter(c =>
-              c.name !== 'All Listings' &&
-              c.items.some(i => {
-                const iId = i.item ? i.item._id : i._id;
-                return iId.toString() === item._id.toString();
-              })
-            ).length;
-          %>
-          <div class="category-picker">
-            <button type="button" class="picker-toggle" data-item-id="<%= item._id %>">
-              Categories (<span class="cat-count"><%= catCount %></span>)
-            </button>
-            <div class="picker-dropdown" style="display:none;">
-              <form class="category-checkbox-form" data-item-id="<%= item._id %>">
-                <% categories.forEach(cat => {
-                    if (cat.name !== 'All Listings') {
-                      const isChecked = cat.items.some(i => {
-                        const iId = i.item ? i.item._id : i._id;
-                        return iId.toString() === item._id.toString();
-                      });
-                %>
-                  <label class="checkbox-item">
-                    <input type="checkbox" name="categories" value="<%= cat._id %>" <%= isChecked ? 'checked' : '' %>>
-                    <span><%= cat.name %></span>
-                  </label>
-                <% }}) %>
-                <button type="submit" class="save-btn">Save</button>
-              </form>
+      <!-- Kebab Menu -->
+      <div class="kebab-menu">
+        <button type="button" class="kebab-btn" aria-label="Actions">
+          <svg class="kebab-icon" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+            <circle cx="10" cy="4" r="2.3" fill="currentColor"/>
+            <circle cx="10" cy="10" r="2.3" fill="currentColor"/>
+            <circle cx="10" cy="16" r="2.3" fill="currentColor"/>
+          </svg>
+        </button>
+        <div class="kebab-dropdown" style="display:none;">
+
+          <% if (allowEdit && categories) { %>
+            <%
+              const catCount = categories.filter(c =>
+                c.name !== 'All Listings' &&
+                c.items.some(i => {
+                  const iId = i.item ? i.item._id : i._id;
+                  return iId.toString() === item._id.toString();
+                })
+              ).length;
+            %>
+            <div class="category-picker">
+              <button type="button" class="picker-toggle" data-item-id="<%= item._id %>">
+                <span>Assign categories</span>
+                <span class="cat-count"><%= catCount %></span>
+              </button>
+              <div class="picker-dropdown" style="display:none;">
+                <form class="category-checkbox-form" data-item-id="<%= item._id %>">
+                  <% categories.forEach(cat => {
+                      if (cat.name !== 'All Listings') {
+                        const isChecked = cat.items.some(i => {
+                          const iId = i.item ? i.item._id : i._id;
+                          return iId.toString() === item._id.toString();
+                        });
+                  %>
+                    <label class="checkbox-item">
+                      <input type="checkbox" name="categories" value="<%= cat._id %>" <%= isChecked ? 'checked' : '' %>>
+                      <span><%= cat.name %></span>
+                    </label>
+                  <% }}) %>
+                  <button type="submit" class="save-btn">Save</button>
+                </form>
+              </div>
             </div>
-          </div>
-        <% } %>
-  
-        <% if (categoryId && user && (isOwner || (addedBy && addedBy._id.toString() === user._id.toString()))) { %>
-          <form method="POST" action="/categories/<%= categoryId %>/remove-item" style="margin-top: 10px;">
-            <input type="hidden" name="itemId" value="<%= item._id %>">
-            <button type="submit" onclick="return confirm('Remove this listing from this category?')">
-              Remove from Category
-            </button>
-          </form>
-        <% } else if (!categoryId && allowDelete && isOwner) { %>
-          <form method="POST" action="/items/<%= item._id %>?_method=DELETE" style="margin-top: 10px;">
-            <button type="submit" onclick="return confirm('Are you sure you want to delete this listing?')">
-              Delete Listing
-            </button>
-          </form>
-        <% } %>
+          <% } %>
+
+          <% if (categoryId && user && (isOwner || (addedBy && addedBy._id.toString() === user._id.toString()))) { %>
+            <hr class="kebab-divider">
+            <form method="POST" action="/categories/<%= categoryId %>/remove-item">
+              <input type="hidden" name="itemId" value="<%= item._id %>">
+              <button type="submit" class="kebab-action kebab-action--danger" onclick="return confirm('Remove this listing from this category?')">
+                Remove from category
+              </button>
+            </form>
+          <% } else if (!categoryId && allowDelete && isOwner) { %>
+            <hr class="kebab-divider">
+            <form method="POST" action="/items/<%= item._id %>?_method=DELETE">
+              <button type="submit" class="kebab-action kebab-action--danger" onclick="return confirm('Are you sure you want to delete this listing?')">
+                Delete listing
+              </button>
+            </form>
+          <% } %>
+
+        </div>
       </div>
     </div>
   </li>

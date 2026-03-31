@@ -2,9 +2,9 @@
     <div class="nav-container">
       <ul class="nav-left">
         <% if (typeof user !== 'undefined' && user) { %>
-          <li><a href="/dashboard">Dashboard</a></li>
-          <li><a href="/listings">My Listings</a></li>
-          <li><a href="/categories">Categories</a></li>
+          <li><a href="/dashboard" class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'dashboard' ? 'active' : '' %>">Dashboard</a></li>
+          <li><a href="/listings" class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'listings' ? 'active' : '' %>">My Listings</a></li>
+          <li><a href="/categories" class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'categories' ? 'active' : '' %>">Categories</a></li>
         <% } %>
       </ul>
 
@@ -12,7 +12,7 @@
         <% if (typeof user !== 'undefined' && user) { %>
           <li class="user-info">
             <span><strong><%= user.username %></strong></span>
-            <a href="/auth/logout" class="logout-btn">Logout</a>
+            <a href="/auth/logout" class="logout-btn">Sign out</a>
           </li>
         <% } else { %>
           <li><a href="/auth/login" class="nav-login-link">Login</a></li>
