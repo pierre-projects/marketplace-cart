@@ -16,8 +16,15 @@
         <a href="/categories" class="back-link">&larr; Categories</a>
         <h1><%= category.name %></h1>
       </div>
-      <% if (isOwner) { %>
-        <button type="button" id="openSettingsModal" class="manage-btn">Settings</button>
+      <% if (canEdit || isOwner) { %>
+        <div class="show-header-actions">
+          <% if (canEdit) { %>
+            <button id="openAddModal" type="button" class="btn-primary listings-add-btn">Add listing</button>
+          <% } %>
+          <% if (isOwner) { %>
+            <button type="button" id="openSettingsModal" class="manage-btn">Settings</button>
+          <% } %>
+        </div>
       <% } %>
     </div>
 
@@ -61,14 +68,14 @@
       <div class="shared-notice">Public category</div>
     <% } %>
 
-    <!-- Add Item (editor/owner) -->
     <% if (canEdit) { %>
-      <div class="add-item-bar">
-        <form action="/categories/<%= category._id %>/add-item" method="POST" class="add-item-form">
-          <input type="url" name="link" placeholder="Paste an item link to add..." required>
-          <button type="submit" class="btn-primary">+ Add</button>
-        </form>
-      </div>
+      <%- include('../partials/add-listing-modal', {
+        categories,
+        returnTo: `/categories/${category._id}`,
+        formAction: `/categories/${category._id}/add-item`,
+        lockedCategoryId: String(category._id),
+        lockCategorySelection: true
+      }) %>
     <% } %>
 
     <!-- Items -->
@@ -76,7 +83,7 @@
       <div class="empty-state">
         <p>No items in this category yet.</p>
         <% if (canEdit) { %>
-          <p class="muted">Add one using the form above.</p>
+          <p class="muted">Add one using the Add listing button above.</p>
         <% } %>
       </div>
     <% } else { %>
@@ -167,6 +174,9 @@
     const itemData = <%- JSON.stringify(category.items) %>;
   </script>
   <script src="/js/totals.js"></script>
+  <% if (canEdit) { %>
+    <script src="/js/dashboard.js"></script>
+  <% } %>
   <% if (isOwner) { %>
     <script src="/js/category-show.js"></script>
   <% } %>

@@ -1,0 +1,113 @@
+<%
+  const modalCategories = (typeof categories !== 'undefined' && Array.isArray(categories)) ? categories : [];
+  const allListingsCategory = modalCategories.find((category) => category.name === 'All Listings');
+  const defaultCategoryIdValue = allListingsCategory ? allListingsCategory._id : '';
+  const modalReturnTo = typeof returnTo === 'string' && returnTo.trim() ? returnTo : '/dashboard';
+  const modalFormAction = typeof formAction === 'string' && formAction.trim() ? formAction : '/items/add';
+  const rawLockedCategoryId = (typeof lockedCategoryId !== 'undefined' && lockedCategoryId !== null)
+    ? String(lockedCategoryId).trim()
+    : '';
+  const useLockedCategory = Boolean(typeof lockCategorySelection !== 'undefined' && lockCategorySelection) && rawLockedCategoryId.length > 0;
+%>
+
+<!-- Add Listing Modal -->
+<div id="addListingModal"
+     class="modal-overlay"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="modalTitle"
+     aria-hidden="true"
+     style="display:none;">
+  <div class="modal-content">
+
+    <div class="modal-header">
+      <h2 id="modalTitle">Add New Listing</h2>
+      <button type="button" class="modal-close" aria-label="Close dialog">&times;</button>
+    </div>
+
+    <div class="modal-stepper" id="modalStepper" aria-hidden="true">
+      <span class="step active" data-step="1">
+        <span class="step-num">1</span> Paste URL
+      </span>
+      <span class="step-sep">›</span>
+      <span class="step" data-step="2">
+        <span class="step-num">2</span> Confirm
+      </span>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- Step 1: URL Input -->
+      <div id="step1" class="modal-step">
+        <p class="step1-hint">Paste an OfferUp listing URL to fetch its details.</p>
+        <form id="previewForm">
+          <label for="link">Listing URL</label>
+          <input
+            type="url"
+            name="link"
+            id="link"
+            placeholder="https://offerup.com/item/..."
+            autocomplete="off"
+            aria-label="OfferUp listing URL"
+            required>
+          <button type="submit" class="btn-primary" style="width:100%;margin-top:0.75rem;" aria-busy="false">
+            Preview
+          </button>
+        </form>
+        <div id="previewError" class="modal-error" role="alert" aria-live="polite" style="display:none;">
+          <i class="modal-error-icon" aria-hidden="true">&#9888;</i>
+          <span id="previewErrorText"></span>
+        </div>
+      </div>
+
+      <!-- Step 2: Preview & Confirm -->
+      <div id="step2" class="modal-step" style="display:none;">
+        <div class="preview-card">
+          <img id="previewImage" src="" alt="Item preview">
+          <div class="preview-info">
+            <h3 id="previewTitle"></h3>
+            <p class="price" id="previewPrice"></p>
+            <div class="preview-meta">
+              <span class="preview-badge" id="previewCondition"></span>
+              <span class="preview-badge" id="previewLocation"></span>
+            </div>
+            <p class="description" id="previewDesc"></p>
+          </div>
+        </div>
+
+        <form id="finalAddForm" method="POST" action="<%= modalFormAction %>">
+          <input type="hidden" name="link" id="finalLink">
+          <input type="hidden" name="defaultCategoryId" value="<%= defaultCategoryIdValue %>">
+          <input type="hidden" name="returnTo" value="<%= modalReturnTo %>">
+          <input type="hidden" name="cachedTitle" id="cachedTitle">
+          <input type="hidden" name="cachedPrice" id="cachedPrice">
+          <input type="hidden" name="cachedCondition" id="cachedCondition">
+          <input type="hidden" name="cachedDescription" id="cachedDescription">
+          <input type="hidden" name="cachedLocation" id="cachedLocation">
+          <input type="hidden" name="cachedImageLinks" id="cachedImageLinks">
+          <input type="hidden" name="cachedAvailable" id="cachedAvailable">
+
+          <% if (useLockedCategory) { %>
+            <input type="hidden" name="category" value="<%= rawLockedCategoryId %>">
+          <% } else if (modalCategories.length > 1) { %>
+            <label for="category">Add to category</label>
+            <select name="category" id="category">
+              <option value="">None (All Listings only)</option>
+              <% modalCategories.forEach(category => { %>
+                <% if (category.name !== 'All Listings') { %>
+                  <option value="<%= category._id %>"><%= category.name %></option>
+                <% } %>
+              <% }) %>
+            </select>
+          <% } %>
+
+          <div class="modal-actions">
+            <button type="button" id="backToStep1" class="btn-secondary">&#8592; Back</button>
+            <button type="submit" class="btn-primary">Add Listing</button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>

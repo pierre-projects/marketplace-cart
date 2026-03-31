@@ -5,6 +5,7 @@
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
+  <% const currentPage = 'categories'; %>
   <%- include('../partials/navbar') %>
 
   <main class="container">
@@ -12,10 +13,12 @@
 
     <div class="page-header">
       <h1>My Categories</h1>
-      <form action="/categories/create" method="POST" class="create-category-form">
-        <input type="text" name="name" placeholder="New category name" required>
-        <button type="submit" class="btn-primary">+ Create</button>
-      </form>
+      <div class="categories-header-actions">
+        <form action="/categories/create" method="POST" class="create-category-form">
+          <input type="text" name="name" placeholder="New category name" required>
+          <button type="submit" class="btn-primary">Create category</button>
+        </form>
+      </div>
     </div>
 
     <!-- Your Categories -->

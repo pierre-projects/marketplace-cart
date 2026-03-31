@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { ensureAuthenticated } = require('../middleware/authMiddleware');
+const { validateItemLink } = require('../middleware/validation');
 const Category = require('../models/Category');
 const User = require('../models/User');
 const { redirectWithFlashError, renderHtmlError } = require('../utils/httpResponses');
@@ -249,8 +250,8 @@ router.post('/:id/update-role', ensureAuthenticated, async (req, res) => {
 // Add item to category (uses shared itemService)
 const { createItem } = require('../services/itemService');
 
-router.post('/:id/add-item', ensureAuthenticated, async (req, res) => {
-  const { link } = req.body;
+router.post('/:id/add-item', ensureAuthenticated, validateItemLink, async (req, res) => {
+  const { link, ...cachedFields } = req.body;
   const category = await Category.findById(req.params.id);
 
   if (!category) return redirectWithFlashError(req, res, 'Category not found.', '/categories');
@@ -265,7 +266,8 @@ router.post('/:id/add-item', ensureAuthenticated, async (req, res) => {
   }
 
   try {
-    const newItem = await createItem(link);
+    const cachedData = cachedFields.cachedTitle ? cachedFields : null;
+    const newItem = await createItem(link, cachedData);
 
     category.items.push({ item: newItem._id, addedBy: req.user._id });
     await category.save();
