@@ -7,6 +7,21 @@ const { ensureAuthenticated } = require('../middleware/authMiddleware');
 const { validateItemLink } = require('../middleware/validation');
 const { redirectWithFlashError } = require('../utils/httpResponses');
 
+function getSafeReturnToPath(rawPath, fallback = '/dashboard') {
+  if (typeof rawPath !== 'string') return fallback;
+
+  const trimmed = rawPath.trim();
+  if (!trimmed || !trimmed.startsWith('/') || trimmed.startsWith('//')) return fallback;
+  if (trimmed.includes('\\') || trimmed.includes('://') || /[\r\n]/.test(trimmed)) return fallback;
+
+  try {
+    const parsed = new URL(trimmed, 'http://localhost');
+    return `${parsed.pathname}${parsed.search}`;
+  } catch (err) {
+    return fallback;
+  }
+}
+
 // POST /items/preview — AJAX preview scraper
 router.post('/preview', ensureAuthenticated, validateItemLink, async (req, res) => {
   const start = Date.now();
@@ -24,7 +39,8 @@ router.post('/preview', ensureAuthenticated, validateItemLink, async (req, res) 
 // POST /items/add — Save listing to default and optional category
 router.post('/add', ensureAuthenticated, validateItemLink, async (req, res) => {
   const start = Date.now();
-  const { link, category, defaultCategoryId, ...cachedFields } = req.body;
+  const { link, category, defaultCategoryId, returnTo, ...cachedFields } = req.body;
+  const redirectPath = getSafeReturnToPath(returnTo, '/dashboard');
 
   try {
     // Pass cached fields if they exist (from preview)
@@ -54,11 +70,11 @@ router.post('/add', ensureAuthenticated, validateItemLink, async (req, res) => {
     }
 
     console.log(`Add listing complete: ${Date.now() - start}ms`);
-    res.redirect('/dashboard');
+    return res.redirect(redirectPath);
   } catch (err) {
     console.log(`Add listing failed: ${Date.now() - start}ms`);
     console.error('Error adding item:', err);
-    return redirectWithFlashError(req, res, 'Something went wrong while adding that listing.', '/dashboard');
+    return redirectWithFlashError(req, res, 'Something went wrong while adding that listing.', redirectPath);
   }
 });
 
