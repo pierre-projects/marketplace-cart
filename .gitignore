@@ -17,3 +17,9 @@ yarn-error.log*
 # editor junk
 .vscode/
 .idea/
+
+# local/dev artifacts
+.claude/
+.codex
+nul
+public/images/kebab.svg
