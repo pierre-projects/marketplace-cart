@@ -85,12 +85,12 @@
 
       <div class="category-grid">
         <% userCategories.slice(0, 5).forEach(category => { %>
-          <div class="category-card">
-            <a href="/categories/<%= category._id %>" class="category-card-link">
-              <h3 class="category-name"><%= category.name %></h3>
-              <p class="category-meta"><%= category.items.length %> item<%= category.items.length !== 1 ? 's' : '' %></p>
-            </a>
-          </div>
+          <%- include('partials/category-card', {
+            category,
+            isShared: false,
+            showAvailableCount: false,
+            showManageButton: false
+          }) %>
         <% }) %>
 
         <!-- Create New Category Card -->
@@ -107,25 +107,24 @@
     <!-- ===================== -->
     <!-- Section: Shared With Me -->
     <!-- ===================== -->
-    <% if (sharedCategories && sharedCategories.length > 0) { %>
-      <section class="dashboard-section">
-        <div class="dashboard-header">
-          <h2>Shared With Me</h2>
-        </div>
+      <% if (sharedCategories && sharedCategories.length > 0) { %>
+        <section class="dashboard-section">
+          <div class="dashboard-header">
+            <h2>Shared With Me</h2>
+          </div>
 
-        <div class="category-grid">
-          <% sharedCategories.forEach(category => { %>
-            <div class="category-card category-card--shared">
-              <a href="/categories/<%= category._id %>" class="category-card-link">
-                <span class="shared-badge">Shared</span>
-                <h3 class="category-name"><%= category.name %></h3>
-                <p class="category-meta"><%= category.items.length %> item<%= category.items.length !== 1 ? 's' : '' %></p>
-              </a>
-            </div>
-          <% }) %>
-        </div>
-      </section>
-    <% } %>
+          <div class="category-grid">
+            <% sharedCategories.forEach(category => { %>
+              <%- include('partials/category-card', {
+                category,
+                isShared: true,
+                showAvailableCount: false,
+                showManageButton: false
+              }) %>
+            <% }) %>
+          </div>
+        </section>
+      <% } %>
 
   </main>
 

@@ -85,11 +85,10 @@ document.addEventListener('DOMContentLoaded', () => {
           return (aIdx === -1 ? 99 : aIdx) - (bIdx === -1 ? 99 : bIdx);
         }
         case 'oldest':
-          // Reverse the current DOM order (items are newest-first by default)
-          return -1;
+          return (parseFloat(a.dataset.addedAt) || 0) - (parseFloat(b.dataset.addedAt) || 0);
         case 'newest':
         default:
-          return 1;
+          return (parseFloat(b.dataset.addedAt) || 0) - (parseFloat(a.dataset.addedAt) || 0);
       }
     });
 

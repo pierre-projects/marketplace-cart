@@ -1,0 +1,69 @@
+<%
+  const isShared = locals.isShared === true;
+  const showManageButton = locals.showManageButton === true;
+  const showAvailableCount = locals.showAvailableCount === true;
+  const categoryItems = Array.isArray(category.items) ? category.items : [];
+  const previewItems = categoryItems
+    .filter((entry) => entry.item && entry.item.imageLinks && entry.item.imageLinks.length > 0)
+    .slice(0, 3);
+  const totalItems = categoryItems.length;
+  const availableCount = showAvailableCount
+    ? categoryItems.filter((entry) => entry.item && entry.item.available).length
+    : 0;
+%>
+
+<div class="category-card<%= isShared ? ' category-card--shared' : '' %>">
+  <a href="/categories/<%= category._id %>" class="category-preview-link" tabindex="-1" aria-hidden="true">
+    <div class="category-preview">
+      <% if (previewItems.length === 0) { %>
+        <div class="category-preview-empty">No preview yet</div>
+      <% } else { %>
+        <% previewItems.forEach((entry) => { %>
+          <div class="category-preview-slot">
+            <img
+              src="<%= entry.item.imageLinks[0] %>"
+              alt="<%= entry.item.title || category.name %>"
+              class="category-preview-img"
+              loading="lazy"
+            >
+          </div>
+        <% }) %>
+        <% for (let i = previewItems.length; i < 3; i++) { %>
+          <div class="category-preview-slot category-preview-slot--empty"></div>
+        <% } %>
+      <% } %>
+    </div>
+  </a>
+
+  <div class="category-card-footer">
+    <a href="/categories/<%= category._id %>" class="category-card-link">
+      <% if (isShared) { %>
+        <div class="category-name-row">
+          <span class="shared-badge">Shared</span>
+          <h3 class="category-name"><%= category.name %></h3>
+        </div>
+      <% } else { %>
+        <h3 class="category-name"><%= category.name %></h3>
+      <% } %>
+
+      <div class="category-meta-row">
+        <span class="category-meta"><%= totalItems %> item<%= totalItems !== 1 ? 's' : '' %></span>
+        <% if (showAvailableCount && totalItems > 0) { %>
+          <span class="category-meta-sep">·</span>
+          <span class="category-meta"><%= availableCount %> available</span>
+        <% } %>
+      </div>
+    </a>
+
+    <% if (showManageButton) { %>
+      <button
+        type="button"
+        class="manage-btn"
+        data-id="<%= category._id %>"
+        data-name="<%= category.name %>"
+      >
+        Manage
+      </button>
+    <% } %>
+  </div>
+</div>

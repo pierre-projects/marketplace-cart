@@ -1,27 +1,33 @@
 <% const showAddedBy = typeof locals.showAddedBy !== 'undefined' ? locals.showAddedBy : false; %>
 <% const _maxItems = typeof maxItems !== 'undefined' ? maxItems : null; %>
-<% const isWrapped = items[0] && items[0].item; %>
 
 <% const displayItems = _maxItems ? items.slice(-_maxItems).reverse() : items.slice().reverse(); %>
 <% const thisCategoryId = typeof categoryId !== 'undefined' ? categoryId : null; %>
 
 <ul class="item-list">
   <% displayItems.forEach(entry => { %>
-    <% const item = isWrapped ? entry.item : entry; %>
-    <% const addedBy = isWrapped ? entry.addedBy : null; %>
-
-    <%- include('./item-card', {
-        item,
-        addedBy,
-        categories,
-        allowEdit,
-        allowDelete,
-        showCategories,
-        categoryId: thisCategoryId,
-        user,
-        isOwner,
-        showAddedBy
-      }) %>
-      
+    <%
+      // Shape is detected per entry, not inferred once from items[0]. Callers
+      // pass either bare Item docs or {item, addedBy} wrappers, and a wrapper
+      // whose item populated to null must still be recognized as a wrapper —
+      // hence `!== undefined` rather than a truthiness check.
+      const isWrapper = entry && entry.item !== undefined;
+      const item = isWrapper ? entry.item : entry;
+      const addedBy = isWrapper ? entry.addedBy : null;
+    %>
+    <% if (item && item._id) { %>
+      <%- include('./item-card', {
+          item,
+          addedBy,
+          categories,
+          allowEdit,
+          allowDelete,
+          showCategories,
+          categoryId: thisCategoryId,
+          user,
+          isOwner,
+          showAddedBy
+        }) %>
+    <% } %>
   <% }) %>
 </ul>

@@ -51,6 +51,24 @@ async function previewItem(link) {
 }
 
 /**
+ * Upsert an Item by link. Item.link is unique, so re-adding a URL refreshes the
+ * existing document (price, availability, title) rather than creating a second
+ * copy. addedAt is preserved on refresh; updatedAt records the refresh.
+ */
+async function upsertItemByLink(link, itemData, platform) {
+  return Item.findOneAndUpdate(
+    { link },
+    {
+      // `link` is applied automatically from the filter on insert — naming it
+      // here as well would be an update-path conflict.
+      $set: { ...itemData, platform },
+      $setOnInsert: { addedAt: new Date() }
+    },
+    { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }
+  );
+}
+
+/**
  * Scrape and create an item from a marketplace link
  * @param {string} link - The marketplace URL
  * @param {Object} cachedData - Optional cached data from preview form
@@ -71,25 +89,35 @@ async function createItem(link, cachedData = null) {
     if (!isSupported(link)) {
       throw new Error('Unsupported marketplace.');
     }
-    itemData = await scrapeItem(link);
-    if (!itemData || !itemData.title) {
+    const scraped = await scrapeItem(link);
+    if (!scraped || !scraped.title) {
       throw new Error('Failed to scrape item data.');
     }
+    // Fresh scraper output must go through the same normalizer as cached form
+    // data. Scrapers return raw marketplace condition strings ("Used",
+    // "Reconditioned") that match no canonical value, and Item.condition is
+    // enum-constrained — unnormalized, a fresh add fails validation outright.
+    itemData = normalizeItemData(scraped);
     logger.debug('Scraped fresh data for item creation');
   }
 
   const platform = detectPlatform(link);
 
-  const newItem = new Item({
-    ...itemData,
-    link,
-    platform,
-  });
+  let item;
+  try {
+    item = await upsertItemByLink(link, itemData, platform);
+  } catch (err) {
+    // Two concurrent upserts of the same link can race between the lookup and
+    // the insert. The recovery is simply to re-run: the second pass finds the
+    // now-existing document and updates it.
+    if (err.code !== 11000) throw err;
+    logger.debug('Upsert raced on duplicate link, retrying:', link);
+    item = await upsertItemByLink(link, itemData, platform);
+  }
 
-  await newItem.save();
-  logger.debug('Created item:', newItem._id);
+  logger.debug('Upserted item:', item._id);
 
-  return newItem;
+  return item;
 }
 
 module.exports = {
@@ -99,3 +127,4 @@ module.exports = {
   detectPlatform,
   isSupported
 };
+

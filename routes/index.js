@@ -12,12 +12,13 @@ router.get('/', (req, res) => {
 // GET /dashboard
 router.get('/dashboard', ensureAuthenticated, async (req, res) => {
   try {
-    // Ensure default category exists
-    let defaultCategory = await Category.findOne({ user: req.user._id, name: 'All Listings' });
-    if (!defaultCategory) {
-      defaultCategory = new Category({ name: 'All Listings', user: req.user._id, items: [] });
-      await defaultCategory.save();
-    }
+    // Ensure default category exists. Atomic upsert rather than find-then-save:
+    // the old read-modify-write raced itself on concurrent dashboard loads.
+    await Category.findOneAndUpdate(
+      { user: req.user._id, name: 'All Listings' },
+      { $setOnInsert: { name: 'All Listings', user: req.user._id, items: [] } },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
 
     // Load categories owned by the user
     const myCategories = await Category.find({ user: req.user._id })

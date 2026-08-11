@@ -4,6 +4,7 @@
     data-price="<%= item.price || 0 %>"
     data-condition="<%= (item.condition || '').toLowerCase() %>"
     data-platform="<%= (item.platform || '').toLowerCase() %>"
+    data-added-at="<%= item.addedAt ? new Date(item.addedAt).getTime() : 0 %>"
     data-available="<%= item.available ? 'true' : 'false' %>">
     <div class="card-grid">
       

@@ -19,7 +19,10 @@ function normalizeCondition(raw) {
       return canonical;
     }
   }
-  return raw;
+  // Unrecognized values are dropped rather than stored raw — Item.condition is
+  // enum-constrained to CONDITIONS, and passing scraped text through would fail
+  // validation on save.
+  return null;
 }
 
 module.exports = { normalizeCondition, CONDITIONS };

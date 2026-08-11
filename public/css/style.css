@@ -2318,19 +2318,7 @@ a:focus-visible {
 }
 
 .dashboard-section .category-card {
-  min-height: 168px;
-  align-items: flex-start;
-}
-
-.dashboard-section .category-card-link {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  min-height: 100%;
-}
-
-.dashboard-section .category-card-link .category-meta {
-  margin-top: auto;
+  min-height: 0;
 }
 
 .dashboard-section .create-card {
@@ -2343,12 +2331,6 @@ a:focus-visible {
 .dashboard-section .create-card-label {
   text-align: center;
   margin: 0;
-}
-
-@media (max-width: 768px) {
-  .dashboard-section .category-card {
-    min-height: 0;
-  }
 }
 
 @media (max-width: 640px) {

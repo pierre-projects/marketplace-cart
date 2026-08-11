@@ -3,6 +3,7 @@ const router = express.Router();
 const Category = require('../models/Category');
 const Item = require('../models/Items');
 const { createItem, previewItem } = require('../services/itemService');
+const { addItemToCategory } = require('../services/categoryService');
 const { ensureAuthenticated } = require('../middleware/authMiddleware');
 const { validateItemLink } = require('../middleware/validation');
 const { redirectWithFlashError } = require('../utils/httpResponses');
@@ -48,25 +49,11 @@ router.post('/add', ensureAuthenticated, validateItemLink, async (req, res) => {
     const newItem = await createItem(link, cachedData);
 
     // Add to All Listings
-    await Category.findByIdAndUpdate(defaultCategoryId, {
-      $addToSet: {
-        items: {
-          item: newItem._id,
-          addedBy: req.user._id
-        }
-      }
-    });
+    await addItemToCategory(defaultCategoryId, newItem._id, req.user._id);
 
     // Add to optional category if different
     if (category && category !== defaultCategoryId) {
-      await Category.findByIdAndUpdate(category, {
-        $addToSet: {
-          items: {
-            item: newItem._id,
-            addedBy: req.user._id
-          }
-        }
-      });
+      await addItemToCategory(category, newItem._id, req.user._id);
     }
 
     console.log(`Add listing complete: ${Date.now() - start}ms`);
@@ -115,14 +102,7 @@ router.post('/:id/assign-categories', ensureAuthenticated, async (req, res) => {
 
     // Add to selected categories
     await Promise.all(categoryIds.map(catId =>
-      Category.findByIdAndUpdate(catId, {
-        $addToSet: {
-          items: {
-            item: itemId,
-            addedBy: req.user._id
-          }
-        }
-      })
+      addItemToCategory(catId, itemId, req.user._id)
     ));
 
     res.json({ success: true });

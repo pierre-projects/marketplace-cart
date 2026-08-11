@@ -48,6 +48,9 @@ router.post('/create', ensureAuthenticated, async (req, res) => {
 
     return res.redirect('/categories');
   } catch (err) {
+    if (err.code === 11000) {
+      return redirectWithFlashError(req, res, `You already have a category called "${req.body.name?.trim()}".`, '/categories');
+    }
     console.error('Error creating category:', err);
     return redirectWithFlashError(req, res, 'Could not create category right now.', '/categories');
   }
@@ -113,6 +116,9 @@ router.post('/:id/edit', ensureAuthenticated, async (req, res) => {
     await Category.findOneAndUpdate({ _id: req.params.id, user: req.user._id }, { name: newName });
     return res.redirect('/categories');
   } catch (err) {
+    if (err.code === 11000) {
+      return redirectWithFlashError(req, res, `You already have a category called "${req.body.name?.trim()}".`, '/categories');
+    }
     console.error('Error renaming category:', err);
     return redirectWithFlashError(req, res, 'Could not rename category right now.', '/categories');
   }
@@ -249,6 +255,7 @@ router.post('/:id/update-role', ensureAuthenticated, async (req, res) => {
 
 // Add item to category (uses shared itemService)
 const { createItem } = require('../services/itemService');
+const { addItemToCategory } = require('../services/categoryService');
 
 router.post('/:id/add-item', ensureAuthenticated, validateItemLink, async (req, res) => {
   const { link, ...cachedFields } = req.body;
@@ -269,8 +276,7 @@ router.post('/:id/add-item', ensureAuthenticated, validateItemLink, async (req, 
     const cachedData = cachedFields.cachedTitle ? cachedFields : null;
     const newItem = await createItem(link, cachedData);
 
-    category.items.push({ item: newItem._id, addedBy: req.user._id });
-    await category.save();
+    await addItemToCategory(category._id, newItem._id, req.user._id);
 
     res.redirect(`/categories/${category._id}`);
   } catch (err) {
