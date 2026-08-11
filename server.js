@@ -10,6 +10,8 @@ const path = require('path');
 const flash = require('connect-flash');
 const logger = require('./utils/logger');
 const { closeBrowser } = require('./utils/browser');
+const scrapeQueue = require('./services/scrapeQueue');
+const maintenance = require('./services/maintenance');
 
 // Load Passport config
 require('./config/passport')(passport);
@@ -37,15 +39,21 @@ app.use(morgan('dev'));
 // View Engine
 app.set('view engine', 'ejs');
 
-// Shutdown hooks — close shared Puppeteer browser on exit
-process.on('SIGINT', async () => {
+// Shutdown hooks — drain in-flight scrapes, then close the shared browser so a
+// half-finished job isn't left 'running' for the next boot to reclaim.
+async function shutdown() {
+  maintenance.stop();
+  try {
+    await scrapeQueue.stop();
+  } catch (err) {
+    logger.error('Error stopping scrape queue:', err.message);
+  }
   await closeBrowser();
   process.exit(0);
-});
-process.on('SIGTERM', async () => {
-  await closeBrowser();
-  process.exit(0);
-});
+}
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
 
 function validateEnv() {
   const missing = ['MONGO_URI', 'SESSION_SECRET'].filter((key) => !process.env[key]);
@@ -145,8 +153,12 @@ async function startServer() {
       });
     });
 
+    // Background workers start only after Mongo is connected — both read from it.
+    scrapeQueue.start();
+    maintenance.start();
+
     app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
+      logger.info(`Server running on http://localhost:${PORT}`);
     });
   } catch (err) {
     logger.error('Server startup failed:', err);

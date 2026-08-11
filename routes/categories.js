@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const { ensureAuthenticated } = require('../middleware/authMiddleware');
-const { validateItemLink } = require('../middleware/validation');
 const Category = require('../models/Category');
 const User = require('../models/User');
 const { redirectWithFlashError, renderHtmlError } = require('../utils/httpResponses');
@@ -253,12 +252,14 @@ router.post('/:id/update-role', ensureAuthenticated, async (req, res) => {
   
 
 
-// Add item to category (uses shared itemService)
-const { createItem } = require('../services/itemService');
+// Add item to category. The item is already in the DB — written by the scrape
+// worker during preview — so this route never scrapes and never accepts
+// listing content from the browser.
+const Item = require('../models/Items');
 const { addItemToCategory } = require('../services/categoryService');
 
-router.post('/:id/add-item', ensureAuthenticated, validateItemLink, async (req, res) => {
-  const { link, ...cachedFields } = req.body;
+router.post('/:id/add-item', ensureAuthenticated, async (req, res) => {
+  const { itemId, link } = req.body;
   const category = await Category.findById(req.params.id);
 
   if (!category) return redirectWithFlashError(req, res, 'Category not found.', '/categories');
@@ -273,15 +274,20 @@ router.post('/:id/add-item', ensureAuthenticated, validateItemLink, async (req, 
   }
 
   try {
-    const cachedData = cachedFields.cachedTitle ? cachedFields : null;
-    const newItem = await createItem(link, cachedData);
+    const item = itemId
+      ? await Item.findById(itemId)
+      : (link ? await Item.findOne({ link }) : null);
 
-    await addItemToCategory(category._id, newItem._id, req.user._id);
+    if (!item) {
+      return redirectWithFlashError(req, res, 'That listing is no longer available to add. Please preview it again.', `/categories/${req.params.id}`);
+    }
+
+    await addItemToCategory(category._id, item._id, req.user._id);
 
     res.redirect(`/categories/${category._id}`);
   } catch (err) {
     console.error('Error adding item to shared category:', err);
-    return redirectWithFlashError(req, res, err.message || 'Error adding item', `/categories/${req.params.id}`);
+    return redirectWithFlashError(req, res, 'Error adding item', `/categories/${req.params.id}`);
   }
 });
 

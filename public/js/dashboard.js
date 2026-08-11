@@ -13,6 +13,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!modal || !openBtn) return;
 
   let lastFocusedElement = null;
+  let pollAbort = null;
+
+  // Scraping runs in a background worker now, so the client enqueues and polls.
+  const POLL_INTERVAL_MS = 1000;
+  const POLL_CEILING_MS = 90000;
 
   // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -28,6 +33,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function closeModal() {
+    // Abandon any in-flight poll so a closed modal stops hitting the server.
+    if (pollAbort) {
+      pollAbort.abort();
+      pollAbort = null;
+    }
     modal.style.display = 'none';
     modal.setAttribute('aria-hidden', 'true');
     if (lastFocusedElement) lastFocusedElement.focus();
@@ -95,18 +105,23 @@ document.addEventListener('DOMContentLoaded', () => {
     linkInput.disabled = true;
     previewError.style.display = 'none';
 
+    pollAbort = new AbortController();
+
     try {
       const res = await fetch('/items/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ link })
+        body: JSON.stringify({ link }),
+        signal: pollAbort.signal
       });
 
-      const data = await res.json();
+      const queued = await res.json();
 
-      if (!res.ok || data.error) {
-        throw new Error(data.error || 'Failed to preview listing');
+      if (!res.ok || queued.error) {
+        throw new Error(queued.error || 'Failed to preview listing');
       }
+
+      const data = await waitForJob(queued.jobId, pollAbort.signal);
 
       // Populate preview card
       document.getElementById('previewTitle').textContent = data.title || 'Untitled';
@@ -129,20 +144,15 @@ document.addEventListener('DOMContentLoaded', () => {
         imgEl.style.display = 'none';
       }
 
-      // Cache values in hidden fields
+      // Name the already-saved item; no listing content goes back to the server.
+      document.getElementById('finalItemId').value = data._id || '';
       document.getElementById('finalLink').value = link;
-      document.getElementById('cachedTitle').value = data.title || '';
-      document.getElementById('cachedPrice').value = data.price || '';
-      document.getElementById('cachedCondition').value = data.condition || '';
-      document.getElementById('cachedDescription').value = data.description || '';
-      document.getElementById('cachedLocation').value = data.location || '';
-      document.getElementById('cachedImageLinks').value = JSON.stringify(data.imageLinks || []);
-      document.getElementById('cachedAvailable').value = data.available ? 'true' : 'false';
 
       showStep(2);
 
     } catch (err) {
-      showError(err.message);
+      // An aborted poll means the user closed the modal — not an error.
+      if (err.name !== 'AbortError') showError(err.message);
     } finally {
       btn.classList.remove('btn-loading');
       btn.setAttribute('aria-busy', 'false');
@@ -150,4 +160,33 @@ document.addEventListener('DOMContentLoaded', () => {
       linkInput.disabled = false;
     }
   });
+
+  /**
+   * Poll a scrape job until it finishes. Resolves with the item, or throws with
+   * the worker's own message so the user sees "the listing was removed" rather
+   * than "Failed to fetch".
+   */
+  async function waitForJob(jobId, signal) {
+    const deadline = Date.now() + POLL_CEILING_MS;
+
+    while (Date.now() < deadline) {
+      await new Promise((resolve, reject) => {
+        const t = setTimeout(resolve, POLL_INTERVAL_MS);
+        signal.addEventListener('abort', () => {
+          clearTimeout(t);
+          reject(new DOMException('Aborted', 'AbortError'));
+        }, { once: true });
+      });
+
+      const res = await fetch(`/items/jobs/${jobId}`, { signal });
+      const body = await res.json();
+
+      if (!res.ok) throw new Error(body.error || 'Could not check the preview status.');
+      if (body.status === 'done') return body.item;
+      if (body.status === 'failed') throw new Error(body.error || 'Could not fetch that listing.');
+      // queued / running — keep waiting.
+    }
+
+    throw new Error('That listing is taking longer than expected. Please try again.');
+  }
 });
