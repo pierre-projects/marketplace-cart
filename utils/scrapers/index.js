@@ -1,34 +1,50 @@
+const logger = require('../logger');
+const { ScrapeError, CODES } = require('./errors');
 const offerupScraper = require('./offerup');
 const facebookScraper = require('./facebook');
 
+// Single source of truth for which marketplaces are supported and what they
+// are called. detectPlatform used to keep its own list, which claimed eBay and
+// Mercari support that no scraper here could deliver.
 const scrapers = [
-  { pattern: /offerup\.com\/item/, scraper: offerupScraper },
-  { pattern: /facebook\.com\/marketplace/, scraper: facebookScraper },
-  // Future scrapers:
-  // { pattern: /ebay\.com\/itm/, scraper: require('./ebay') },
-  // { pattern: /mercari\.com\//, scraper: require('./mercari') },
+  { pattern: /offerup\.com\/item/, platform: 'OfferUp', scraper: offerupScraper },
+  { pattern: /facebook\.com\/marketplace/, platform: 'Facebook Marketplace', scraper: facebookScraper },
+  // Future scrapers: add the entry here and detectPlatform picks it up too.
+  // { pattern: /ebay\.com\/itm/, platform: 'eBay', scraper: require('./ebay') },
+  // { pattern: /mercari\.com\//, platform: 'Mercari', scraper: require('./mercari') },
 ];
 
+function findEntry(url) {
+  return scrapers.find(s => s.pattern.test(url)) || null;
+}
+
 function getScraper(url) {
-  const match = scrapers.find(s => s.pattern.test(url));
-  return match ? match.scraper : null;
+  return findEntry(url)?.scraper || null;
 }
 
 function isSupported(url) {
-  return scrapers.some(s => s.pattern.test(url));
+  return findEntry(url) !== null;
+}
+
+/** Display name for a link, derived from the same registry that scrapes it. */
+function detectPlatform(url) {
+  return findEntry(url)?.platform || 'Unknown';
 }
 
 async function scrapeItem(url) {
-  const scraper = getScraper(url);
-  if (!scraper) {
-    throw new Error('Unsupported marketplace');
+  const entry = findEntry(url);
+  if (!entry) {
+    throw new ScrapeError(CODES.UNSUPPORTED);
   }
-  const platform = scrapers.find(s => s.pattern.test(url))?.pattern.source || 'unknown';
-  const label = `Scrape [${platform}]`;
-  console.time(label);
-  const result = await scraper.scrape(url);
-  console.timeEnd(label);
-  return result;
+
+  // console.time derived its label from the regex source, so concurrent scrapes
+  // of the same platform collided on the label and Node warned.
+  const started = Date.now();
+  try {
+    return await entry.scraper.scrape(url);
+  } finally {
+    logger.debug(`Scrape [${entry.platform}] took ${Date.now() - started}ms`);
+  }
 }
 
-module.exports = { scrapeItem, getScraper, isSupported };
+module.exports = { scrapeItem, getScraper, isSupported, detectPlatform };

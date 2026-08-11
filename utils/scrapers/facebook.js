@@ -1,5 +1,8 @@
-const { getBrowser } = require('../browser');
+const { getBrowser, acquireContextSlot } = require('../browser');
 const logger = require('../logger');
+const { ScrapeError, CODES, asScrapeError } = require('./errors');
+
+const NAVIGATION_TIMEOUT_MS = 25000;
 
 /**
  * Facebook Marketplace Scraper
@@ -175,12 +178,22 @@ async function scrape(url) {
   // Extract listing ID from URL
   const listingId = url.match(/\/item\/(\d+)/)?.[1] || url.match(/(\d{10,})/)?.[1];
   if (!listingId) {
-    throw new Error('Could not extract listing ID from Facebook URL');
+    throw new ScrapeError(CODES.UNSUPPORTED, 'Could not extract a listing ID from that Facebook URL.');
   }
   logger.debug('Facebook: Listing ID:', listingId);
 
-  const browser = await getBrowser();
-  const ctx = await browser.createBrowserContext();
+  // Bounds live Chromium contexts independently of queue concurrency — each
+  // context is a real browser profile, not a cheap handle.
+  const releaseSlot = await acquireContextSlot();
+  let browser;
+  let ctx;
+  try {
+    browser = await getBrowser();
+    ctx = await browser.createBrowserContext();
+  } catch (err) {
+    releaseSlot();
+    throw asScrapeError(err, CODES.NETWORK);
+  }
 
   try {
     const page = await ctx.newPage();
@@ -199,7 +212,11 @@ async function scrape(url) {
     });
 
     // domcontentloaded is sufficient — __bbox data is in SSR script tags
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    try {
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAVIGATION_TIMEOUT_MS });
+    } catch (err) {
+      throw new ScrapeError(CODES.TIMEOUT, undefined, { cause: err });
+    }
 
     // Fire-and-forget modal dismiss — don't block extraction
     page.click('[aria-label="Close"]').catch(() => {});
@@ -278,17 +295,19 @@ async function scrape(url) {
     }
 
     if (!result.title || result.title === 'Untitled') {
-      throw new Error('Could not extract listing data from Facebook Marketplace');
+      throw new ScrapeError(CODES.PARSE_FAILED, 'Could not extract listing data from Facebook Marketplace.');
     }
 
     logger.debug('Facebook: Scrape complete -', result.title);
     return result;
 
   } catch (err) {
-    logger.error('Facebook scraper error:', err.message);
-    throw new Error('Failed to scrape Facebook Marketplace listing: ' + err.message);
+    const scrapeErr = asScrapeError(err);
+    logger.error(`Facebook scraper error [${scrapeErr.code}]:`, err.message);
+    throw scrapeErr;
   } finally {
-    await ctx.close();
+    await ctx.close().catch(err => logger.error('Facebook: context close failed:', err.message));
+    releaseSlot();
   }
 }
 
