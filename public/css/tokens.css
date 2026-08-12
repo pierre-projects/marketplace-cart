@@ -1,0 +1,108 @@
+/* ==========================================================================
+   Design tokens — the single source of truth for color, space, and type.
+
+   Everything else in public/css/ references these. If a value is hardcoded
+   outside this file, that is a bug: the stylesheet previously carried 169 hex
+   literals against 108 var() usages, including 8 copies of the accent color.
+   ========================================================================== */
+
+:root {
+  /* Surfaces (dark theme) */
+  --bg: #121212;
+  --surface: #1e1e1e;
+  --surface-raised: #282828;
+  --surface-input: #333;
+  --surface-hover: #444;
+
+  /* Borders */
+  --border: #2a2a2a;
+  --border-strong: #333;
+  --border-hover: #444;
+  --border-muted: #555;
+  /* Legacy alias — existing rules reference this name. */
+  --card-border: var(--border);
+
+  /* Text */
+  --text: #ffffff;
+  --muted: #b3b3b3;
+  --on-accent: #000000;
+
+  /* Brand. Three single-use near-duplicates (#ce308c, #d6288d, #b91d73)
+     were collapsed onto --accent; they were an auth heading, a footer link,
+     and the bare button background, all of which should be the accent. */
+  --accent: #c43d8c;
+  --accent-hover: #d64a9a;
+
+  /* Status */
+  --danger: #ff6b6b;
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Focus ring — restored in Phase 4; focus was previously unstyled. */
+  --focus-ring: 2px solid var(--accent-hover);
+  --focus-ring-offset: 2px;
+
+  /* ------------------------------------------------------------------------
+     Role tokens for the rest of the palette. These were previously inline hex
+     literals scattered across the stylesheet; the values are unchanged, they
+     simply have names now so a color can be altered in one place.
+     ------------------------------------------------------------------------ */
+
+  /* Surfaces */
+  --surface-nav: #070911;
+  --surface-deep: #0b0b0b;
+  --surface-sunken: #101010;
+  --surface-inset: #181818;
+  --surface-preview: #1a1a1a;
+  --surface-subtle: #222;
+  --surface-hover-subtle: #232323;
+  --surface-card: #252525;
+  --border-card: #2f2f2f;
+  --border-modal: #2e2e2e;
+  --border-ghost: #3a3a3a;
+  --border-slot: #111;
+  --surface-nav-primary: #1b1f2b;
+  --surface-nav-primary-hover: #262d3f;
+  --border-nav-primary: #2f3648;
+  --danger-border: #5b2f34;
+  --danger-border-hover: #6b343b;
+  --success-border: #2e5f46;
+
+  /* Text */
+  --text-brand: #f6f9ff;
+  --text-nav-strong: #f4f8ff;
+  --text-icon: #f2f2f2;
+  --text-body: #e8e8e8;
+  --text-nav: #e5efff;
+  --text-soft: #e4e4e4;
+  --text-label: #ccc;
+  --text-faint: #999;
+  --text-placeholder: #777;
+  --text-placeholder-dim: #666;
+  --text-nav-dim: #9aabc8;
+  --text-nav-muted: #b9c9e8;
+  --text-nav-link: #dbe8ff;
+  --accent-deep: #8f2d69;
+  --accent-tint: #ffd4eb;
+  --danger-text: #ffd7db;
+  --success-text: #d8f7e8;
+  --success-text-alt: #dbf7d8;
+
+  /* Status */
+  --danger-strong: #ff4c4c;
+  --danger-strong-hover: #ff3333;
+  --danger-text: #ffd7db;
+  --danger-border: #5b2f34;
+  --danger-border-hover: #6b343b;
+  --danger-bg: #31171a;
+  --danger-bg-hover: #35191d;
+  --success: #1ed760;
+  --success-strong: #1db954;
+  --success-text: #d8f7e8;
+  --success-text-alt: #dbf7d8;
+  --success-border: #2e5f46;
+  --success-bg: #173026;
+}

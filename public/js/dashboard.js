@@ -23,10 +23,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function openModal() {
     lastFocusedElement = document.activeElement;
-    modal.style.display = 'flex';
+    modal.classList.add('is-open');
     modal.removeAttribute('aria-hidden');
     showStep(1);
-    previewError.style.display = 'none';
+    previewError.classList.remove('is-visible');
     linkInput.value = '';
     // Defer focus so display:flex has rendered
     requestAnimationFrame(() => linkInput.focus());
@@ -38,14 +38,14 @@ document.addEventListener('DOMContentLoaded', () => {
       pollAbort.abort();
       pollAbort = null;
     }
-    modal.style.display = 'none';
+    modal.classList.remove('is-open');
     modal.setAttribute('aria-hidden', 'true');
     if (lastFocusedElement) lastFocusedElement.focus();
   }
 
   function showStep(n) {
-    step1.style.display = n === 1 ? 'block' : 'none';
-    step2.style.display = n === 2 ? 'block' : 'none';
+    step1.classList.toggle('is-active', n === 1);
+    step2.classList.toggle('is-active', n === 2);
     // Update stepper indicators
     modal.querySelectorAll('.modal-stepper .step').forEach((el) => {
       el.classList.toggle('active', Number(el.dataset.step) === n);
@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function showError(message) {
     previewErrorText.textContent = message;
-    previewError.style.display = 'flex';
+    previewError.classList.add('is-visible');
   }
 
   // ── Open / Close ─────────────────────────────────────────────────────────
@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modal.style.display === 'flex') closeModal();
+    if (e.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
   });
 
   // ── Focus trap ───────────────────────────────────────────────────────────
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.setAttribute('aria-busy', 'true');
     btn.disabled = true;
     linkInput.disabled = true;
-    previewError.style.display = 'none';
+    previewError.classList.remove('is-visible');
 
     pollAbort = new AbortController();
 
@@ -138,10 +138,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const imgEl = document.getElementById('previewImage');
       if (data.imageLinks?.[0]) {
         imgEl.src = data.imageLinks[0];
-        imgEl.style.display = 'block';
+        imgEl.classList.add('is-visible');
       } else {
         imgEl.src = '';
-        imgEl.style.display = 'none';
+        imgEl.classList.remove('is-visible');
       }
 
       // Name the already-saved item; no listing content goes back to the server.

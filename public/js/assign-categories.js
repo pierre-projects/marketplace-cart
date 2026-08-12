@@ -27,13 +27,12 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.kebab-menu').forEach(m => {
         if (m !== menu) {
           m.classList.remove('open');
-          m.querySelector('.kebab-dropdown').style.display = 'none';
+          m.querySelector('.kebab-dropdown').classList.remove('is-open');
         }
       });
 
-      const isOpen = dropdown.style.display !== 'none';
-      dropdown.style.display = isOpen ? 'none' : 'block';
-      menu.classList.toggle('open', !isOpen);
+      const nowOpen = dropdown.classList.toggle('is-open');
+      menu.classList.toggle('open', nowOpen);
     });
   });
 
@@ -42,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!e.target.closest('.kebab-menu')) {
       document.querySelectorAll('.kebab-menu').forEach(m => {
         m.classList.remove('open');
-        m.querySelector('.kebab-dropdown').style.display = 'none';
+        m.querySelector('.kebab-dropdown').classList.remove('is-open');
       });
     }
   });
@@ -55,10 +54,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Close all other picker dropdowns first
       document.querySelectorAll('.picker-dropdown').forEach(d => {
-        if (d !== dropdown) d.style.display = 'none';
+        if (d !== dropdown) d.classList.remove('is-open');
       });
 
-      dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+      dropdown.classList.toggle('is-open');
     });
   });
 
@@ -66,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.category-picker')) {
       document.querySelectorAll('.picker-dropdown').forEach(d => {
-        d.style.display = 'none';
+        d.classList.remove('is-open');
       });
     }
   });
@@ -96,16 +95,26 @@ document.addEventListener('DOMContentLoaded', () => {
           const toggle = form.closest('.category-picker').querySelector('.cat-count');
           toggle.textContent = categoryIds.length;
           // Close dropdown
-          form.closest('.picker-dropdown').style.display = 'none';
+          form.closest('.picker-dropdown').classList.remove('is-open');
         } else {
-          showToast('Failed to update', 'error');
+          // Surface what the server actually said rather than collapsing every
+          // 4xx/5xx into one generic string.
+          let message = 'Failed to update';
+          try {
+            const body = await res.json();
+            if (body && body.error) message = body.error;
+          } catch (parseErr) {
+            // Non-JSON response (e.g. a 302 to the login page on an expired
+            // session) — keep the generic message.
+          }
+          showToast(message, 'error');
         }
       } catch (err) {
         showToast('Network error', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save';
       }
-
-      btn.disabled = false;
-      btn.textContent = 'Save';
     });
   });
 });

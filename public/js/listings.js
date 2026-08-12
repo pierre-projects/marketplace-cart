@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Update stats based on visible items
   function updateStats() {
-    const visible = document.querySelectorAll('.item-card:not([style*="display: none"])');
+    const visible = document.querySelectorAll('.item-card:not(.is-hidden)');
     let total = 0;
     let available = 0;
 
@@ -28,11 +28,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Show/hide no results message
     if (visible.length === 0) {
-      noResults.style.display = 'block';
-      itemList.style.display = 'none';
+      noResults.classList.remove('is-hidden');
+      itemList.classList.add('is-hidden');
     } else {
-      noResults.style.display = 'none';
-      itemList.style.display = '';
+      noResults.classList.add('is-hidden');
+      itemList.classList.remove('is-hidden');
     }
   }
 
@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
         matchesFilter = condition === activeFilter;
       }
 
-      card.style.display = (matchesSearch && matchesFilter) ? '' : 'none';
+      card.classList.toggle('is-hidden', !(matchesSearch && matchesFilter));
     });
 
     updateStats();
