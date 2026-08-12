@@ -17,6 +17,30 @@ function getSafeRedirectPath(req, fallback = '/') {
   }
 }
 
+/**
+ * Validate a caller-supplied `returnTo` before redirecting to it.
+ *
+ * Anything that could leave this origin is refused rather than sanitised:
+ * absolute URLs, protocol-relative `//host`, backslashes (which some clients
+ * normalise to `/`), and embedded CR/LF. A convenience is not worth an open
+ * redirect. Lived in routes/items.js; shared so a second caller cannot grow a
+ * weaker second copy.
+ */
+function getSafeReturnToPath(rawPath, fallback = '/dashboard') {
+  if (typeof rawPath !== 'string') return fallback;
+
+  const trimmed = rawPath.trim();
+  if (!trimmed || !trimmed.startsWith('/') || trimmed.startsWith('//')) return fallback;
+  if (trimmed.includes('\\') || trimmed.includes('://') || /[\r\n]/.test(trimmed)) return fallback;
+
+  try {
+    const parsed = new URL(trimmed, 'http://localhost');
+    return `${parsed.pathname}${parsed.search}`;
+  } catch (err) {
+    return fallback;
+  }
+}
+
 function redirectWithFlashError(req, res, message, fallback = '/') {
   req.flash('error_msg', message);
   return res.redirect(getSafeRedirectPath(req, fallback));
@@ -55,6 +79,7 @@ function renderHtmlError(req, res, statusCode, message, options = {}) {
 
 module.exports = {
   getSafeRedirectPath,
+  getSafeReturnToPath,
   redirectWithFlashError,
   renderHtmlError
 };

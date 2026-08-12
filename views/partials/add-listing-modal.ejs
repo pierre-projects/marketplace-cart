@@ -17,17 +17,15 @@
 %>
 
 <!-- Add Listing Modal -->
-<div id="addListingModal"
-     class="modal-overlay"
-     role="dialog"
-     aria-modal="true"
-     aria-labelledby="modalTitle"
-     aria-hidden="true"
-     >
+<%
+  // Native <dialog>: showModal() supplies the top layer, ::backdrop, Escape
+  // handling and an inert background, replacing a hand-rolled focus trap.
+%>
+<dialog id="addListingModal" class="modal" aria-labelledby="modalTitle">
   <div class="modal-content">
 
     <div class="modal-header">
-      <h2 id="modalTitle">Add New Listing</h2>
+      <h2 id="modalTitle">Save an item</h2>
       <button type="button" class="modal-close" aria-label="Close dialog">&times;</button>
     </div>
 
@@ -45,19 +43,19 @@
 
       <!-- Step 1: URL Input -->
       <div id="step1" class="modal-step is-active">
-        <p class="step1-hint">Paste an OfferUp listing URL to fetch its details.</p>
+        <p class="step1-hint">Paste a link from OfferUp or Facebook Marketplace and we will pull in the price and photos.</p>
         <form id="previewForm">
-          <label for="link">Listing URL</label>
+          <label for="link">Listing link</label>
           <input
             type="url"
             name="link"
             id="link"
             placeholder="https://offerup.com/item/..."
             autocomplete="off"
-            aria-label="OfferUp listing URL"
+            aria-label="Marketplace listing link"
             required>
-          <button type="submit" class="btn-primary" style="width:100%;margin-top:0.75rem;" aria-busy="false">
-            Preview
+          <button type="submit" class="btn btn--primary" style="width:100%;margin-top:0.75rem;" aria-busy="false">
+            Fetch details
           </button>
         </form>
         <div id="previewError" class="modal-error" role="alert" aria-live="polite">
@@ -92,7 +90,7 @@
           <% if (useLockedCategory) { %>
             <input type="hidden" name="category" value="<%= rawLockedCategoryId %>">
           <% } else if (assignableCategories.length > 0) { %>
-            <label for="category">Add to category</label>
+            <label for="category">Add to collection</label>
             <select name="category" id="category">
               <option value="">None (<%= defaultCategoryName %> only)</option>
               <% assignableCategories.forEach(category => { %>
@@ -102,12 +100,12 @@
           <% } %>
 
           <div class="modal-actions">
-            <button type="button" id="backToStep1" class="btn-secondary">&#8592; Back</button>
-            <button type="submit" class="btn-primary">Add Listing</button>
+            <button type="button" id="backToStep1" class="btn btn--secondary">&#8592; Back</button>
+            <button type="submit" class="btn btn--primary">Save item</button>
           </div>
         </form>
       </div>
 
     </div>
   </div>
-</div>
+</dialog>

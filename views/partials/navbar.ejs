@@ -12,10 +12,27 @@
     </a>
 
     <% if (typeof user !== 'undefined' && user) { %>
+      <%
+        // aria-current is emitted with a varying VALUE rather than a varying
+        // attribute. The escaping output tag escapes quotes, so building the
+        // whole attribute dynamically renders it as visible text, and the raw
+        // tag is reserved for includes. "false" is a valid aria-current value
+        // meaning "not the current page".
+        const _page = typeof currentPage !== 'undefined' ? currentPage : '';
+        const _nav = [
+          { href: '/dashboard',  key: 'dashboard',  label: 'Dashboard' },
+          { href: '/listings',   key: 'listings',   label: 'Saved items' },
+          { href: '/categories', key: 'categories', label: 'Collections' },
+        ];
+      %>
       <ul class="nav-center">
-        <li><a href="/dashboard" class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'dashboard' ? 'active' : '' %>">Dashboard</a></li>
-        <li><a href="/listings" class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'listings' ? 'active' : '' %>">My Listings</a></li>
-        <li><a href="/categories" class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'categories' ? 'active' : '' %>">Categories</a></li>
+        <% _nav.forEach((n) => { %>
+          <li>
+            <a href="<%= n.href %>"
+               class="nav-link <%= _page === n.key ? 'active' : '' %>"
+               aria-current="<%= _page === n.key ? 'page' : 'false' %>"><%= n.label %></a>
+          </li>
+        <% }) %>
       </ul>
     <% } else { %>
       <div class="nav-center nav-center--empty" aria-hidden="true"></div>
@@ -41,6 +58,13 @@
           <div class="account-dropdown" data-account-dropdown role="menu" hidden>
             <p class="account-dropdown-label">Signed in as</p>
             <p class="account-dropdown-name"><%= username %></p>
+
+            <div class="theme-toggle" data-theme-toggle role="group" aria-label="Colour theme">
+              <button type="button" class="theme-toggle__opt" data-theme-value="system" aria-pressed="false">System</button>
+              <button type="button" class="theme-toggle__opt" data-theme-value="light"  aria-pressed="false">Light</button>
+              <button type="button" class="theme-toggle__opt" data-theme-value="dark"   aria-pressed="false">Dark</button>
+            </div>
+
             <a href="/auth/logout" class="account-signout-btn" role="menuitem">Sign out</a>
           </div>
         </div>

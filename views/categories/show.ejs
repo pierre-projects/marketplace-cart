@@ -2,53 +2,63 @@
   <%- include('../partials/flash-alert') %>
 
   <!-- Page Header -->
-  <div class="show-header">
-    <div class="show-header-left">
-      <a href="/categories" class="back-link">&larr; Categories</a>
-      <h1><%= category.name %></h1>
+  <div class="page-head">
+    <div class="page-head__main">
+      <a href="/categories" class="back-link">&larr; Collections</a>
+
+      <%
+        // Owners edit the title in place. Everyone else gets a plain heading —
+        // the route is owner-scoped, so the affordance must be too.
+      %>
+      <% if (isOwner) { %>
+        <h1 class="collection-title"
+            id="collectionTitle"
+            data-category-id="<%= category._id %>"
+            data-name="<%= category.name %>"
+            tabindex="0"
+            role="button"
+            aria-label="Rename this collection">
+          <span class="collection-title__text"><%= category.name %></span>
+          <svg class="collection-title__pencil" width="15" height="15" viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M13.6 2.6a1.9 1.9 0 0 1 2.7 2.7l-8.5 8.5-3.6.9.9-3.6 8.5-8.5Z"
+                  fill="none" stroke="currentColor" stroke-width="1.6"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </h1>
+      <% } else { %>
+        <h1><%= category.name %></h1>
+      <% } %>
+
+      <%
+        // Badges inline with the title, rather than the stacked full-width
+        // notices that used to push the content down the page.
+      %>
+      <div class="collection-badges">
+        <% if (!isOwner && user) { %>
+          <span class="badge badge--neutral">Shared with you<% if (canEdit) { %> · can edit<% } %></span>
+        <% } %>
+        <% if (category.isPublic) { %>
+          <span class="badge badge--neutral">Public</span>
+        <% } %>
+      </div>
     </div>
+
     <% if (canEdit || isOwner) { %>
-      <div class="show-header-actions">
+      <div class="page-head__actions">
         <% if (canEdit) { %>
-          <button id="openAddModal" type="button" class="btn btn--primary listings-add-btn">Save an item</button>
+          <button id="openAddModal" type="button" class="btn btn--primary">Save an item</button>
         <% } %>
         <% if (isOwner) { %>
-          <button type="button" id="openSettingsModal" class="manage-btn">Settings</button>
+          <button type="button" id="openSettingsModal" class="btn btn--secondary">Settings</button>
         <% } %>
       </div>
     <% } %>
   </div>
 
-  <!-- Stats Bar -->
-
   <% if (stats.totalItems > 0) { %>
-    <div class="stats-bar">
-      <div class="stat">
-        <span class="stat-value"><%= stats.totalItems %></span>
-        <span class="stat-label">items</span>
-      </div>
-      <div class="stat">
-        <span class="stat-value"><%= money(stats.totalValue) %></span>
-        <span class="stat-label">total</span>
-      </div>
-      <div class="stat">
-        <span class="stat-value"><%= stats.availableCount %></span>
-        <span class="stat-label">still live</span>
-      </div>
-    </div>
-  <% } %>
-
-  <!-- Shared Info (non-owner viewers) -->
-  <% if (!isOwner && user) { %>
-    <div class="shared-notice">
-      Shared with you
-      <% if (canEdit) { %> &middot; You can edit<% } %>
-    </div>
-  <% } %>
-
-  <!-- Public badge -->
-  <% if (category.isPublic && !isOwner) { %>
-    <div class="shared-notice">Public category</div>
+    <%- include('../partials/stats-panel', {
+      stats, breakdown: locals.breakdown, panelLabel: 'Collection total'
+    }) %>
   <% } %>
 
   <% if (canEdit) { %>
@@ -84,23 +94,10 @@
   <% } %>
 
   <%
-    // Reduced to one row per marketplace. Listing every item here repeated the
-    // grid directly above it on the same screen.
+    // The per-marketplace breakdown that used to live here now sits in the
+    // stats panel above the grid, where it is read before scrolling past every
+    // item — and it shows for a single marketplace too.
   %>
-  <% if (breakdown.platforms.length > 1) { %>
-    <section class="price-summary" aria-labelledby="price-summary-title">
-      <h2 id="price-summary-title" class="price-summary-title">Where this money goes</h2>
-      <% breakdown.platforms.forEach((group) => { %>
-        <p class="price-summary-platform">
-          <strong><%= group.platform %></strong>
-          <span class="muted"><%= plural(group.items.length, 'item') %></span>
-          <span class="tnum"><%= money(group.subtotal) %></span>
-        </p>
-      <% }) %>
-      <p class="price-summary-total"><strong>Total</strong> <span class="tnum"><%= money(breakdown.total) %></span></p>
-    </section>
-  <% } %>
-
 </main>
 
 <!-- Settings Modal (owner only) -->
@@ -112,6 +109,22 @@
         <button type="button" class="modal-close">&times;</button>
       </div>
       <div class="modal-body">
+
+        <!-- Rename -->
+        <div class="settings-section">
+          <h4 class="settings-label">Name</h4>
+          <form action="/categories/<%= category._id %>/edit" method="POST" class="modal-form">
+            <div class="input-group">
+              <label class="sr-only" for="settingsRename">Collection name</label>
+              <input type="text" id="settingsRename" name="name" value="<%= category.name %>"
+                     required maxlength="60">
+              <input type="hidden" name="returnTo" value="/categories/<%= category._id %>">
+              <button type="submit" class="btn btn--primary">Save</button>
+            </div>
+          </form>
+        </div>
+
+        <hr class="modal-divider">
 
         <!-- Visibility -->
         <div class="settings-section">
@@ -164,6 +177,19 @@
             </ul>
           </div>
         <% } %>
+
+        <hr class="modal-divider">
+
+        <div class="settings-section danger-zone">
+          <p class="danger-label">Danger Zone</p>
+          <form action="/categories/<%= category._id %>?_method=DELETE" method="POST">
+            <button type="submit" class="btn-danger"
+                    onclick="return confirm('Delete this collection? The items stay in Saved items.')">
+              Delete collection
+            </button>
+          </form>
+          <p class="danger-warning">This removes the collection but not the items.</p>
+        </div>
 
       </div>
     </div>

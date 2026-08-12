@@ -1,0 +1,68 @@
+<main class="container settings-page" id="main">
+  <%- include('partials/flash-alert') %>
+
+  <div class="page-head">
+    <div>
+      <h1>Settings</h1>
+      <p class="page-head__sub">How Marketplace Cart looks on this device.</p>
+    </div>
+  </div>
+
+  <section class="settings-section" aria-labelledby="appearance-heading">
+    <div class="settings-section__head">
+      <h2 id="appearance-heading">Appearance</h2>
+      <p class="muted">Follow your system, or pick one. Saved on this device only.</p>
+    </div>
+
+    <div class="theme-toggle" data-theme-toggle role="group" aria-label="Colour theme">
+      <button type="button" class="theme-toggle__opt" data-theme-value="system" aria-pressed="false">System</button>
+      <button type="button" class="theme-toggle__opt" data-theme-value="light"  aria-pressed="false">Light</button>
+      <button type="button" class="theme-toggle__opt" data-theme-value="dark"   aria-pressed="false">Dark</button>
+    </div>
+  </section>
+
+  <section class="settings-section" aria-labelledby="accent-heading">
+    <div class="settings-section__head">
+      <h2 id="accent-heading">Accent colour</h2>
+      <p class="muted">Used for buttons, prices, links and the focus ring.</p>
+    </div>
+
+    <%
+      // Each swatch sets data-accent on ITSELF, so its dot resolves the real
+      // --accent for that preset. This only works because the preset rules are
+      // attribute-scoped rather than anchored to :root — anchored, every swatch
+      // rendered the current global accent instead of its own.
+    %>
+    <div class="accent-picker" data-accent-picker role="group" aria-label="Accent colour">
+      <% accents.forEach((a) => { %>
+        <button type="button"
+                class="accent-swatch"
+                data-accent-value="<%= a.key %>"
+                data-accent="<%= a.key %>"
+                aria-pressed="false">
+          <span class="accent-swatch__dot" aria-hidden="true"></span>
+          <span class="accent-swatch__label"><%= a.label %></span>
+        </button>
+      <% }) %>
+    </div>
+  </section>
+
+  <section class="settings-section" aria-labelledby="account-heading">
+    <div class="settings-section__head">
+      <h2 id="account-heading">Account</h2>
+    </div>
+
+    <dl class="settings-list">
+      <dt>Signed in as</dt>
+      <dd><%= user.username %></dd>
+      <% if (user.email) { %>
+        <dt>Email</dt>
+        <dd><%= user.email %></dd>
+      <% } %>
+    </dl>
+
+    <a href="/auth/logout" class="btn btn--secondary">Sign out</a>
+  </section>
+</main>
+
+<script src="/js/theme-toggle.js"></script>

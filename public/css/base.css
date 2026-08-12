@@ -2,18 +2,86 @@
    Base — reset, elements, typography, layout primitives, forms
    ========================================================================== */
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
-  background-color: var(--bg);
-  color: var(--text);
-  font-family: 'Helvetica Neue', sans-serif;
+  background-color: var(--surface-page);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: 1.6;
   margin: 0;
   padding: 0;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
+
+/* Two weights only — 400 and 600. Heavier headings are the loudest tell of a
+   page that never had a typographer near it. Negative tracking above 20px. */
+h1, h2, h3, h4 {
+  font-weight: 600;
+  margin: 0;
+  text-wrap: balance;
+}
+
+h1 { font-size: var(--fs-h1); letter-spacing: -0.022em; line-height: 1.2; }
+h2 { font-size: var(--fs-h2); letter-spacing: -0.018em; line-height: 1.25; }
+h3 { font-size: var(--fs-h3); letter-spacing: -0.012em; line-height: 1.3; }
+h4 { font-size: var(--fs-lead); }
+
+/* Money and counts. Proportional digits make a column of prices jitter. */
+.tnum,
+.card__price,
+.stats-panel__figure,
+.stats-panel__amount {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+.eyebrow {
+  font-size: var(--fs-label);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.muted { color: var(--text-muted); }
+
+/* Prose measure — descriptions previously ran the full viewport width. */
+.prose { max-width: 65ch; }
 
 .container {
   width: min(1200px, calc(100% - 2.5rem));
   margin: 0 auto;
-  padding: 2rem 0 3rem;
+  padding: var(--sp-6) 0 var(--sp-8);
+}
+
+/* Vertical rhythm primitive, replacing ad-hoc margins. */
+.stack > * + * { margin-top: var(--stack-gap, var(--sp-4)); }
+.stack-lg { --stack-gap: var(--sp-6); }
+
+/* The workhorse grid: photo-first cards, auto-fitting to the container. */
+.grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--sp-4);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+  padding-block: var(--sp-2) var(--sp-5);
 }
 
 a {
@@ -25,13 +93,45 @@ a:hover {
   text-decoration: underline;
 }
 
+img { max-width: 100%; }
+
+/* Visible only to screen readers, until focused. */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--sp-3);
+  top: -100%;
+  z-index: var(--z-toast);
+  background: var(--surface-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: var(--sp-2) var(--sp-4);
+  font-weight: 600;
+  transition: top var(--dur-fast) var(--ease-out);
+}
+
+.skip-link:focus-visible {
+  top: var(--sp-3);
+  text-decoration: none;
+}
+
 @supports not ((backdrop-filter: blur(2px))) {
   .navbar {
     background: var(--surface-nav);
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .container {
     width: min(1200px, calc(100% - 1.5rem));
     padding: 1.5rem 0 2rem;
@@ -49,8 +149,8 @@ input[type="text"],
   width: 100%;
   max-width: 350px;
   border: 1px solid var(--border-strong);
-  border-radius: 8px;
-  font-size: 0.95rem;
+  border-radius: var(--radius-md);
+  font-size: var(--fs-body);
   transition: border 0.2s;
 }
 

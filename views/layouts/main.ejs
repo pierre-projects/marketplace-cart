@@ -4,7 +4,28 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><%= typeof title !== 'undefined' && title ? title : 'Marketplace Cart' %></title>
+  <meta name="color-scheme" content="light dark">
   <link rel="icon" type="image/png" href="/favicon.png">
+
+  <%
+    // Runs before any stylesheet so the correct theme is stamped on <html>
+    // during parse — otherwise a dark-mode user sees a white flash on every
+    // navigation. Deliberately inline and blocking; it is ~100 bytes.
+  %>
+  <script>
+    (function () {
+      try {
+        var r = document.documentElement;
+        var t = localStorage.getItem('theme');
+        if (t === 'light' || t === 'dark') r.dataset.theme = t;
+        // The accent must be stamped here too, or the previous accent paints
+        // for a frame on every navigation.
+        var a = localStorage.getItem('accent');
+        if (a && a !== 'default') r.dataset.accent = a;
+      } catch (e) {}
+    })();
+  </script>
+
   <!-- Order matters: tokens define the variables everything else consumes. -->
   <link rel="stylesheet" href="/css/tokens.css">
   <link rel="stylesheet" href="/css/base.css">
@@ -13,10 +34,30 @@
   <%- style %>
 </head>
 <body>
-  <%- include('../partials/navbar') %>
+  <a class="skip-link" href="#main">Skip to content</a>
 
-  <%- body %>
+  <%
+    // Signed-in pages get the persistent rail; logged-out pages (landing, auth,
+    // error) keep the top bar, where a nav rail would be meaningless.
+    const signedIn = typeof user !== 'undefined' && user;
+  %>
+  <% if (signedIn) { %>
+    <div class="app-shell">
+      <%- include('../partials/sidebar') %>
+      <div class="app-shell__content">
+        <%- body %>
+      </div>
+    </div>
+  <% } else { %>
+    <%- include('../partials/navbar') %>
+    <%- body %>
+  <% } %>
 
+  <!-- Single live region for client-side feedback. -->
+  <div id="toasts" class="toasts" aria-live="polite" aria-atomic="false"></div>
+
+  <script src="/js/navbar.js" defer></script>
+  <script src="/js/theme-toggle.js" defer></script>
   <%- script %>
 </body>
 </html>

@@ -3,13 +3,12 @@
    ========================================================================== */
 
 .landing-container {
-  min-height: calc(100vh - 73px);
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   padding: clamp(2.5rem, 6vw, 5rem) clamp(1rem, 4vw, 3rem) 4rem;
-  background: radial-gradient(circle at 12% 12%, rgba(196, 61, 140, 0.22), transparent 34%),
-      radial-gradient(circle at 85% 6%, rgba(75, 147, 255, 0.16), transparent 30%),
-      linear-gradient(180deg, rgba(8, 8, 8, 0.9) 0%, rgba(12, 12, 12, 0.86) 58%, rgba(18, 18, 18, 0.96) 100%),
+  background: radial-gradient(circle at 12% 12%, var(--accent-wash), transparent 34%),
+      linear-gradient(180deg, var(--hero-scrim-top) 0%, var(--hero-scrim-mid) 58%, var(--hero-scrim-bottom) 100%),
       url('/images/markeplacecart.png') center/cover no-repeat;
 }
 
@@ -36,7 +35,7 @@
 .landing-content p {
   margin: 1.15rem 0 0;
   max-width: 62ch;
-  color: var(--text-body);
+  color: var(--text-secondary);
   font-size: 1.1rem;
   line-height: 1.65;
 }
@@ -88,39 +87,38 @@
 
 .hero-btn-secondary {
   background: transparent;
-  color: var(--text-icon);
-  border-color: var(--border-ghost);
+  color: var(--text-secondary);
+  border-color: var(--border-strong);
 }
 
 .hero-btn-secondary:hover {
-  background: var(--surface-hover-subtle);
+  background: var(--surface-hover);
   color: var(--text);
   border-color: var(--border-muted);
 }
 
 .error-page {
-  min-height: calc(100vh - 73px);
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2.5rem 1rem 3rem;
-  background: radial-gradient(circle at 80% 6%, rgba(196, 61, 140, 0.18), transparent 30%),
-      radial-gradient(circle at 8% 90%, rgba(166, 207, 255, 0.14), transparent 34%),
-      linear-gradient(180deg, var(--surface-deep) 0%, var(--surface-sunken) 58%, var(--bg) 100%);
+  background: radial-gradient(circle at 80% 6%, var(--accent-wash), transparent 30%),
+      linear-gradient(180deg, var(--surface-page) 0%, var(--surface-sunken) 100%);
 }
 
 .error-card {
   width: min(620px, 100%);
   background: var(--surface-inset);
-  border: 1px solid var(--border-card);
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 2rem;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 12px 30px var(--overlay-strong);
 }
 
 .error-code {
   margin: 0 0 0.4rem;
-  color: var(--success-text-alt);
+  color: var(--success-text);
   font-size: 0.82rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -135,7 +133,7 @@
 
 .error-description {
   margin: 1rem 0 0;
-  color: var(--text-soft);
+  color: var(--text-secondary);
   line-height: 1.65;
   font-size: 1rem;
 }
@@ -147,9 +145,9 @@
   flex-wrap: wrap;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .landing-container {
-    min-height: calc(100vh - 65px);
+    min-height: 100dvh;
     align-items: flex-start;
     padding: 2.5rem 1rem 2rem;
   }
@@ -176,17 +174,13 @@
   }
 
   .error-page {
-    min-height: calc(100vh - 65px);
+    min-height: 100dvh;
     padding: 1.5rem 1rem 2rem;
   }
 
   .error-card {
     padding: 1.5rem;
     border-radius: 12px;
-  }
-
-  .stats-bar {
-    grid-template-columns: repeat(2, 1fr);
   }
 
   .dashboard-welcome {
@@ -235,18 +229,18 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 80vh;
-  background: var(--bg);
+  min-height: 70dvh;
+  background: var(--surface-page);
 }
 
 .form-box {
   background: var(--surface-inset);
   padding: 2rem 2.5rem;
   border-radius: 12px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.4);
+  box-shadow: 0 0 10px var(--overlay-strong);
   width: 100%;
   max-width: 400px;
-  color: white;
+  color: var(--text-primary);
 }
 
 .form-box h1 {
@@ -287,46 +281,6 @@
 .form-footer a {
   color: var(--accent);
   text-decoration: none;
-}
-
-.price-summary {
-  background: var(--bg);
-  color: var(--text);
-  padding: 1rem 1.5rem;
-  border: 1px solid var(--border-strong);
-  margin-top: 2rem;
-  border-radius: var(--radius-lg);
-  font-size: 0.95rem;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
-}
-
-/* The breakdown moved from client-side innerHTML (which injected unescaped
-   scraped titles) to server-rendered markup, so it needs real rules rather
-   than the inline styles the old script wrote. */
-.price-summary-title {
-  font-size: 1rem;
-  margin: 0 0 0.75rem;
-  color: var(--muted);
-  font-weight: 600;
-}
-
-.price-summary-group {
-  margin-bottom: 0.75rem;
-}
-
-.price-summary-platform {
-  margin: 0 0 0.25rem;
-}
-
-.price-summary-item {
-  margin: 0 0 0.15rem 1rem;
-  color: var(--muted);
-}
-
-.price-summary-total {
-  margin: 1rem 0 0;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--border-strong);
 }
 
 .page-header {
@@ -384,40 +338,6 @@
   letter-spacing: 0.5px;
 }
 
-.stats-bar {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.stat {
-  background: var(--surface);
-  border: 1px solid var(--card-border);
-  border-top: 3px solid var(--accent);
-  border-radius: var(--radius-md);
-  padding: 1.25rem 1rem;
-  text-align: center;
-}
-
-.stat-value {
-  display: block;
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: var(--text);
-  line-height: 1.2;
-}
-
-.stat-label {
-  display: block;
-  font-size: 0.8rem;
-  color: var(--text-label);
-  margin-top: 0.4rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 500;
-}
-
 .listings-toolbar {
   display: flex;
   gap: 1rem;
@@ -434,7 +354,7 @@
 .search-input {
   width: 100%;
   max-width: 100%;
-  background: var(--surface);
+  background: var(--surface-card);
   border: 1px solid var(--border-strong);
   color: var(--text);
   padding: 0.6rem 1rem;
@@ -449,7 +369,7 @@
 }
 
 .search-input::placeholder {
-  color: var(--text-placeholder-dim);
+  color: var(--text-faint);
 }
 
 .sort-box {

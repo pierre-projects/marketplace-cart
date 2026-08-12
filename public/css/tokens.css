@@ -1,108 +1,364 @@
 /* ==========================================================================
    Design tokens — the single source of truth for color, space, and type.
 
-   Everything else in public/css/ references these. If a value is hardcoded
-   outside this file, that is a bug: the stylesheet previously carried 169 hex
-   literals against 108 var() usages, including 8 copies of the accent color.
+   Nothing outside this file may hardcode a color. Components read the ROLE
+   ALIASES (--surface-page, --text-primary, --border, …), never the raw ramp,
+   which is what makes the light/dark switch a single override block at the
+   bottom of this file rather than a second stylesheet.
    ========================================================================== */
 
 :root {
-  /* Surfaces (dark theme) */
-  --bg: #121212;
-  --surface: #1e1e1e;
-  --surface-raised: #282828;
-  --surface-input: #333;
-  --surface-hover: #444;
+  /* ── Neutral ramp — warm, not blue-grey ─────────────────────────────── */
+  --n-0:   #ffffff;
+  --n-25:  #fafaf9;
+  --n-50:  #f4f4f5;
+  --n-100: #e9e9eb;
+  --n-200: #d4d4d8;
+  --n-300: #b8b8c0;
+  --n-400: #a1a1aa;
+  --n-500: #71717a;
+  --n-600: #52525b;
+  --n-700: #3f3f46;
+  --n-900: #18181b;
 
-  /* Borders */
-  --border: #2a2a2a;
-  --border-strong: #333;
-  --border-hover: #444;
-  --border-muted: #555;
-  /* Legacy alias — existing rules reference this name. */
-  --card-border: var(--border);
+  /* ── Brand ──────────────────────────────────────────────────────────── */
+  --brand-50:  #fdf2f7;
+  --brand-100: #fbcfe3;
+  --brand-300: #f4a9c9;
+  --brand-600: #c2185b;
+  --brand-700: #9f1e52;
+  --brand-900: #6e1039;
 
-  /* Text */
-  --text: #ffffff;
-  --muted: #b3b3b3;
-  --on-accent: #000000;
+  /* ── Semantic ───────────────────────────────────────────────────────── */
+  --ok-bg:   #dcfce7;  --ok-fg:   #14532d;  --ok-dot:   #16a34a;
+  --warn-bg: #fef3c7;  --warn-fg: #78350f;  --warn-dot: #d97706;
+  --stop-bg: #fee2e2;  --stop-fg: #7f1d1d;  --stop-dot: #dc2626;
+  --idle-bg: #f4f4f5;  --idle-fg: #3f3f46;  --idle-dot: #a1a1aa;
 
-  /* Brand. Three single-use near-duplicates (#ce308c, #d6288d, #b91d73)
-     were collapsed onto --accent; they were an auth heading, a footer link,
-     and the bare button background, all of which should be the accent. */
-  --accent: #c43d8c;
-  --accent-hover: #d64a9a;
+  /* ── Platform tints ─────────────────────────────────────────────────── */
+  --p-offerup-bg: #e7f7ee;  --p-offerup-fg: #0b5132;
+  --p-fb-bg:      #e8f0fe;  --p-fb-fg:      #123a75;
+  --p-neutral-bg: #f4f4f5;  --p-neutral-fg: #3f3f46;
 
-  /* Status */
-  --danger: #ff6b6b;
+  /* ── Role aliases — everything else reads only these ────────────────── */
+  --surface-page:    var(--n-25);
+  --surface-card:    var(--n-0);
+  --surface-sunken:  var(--n-50);
+  --surface-raised:  var(--n-0);
+  --surface-inset:   var(--n-50);
+  --surface-input:   var(--n-0);
+  --surface-hover:   var(--n-50);
+  --surface-nav:     rgb(255 255 255 / 0.85);
 
-  /* Radii */
+  --text-primary:    var(--n-900);
+  --text:            var(--n-900);
+  --text-secondary:  var(--n-600);
+  --text-muted:      var(--n-500);
+  --muted:           var(--n-500);
+  --text-faint:      var(--n-400);
+  --text-on-brand:   var(--n-0);
+  --on-accent:       var(--n-0);
+
+  --border:          var(--n-100);
+  --border-strong:   var(--n-200);
+  --border-hover:    var(--n-300);
+  --border-muted:    var(--n-200);
+  --card-border:     var(--border);
+
+  --accent:          var(--brand-600);
+  --accent-hover:    var(--brand-700);
+  /* Derived from --accent so an accent preset only declares two values and
+     cannot leave the previous accent behind on borders and tints. */
+  --accent-deep:     color-mix(in srgb, var(--accent) 70%, #000);
+  --accent-tint:     color-mix(in srgb, var(--accent) 25%, var(--surface-card));
+  --accent-soft:     color-mix(in srgb, var(--accent) 8%, var(--surface-card));
+
+  --danger:          var(--stop-dot);
+  --danger-strong:   var(--stop-dot);
+  --danger-text:     var(--stop-fg);
+  --danger-bg:       var(--stop-bg);
+  --danger-border:   #fca5a5;
+  --success:         var(--ok-dot);
+  --success-text:    var(--ok-fg);
+  --success-bg:      var(--ok-bg);
+  --success-border:  #86efac;
+
+  /* Translucent layers. These were 39 hardcoded rgba() literals that each
+     assumed a dark canvas — a white 8% hover is invisible on a light page. */
+  --overlay-hover:   rgb(24 24 27 / 0.04);
+  --overlay-press:   rgb(24 24 27 / 0.08);
+  --overlay-strong:  rgb(24 24 27 / 0.12);
+  --scrim:           rgb(9 9 11 / 0.55);
+  --glass:           rgb(255 255 255 / 0.92);
+  --accent-wash:     color-mix(in srgb, var(--accent) 10%, transparent);
+  --accent-edge:     color-mix(in srgb, var(--accent) 30%, transparent);
+  --danger-wash:     rgb(220 38 38 / 0.10);
+  --success-wash:    rgb(22 163 74 / 0.12);
+
+  /* Scrim over the landing hero photo. Light theme needs to lighten the
+     image, not darken it, or the headline is unreadable. */
+  --hero-scrim-top:    rgb(250 250 249 / 0.92);
+  --hero-scrim-mid:    rgb(250 250 249 / 0.86);
+  --hero-scrim-bottom: rgb(250 250 249 / 0.96);
+
+  /* ── Type ───────────────────────────────────────────────────────────── */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI Variable',
+               'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  --fs-label: 0.6875rem;
+  --fs-meta:  0.8125rem;
+  --fs-body:  0.875rem;
+  --fs-lead:  1rem;
+  --fs-price: 1.125rem;
+  --fs-h3:    1.25rem;
+  --fs-h2:    1.5rem;
+  --fs-h1:    2rem;
+  --fs-stat:  1.75rem;
+  --fs-hero:  3rem;
+
+  /* ── Space — 4px base ───────────────────────────────────────────────── */
+  --sp-1: 4px;   --sp-2: 8px;   --sp-3: 12px;  --sp-4: 16px;
+  --sp-5: 24px;  --sp-6: 32px;  --sp-7: 48px;  --sp-8: 64px;
+
+  /* ── Radius ─────────────────────────────────────────────────────────── */
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
+  --r-sm: var(--radius-sm);
+  --r-md: var(--radius-md);
+  --r-lg: var(--radius-lg);
+  --r-full: 999px;
 
-  /* Focus ring — restored in Phase 4; focus was previously unstyled. */
-  --focus-ring: 2px solid var(--accent-hover);
+  /* ── Elevation — resting cards get none ─────────────────────────────── */
+  --shadow-sm: 0 1px 2px rgb(24 24 27 / 0.05);
+  --shadow-md: 0 4px 12px rgb(24 24 27 / 0.08);
+  --shadow-lg: 0 16px 40px rgb(24 24 27 / 0.16);
+
+  /* ── Motion ─────────────────────────────────────────────────────────── */
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+
+  /* ── Layering ───────────────────────────────────────────────────────── */
+  --z-nav: 100;
+  --z-dropdown: 200;
+  --z-overlay: 300;
+  --z-modal: 310;
+  --z-toast: 400;
+
+  /* ── Focus ──────────────────────────────────────────────────────────── */
+  --focus-ring: 2px solid var(--accent);
   --focus-ring-offset: 2px;
-
-  /* ------------------------------------------------------------------------
-     Role tokens for the rest of the palette. These were previously inline hex
-     literals scattered across the stylesheet; the values are unchanged, they
-     simply have names now so a color can be altered in one place.
-     ------------------------------------------------------------------------ */
-
-  /* Surfaces */
-  --surface-nav: #070911;
-  --surface-deep: #0b0b0b;
-  --surface-sunken: #101010;
-  --surface-inset: #181818;
-  --surface-preview: #1a1a1a;
-  --surface-subtle: #222;
-  --surface-hover-subtle: #232323;
-  --surface-card: #252525;
-  --border-card: #2f2f2f;
-  --border-modal: #2e2e2e;
-  --border-ghost: #3a3a3a;
-  --border-slot: #111;
-  --surface-nav-primary: #1b1f2b;
-  --surface-nav-primary-hover: #262d3f;
-  --border-nav-primary: #2f3648;
-  --danger-border: #5b2f34;
-  --danger-border-hover: #6b343b;
-  --success-border: #2e5f46;
-
-  /* Text */
-  --text-brand: #f6f9ff;
-  --text-nav-strong: #f4f8ff;
-  --text-icon: #f2f2f2;
-  --text-body: #e8e8e8;
-  --text-nav: #e5efff;
-  --text-soft: #e4e4e4;
-  --text-label: #ccc;
-  --text-faint: #999;
-  --text-placeholder: #777;
-  --text-placeholder-dim: #666;
-  --text-nav-dim: #9aabc8;
-  --text-nav-muted: #b9c9e8;
-  --text-nav-link: #dbe8ff;
-  --accent-deep: #8f2d69;
-  --accent-tint: #ffd4eb;
-  --danger-text: #ffd7db;
-  --success-text: #d8f7e8;
-  --success-text-alt: #dbf7d8;
-
-  /* Status */
-  --danger-strong: #ff4c4c;
-  --danger-strong-hover: #ff3333;
-  --danger-text: #ffd7db;
-  --danger-border: #5b2f34;
-  --danger-border-hover: #6b343b;
-  --danger-bg: #31171a;
-  --danger-bg-hover: #35191d;
-  --success: #1ed760;
-  --success-strong: #1db954;
-  --success-text: #d8f7e8;
-  --success-text-alt: #dbf7d8;
-  --success-border: #2e5f46;
-  --success-bg: #173026;
 }
+
+/* ==========================================================================
+   Dark theme
+
+   Only role aliases are reassigned. The ramp above is untouched, so a
+   component never needs to know which theme is active.
+
+   Applies when the user has explicitly chosen dark, or when the system
+   prefers dark and they have not explicitly chosen light.
+   ========================================================================== */
+
+:root[data-theme='dark'] {
+  --surface-page:   #0b0b0f;
+  --surface-card:   #16161c;
+  --surface-sunken: #1e1e26;
+  --surface-raised: #1e1e26;
+  --surface-inset:  #101016;
+  --surface-input:  #16161c;
+  --surface-hover:  #26262f;
+  --surface-nav:    rgb(11 11 15 / 0.85);
+
+  --text-primary:   #e9e9ec;
+  --text:           #e9e9ec;
+  --text-secondary: #a1a1aa;
+  --text-muted:     #8b8b96;
+  --muted:          #8b8b96;
+  --text-faint:     #6c6c78;
+  --text-on-brand:  #16161c;
+  --on-accent:      #16161c;
+
+  --border:         #26262f;
+  --border-strong:  #33333f;
+  --border-hover:   #44444f;
+  --border-muted:   #33333f;
+  --card-border:    var(--border);
+
+  /* #c2185b fails contrast on near-black; dark needs a lighter brand. */
+  --accent:         #e8578f;
+  --accent-hover:   #f4a9c9;
+  --accent-deep:    color-mix(in srgb, var(--accent) 70%, #fff);
+  --accent-tint:    color-mix(in srgb, var(--accent) 30%, var(--surface-card));
+  --accent-soft:    color-mix(in srgb, var(--accent) 12%, var(--surface-card));
+
+  --danger:         #f87171;
+  --danger-strong:  #f87171;
+  --danger-text:    #fecaca;
+  --danger-bg:      #2a1416;
+  --danger-border:  #5b2f34;
+  --success:        #4ade80;
+  --success-text:   #bbf7d0;
+  --success-bg:     #0f2e1d;
+  --success-border: #2e5f46;
+
+  --ok-bg:   #0f2e1d;  --ok-fg:   #86efac;
+  --warn-bg: #2e2410;  --warn-fg: #fcd34d;
+  --stop-bg: #2a1416;  --stop-fg: #fecaca;
+  --idle-bg: #1e1e26;  --idle-fg: #a1a1aa;
+
+  --p-offerup-bg: #0d2c1d;  --p-offerup-fg: #86efac;
+  --p-fb-bg:      #12203a;  --p-fb-fg:      #bfdbfe;
+  --p-neutral-bg: #1e1e26;  --p-neutral-fg: #a1a1aa;
+
+  --overlay-hover:  rgb(255 255 255 / 0.06);
+  --overlay-press:  rgb(255 255 255 / 0.10);
+  --overlay-strong: rgb(255 255 255 / 0.16);
+  --scrim:          rgb(0 0 0 / 0.7);
+  --glass:          rgb(22 22 28 / 0.92);
+  --accent-wash:    color-mix(in srgb, var(--accent) 14%, transparent);
+  --accent-edge:    color-mix(in srgb, var(--accent) 38%, transparent);
+  --danger-wash:    rgb(248 113 113 / 0.14);
+  --success-wash:   rgb(74 222 128 / 0.14);
+
+  --hero-scrim-top:    rgb(8 8 10 / 0.90);
+  --hero-scrim-mid:    rgb(12 12 15 / 0.86);
+  --hero-scrim-bottom: rgb(18 18 22 / 0.96);
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 4px 12px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 16px 40px rgb(0 0 0 / 0.6);
+}
+
+/* System preference, unless the user explicitly picked light. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']):not([data-theme='dark']) {
+    --surface-page:   #0b0b0f;
+    --surface-card:   #16161c;
+    --surface-sunken: #1e1e26;
+    --surface-raised: #1e1e26;
+    --surface-inset:  #101016;
+    --surface-input:  #16161c;
+    --surface-hover:  #26262f;
+    --surface-nav:    rgb(11 11 15 / 0.85);
+
+    --text-primary:   #e9e9ec;
+    --text:           #e9e9ec;
+    --text-secondary: #a1a1aa;
+    --text-muted:     #8b8b96;
+    --muted:          #8b8b96;
+    --text-faint:     #6c6c78;
+    --text-on-brand:  #16161c;
+    --on-accent:      #16161c;
+
+    --border:         #26262f;
+    --border-strong:  #33333f;
+    --border-hover:   #44444f;
+    --border-muted:   #33333f;
+    --card-border:    #26262f;
+
+    --accent:         #e8578f;
+    --accent-hover:   #f4a9c9;
+    --accent-deep:    color-mix(in srgb, var(--accent) 70%, #fff);
+    --accent-tint:    color-mix(in srgb, var(--accent) 30%, var(--surface-card));
+    --accent-soft:    color-mix(in srgb, var(--accent) 12%, var(--surface-card));
+
+    --danger:         #f87171;
+    --danger-strong:  #f87171;
+    --danger-text:    #fecaca;
+    --danger-bg:      #2a1416;
+    --danger-border:  #5b2f34;
+    --success:        #4ade80;
+    --success-text:   #bbf7d0;
+    --success-bg:     #0f2e1d;
+    --success-border: #2e5f46;
+
+    --ok-bg:   #0f2e1d;  --ok-fg:   #86efac;
+    --warn-bg: #2e2410;  --warn-fg: #fcd34d;
+    --stop-bg: #2a1416;  --stop-fg: #fecaca;
+    --idle-bg: #1e1e26;  --idle-fg: #a1a1aa;
+
+    --p-offerup-bg: #0d2c1d;  --p-offerup-fg: #86efac;
+    --p-fb-bg:      #12203a;  --p-fb-fg:      #bfdbfe;
+    --p-neutral-bg: #1e1e26;  --p-neutral-fg: #a1a1aa;
+
+    --overlay-hover:  rgb(255 255 255 / 0.06);
+    --overlay-press:  rgb(255 255 255 / 0.10);
+    --overlay-strong: rgb(255 255 255 / 0.16);
+    --scrim:          rgb(0 0 0 / 0.7);
+    --glass:          rgb(22 22 28 / 0.92);
+    --accent-wash:    color-mix(in srgb, var(--accent) 14%, transparent);
+    --accent-edge:    color-mix(in srgb, var(--accent) 38%, transparent);
+    --danger-wash:    rgb(248 113 113 / 0.14);
+    --success-wash:   rgb(74 222 128 / 0.14);
+
+    --hero-scrim-top:    rgb(8 8 10 / 0.90);
+    --hero-scrim-mid:    rgb(12 12 15 / 0.86);
+    --hero-scrim-bottom: rgb(18 18 22 / 0.96);
+
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-md: 0 4px 12px rgb(0 0 0 / 0.5);
+    --shadow-lg: 0 16px 40px rgb(0 0 0 / 0.6);
+  }
+}
+
+/* ==========================================================================
+   Accent presets
+
+   Selected with data-accent on <html>, exactly like data-theme.
+
+   The selectors are attribute-based rather than anchored to :root, so ANY
+   element carrying data-accent gets that accent locally. That is what lets a
+   settings swatch preview its own colour through the very token the app uses
+   — anchoring these to :root made every swatch render the current global
+   accent instead of the one it represents.
+
+   Each preset declares only --accent and --accent-hover; every derived accent
+   token is computed from them with color-mix, so a preset cannot leave stale
+   colour from the previous accent behind.
+
+   Two values per theme is not redundancy: dark surfaces need a lighter, less
+   saturated accent to stay readable. The default pink is the proof — #c2185b
+   measures about 3.0:1 on #16161c and is unusable there.
+
+   Every value clears 4.5:1 against its own surface (#ffffff light, #16161c
+   dark); the harness recomputes this rather than trusting the comment.
+   ========================================================================== */
+
+[data-accent='default'] { --accent: #c2185b; --accent-hover: #9f1e52; }
+[data-accent='blue']    { --accent: #1d4ed8; --accent-hover: #1e40af; }
+[data-accent='teal']    { --accent: #0f766e; --accent-hover: #115e59; }
+[data-accent='violet']  { --accent: #6d28d9; --accent-hover: #5b21b6; }
+[data-accent='amber']   { --accent: #b45309; --accent-hover: #92400e; }
+
+/* Dark. The descendant form covers swatches inside a dark page; the compound
+   form covers <html> itself carrying the accent. */
+:root[data-theme='dark'][data-accent='default'],
+:root[data-theme='dark'] [data-accent='default'] { --accent: #e8578f; --accent-hover: #f4a9c9; }
+:root[data-theme='dark'][data-accent='blue'],
+:root[data-theme='dark'] [data-accent='blue']    { --accent: #7aa5ff; --accent-hover: #a8c4ff; }
+:root[data-theme='dark'][data-accent='teal'],
+:root[data-theme='dark'] [data-accent='teal']    { --accent: #5eead4; --accent-hover: #99f6e4; }
+:root[data-theme='dark'][data-accent='violet'],
+:root[data-theme='dark'] [data-accent='violet']  { --accent: #c4b5fd; --accent-hover: #ddd6fe; }
+:root[data-theme='dark'][data-accent='amber'],
+:root[data-theme='dark'] [data-accent='amber']   { --accent: #fbbf24; --accent-hover: #fcd34d; }
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light'])[data-accent='default'],
+  :root:not([data-theme='light']) [data-accent='default'] { --accent: #e8578f; --accent-hover: #f4a9c9; }
+  :root:not([data-theme='light'])[data-accent='blue'],
+  :root:not([data-theme='light']) [data-accent='blue']    { --accent: #7aa5ff; --accent-hover: #a8c4ff; }
+  :root:not([data-theme='light'])[data-accent='teal'],
+  :root:not([data-theme='light']) [data-accent='teal']    { --accent: #5eead4; --accent-hover: #99f6e4; }
+  :root:not([data-theme='light'])[data-accent='violet'],
+  :root:not([data-theme='light']) [data-accent='violet']  { --accent: #c4b5fd; --accent-hover: #ddd6fe; }
+  :root:not([data-theme='light'])[data-accent='amber'],
+  :root:not([data-theme='light']) [data-accent='amber']   { --accent: #fbbf24; --accent-hover: #fcd34d; }
+}
+
+/* Text sitting ON the accent. Dark-theme accents are light, so they need dark
+   text; the light-theme accents need white. */
+:root[data-theme='dark'] { --text-on-brand: #16161c; --on-accent: #16161c; }

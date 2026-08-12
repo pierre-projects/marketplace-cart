@@ -26,24 +26,44 @@ async function addItemToCategory(categoryId, itemId, userId) {
  * entries whose item failed to populate. This lived in two places — correctly in
  * the dashboard controller and again, in EJS, in categories/show.
  *
- * @returns {{ totalItems: number, totalValue: number, availableCount: number }}
+ * `unpricedCount` exists so the UI can say "2 items have no price" rather than
+ * quietly folding them in as $0, which makes a total look smaller than it is.
+ *
+ * @returns {{ totalItems, totalValue, availableCount, unpricedCount, freeCount }}
  */
 function computeItemStats(entries) {
   const list = Array.isArray(entries) ? entries : [];
   let totalValue = 0;
   let availableCount = 0;
   let totalItems = 0;
+  let unpricedCount = 0;
+  let freeCount = 0;
 
   for (const entry of list) {
     const item = entry && entry.item !== undefined ? entry.item : entry;
     if (!item) continue;
 
     totalItems++;
-    totalValue += typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0;
+    const price = toPrice(item.price);
+    if (price === null) unpricedCount++;
+    else if (price === 0) freeCount++;
+    else totalValue += price;
+
     if (item.available) availableCount++;
   }
 
-  return { totalItems, totalValue, availableCount };
+  return { totalItems, totalValue, availableCount, unpricedCount, freeCount };
+}
+
+/**
+ * A finite number, or null when there is no readable price.
+ * `parseFloat(x) || 0` cannot be used: it turns both null and a genuine 0 into
+ * 0, which is exactly the conflation the price work removed.
+ */
+function toPrice(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const n = typeof value === 'number' ? value : parseFloat(value);
+  return Number.isFinite(n) ? n : null;
 }
 
 /**
@@ -95,20 +115,28 @@ function computePlatformBreakdown(entries) {
     const item = entry && entry.item !== undefined ? entry.item : entry;
     if (!item || !item.link) continue;
 
-    const price = typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0;
-    if (price === 0) continue;
-
+    // Zero- and null-priced items used to be skipped outright, so a collection
+    // showing "7 items" could break down only 5 with no hint the rest were
+    // dropped. Every item counts toward its marketplace; only the SUBTOTAL
+    // ignores prices it does not have.
+    const price = toPrice(item.price);
     const platform = item.platform || 'Unknown';
     if (!groups.has(platform)) groups.set(platform, []);
     groups.get(platform).push({ title: item.title || 'Untitled', price });
-    total += price;
+    if (price !== null) total += price;
   }
 
   const platforms = [...groups.entries()].map(([platform, items]) => ({
     platform,
     items,
-    subtotal: items.reduce((sum, i) => sum + i.price, 0)
+    subtotal: items.reduce((sum, i) => sum + (i.price === null ? 0 : i.price), 0),
+    // So a row can explain a subtotal that is smaller than its item count implies.
+    unpricedCount: items.filter(i => i.price === null).length,
+    freeCount: items.filter(i => i.price === 0).length,
   }));
+
+  // Largest spend first: the panel is answering "where is the money going".
+  platforms.sort((a, b) => b.subtotal - a.subtotal);
 
   return { platforms, total };
 }

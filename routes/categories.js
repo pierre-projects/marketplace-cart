@@ -9,7 +9,7 @@ const {
   sortEntriesByNewest
 } = require('../services/categoryService');
 const User = require('../models/User');
-const { redirectWithFlashError, renderHtmlError } = require('../utils/httpResponses');
+const { redirectWithFlashError, renderHtmlError, getSafeReturnToPath } = require('../utils/httpResponses');
 
 // GET /categories
 // GET /categories
@@ -126,18 +126,33 @@ router.get('/:id', async (req, res) => {
 
 // POST /categories/:id/edit
 router.post('/:id/edit', ensureAuthenticated, async (req, res) => {
+  // Renaming from a collection page used to bounce you to /categories. The
+  // caller says where it came from; getSafeReturnToPath refuses anything that
+  // could leave this origin.
+  const back = getSafeReturnToPath(req.body.returnTo, '/categories');
+
   try {
     const newName = req.body.name?.trim();
-    if (!newName) return redirectWithFlashError(req, res, 'Category name is required.', '/categories');
+    if (!newName) return redirectWithFlashError(req, res, 'Collection name is required.', back);
 
-    await Category.findOneAndUpdate({ _id: req.params.id, user: req.user._id }, { name: newName });
-    return res.redirect('/categories');
+    // Scoped to the owner: a viewer or editor posting this directly matches no
+    // document and changes nothing.
+    const updated = await Category.findOneAndUpdate(
+      { _id: req.params.id, user: req.user._id },
+      { name: newName },
+      { new: true, runValidators: true }
+    );
+    if (!updated) {
+      return redirectWithFlashError(req, res, 'Not authorized to rename this collection.', back);
+    }
+
+    return res.redirect(back);
   } catch (err) {
     if (err.code === 11000) {
-      return redirectWithFlashError(req, res, `You already have a category called "${req.body.name?.trim()}".`, '/categories');
+      return redirectWithFlashError(req, res, `You already have a collection called "${req.body.name?.trim()}".`, back);
     }
     console.error('Error renaming category:', err);
-    return redirectWithFlashError(req, res, 'Could not rename category right now.', '/categories');
+    return redirectWithFlashError(req, res, 'Could not rename collection right now.', back);
   }
 });
 

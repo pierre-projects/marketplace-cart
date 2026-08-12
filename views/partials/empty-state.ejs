@@ -1,0 +1,25 @@
+<%
+  // Six contexts, one component. With a 5-40 item dataset these are the states
+  // the user sees most, so each gets a specific headline and one verb-first
+  // action — never "No data found".
+  const _headline = typeof headline !== 'undefined' ? headline : 'Nothing here yet';
+  const _body = typeof body !== 'undefined' ? body : '';
+  const _actionLabel = typeof actionLabel !== 'undefined' ? actionLabel : null;
+  const _actionHref = typeof actionHref !== 'undefined' ? actionHref : null;
+  const _actionId = typeof actionId !== 'undefined' ? actionId : null;
+%>
+<div class="empty">
+  <span class="empty__icon" aria-hidden="true">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+      <path d="M3 5h2l1.4 8.4a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 2-1.6L20 8H7"/>
+      <circle cx="10" cy="19" r="1.4"/><circle cx="17" cy="19" r="1.4"/>
+    </svg>
+  </span>
+  <h3 class="empty__headline"><%= _headline %></h3>
+  <% if (_body) { %><p class="empty__body"><%= _body %></p><% } %>
+  <% if (_actionLabel && _actionHref) { %>
+    <a class="btn btn--primary" href="<%= _actionHref %>"><%= _actionLabel %></a>
+  <% } else if (_actionLabel && _actionId) { %>
+    <button type="button" class="btn btn--primary" id="<%= _actionId %>"><%= _actionLabel %></button>
+  <% } %>
+</div>

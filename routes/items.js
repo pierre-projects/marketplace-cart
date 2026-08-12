@@ -8,23 +8,8 @@ const { addItemToCategory } = require('../services/categoryService');
 const scrapeQueue = require('../services/scrapeQueue');
 const { ensureAuthenticated } = require('../middleware/authMiddleware');
 const { validateItemLink } = require('../middleware/validation');
-const { redirectWithFlashError } = require('../utils/httpResponses');
+const { redirectWithFlashError, getSafeReturnToPath } = require('../utils/httpResponses');
 const logger = require('../utils/logger');
-
-function getSafeReturnToPath(rawPath, fallback = '/dashboard') {
-  if (typeof rawPath !== 'string') return fallback;
-
-  const trimmed = rawPath.trim();
-  if (!trimmed || !trimmed.startsWith('/') || trimmed.startsWith('//')) return fallback;
-  if (trimmed.includes('\\') || trimmed.includes('://') || /[\r\n]/.test(trimmed)) return fallback;
-
-  try {
-    const parsed = new URL(trimmed, 'http://localhost');
-    return `${parsed.pathname}${parsed.search}`;
-  } catch (err) {
-    return fallback;
-  }
-}
 
 /** Shape an Item for the preview card. Only fields the modal renders. */
 function toPreviewPayload(item) {

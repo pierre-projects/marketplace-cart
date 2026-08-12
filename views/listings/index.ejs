@@ -1,73 +1,119 @@
-<main class="container">
+<main class="container" id="main">
   <%- include('../partials/flash-alert') %>
 
-  <div class="page-header">
-    <h1>All My Listings</h1>
-    <button id="openAddModal" type="button" class="btn-primary listings-add-btn">Add listing</button>
+  <%
+    const items = listings.map(e => (e && e.item !== undefined ? e.item : e)).filter(Boolean);
+    const total = items.reduce((sum, i) => sum + (typeof i.price === 'number' ? i.price : 0), 0);
+    const conditions = [...new Set(items.map(i => i.condition).filter(Boolean))];
+    const platforms = [...new Set(items.map(i => i.platform).filter(Boolean))];
+  %>
+
+  <div class="page-head">
+    <div>
+      <h1>Saved items</h1>
+      <p class="page-head__sub"><%= plural(items.length, 'item') %> · <%= money(total) %> total</p>
+    </div>
+    <button id="openAddModal" type="button" class="btn btn--primary">Save an item</button>
   </div>
 
   <%- include('../partials/add-listing-modal', { categories, returnTo: '/listings', defaultCategoryId: null }) %>
 
-  <% if (listings.length === 0) { %>
-    <div class="empty-state">
-      <p>No listings yet.</p>
-      <p class="muted">Click "Add listing" above to save your first item.</p>
-    </div>
+  <% if (items.length === 0) { %>
+    <%- include('../partials/empty-state', {
+      headline: 'Your cart is empty',
+      body: 'Paste a link from OfferUp or Facebook Marketplace and we will pull in the price and photos.',
+      actionLabel: 'Save an item',
+      actionId: 'openAddModalEmpty'
+    }) %>
   <% } else { %>
 
-    <!-- Stats Bar -->
-    <div class="stats-bar">
-      <div class="stat">
-        <span class="stat-value" id="statCount"><%= listings.length %></span>
-        <span class="stat-label">listings</span>
+    <div class="toolbar" data-toolbar>
+      <div class="toolbar__search">
+        <span class="toolbar__search-icon" aria-hidden="true">
+          <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="9" cy="9" r="5.2"/><path d="m13 13 4 4"/>
+          </svg>
+        </span>
+        <label class="sr-only" for="searchInput">Search saved items</label>
+        <input type="search" id="searchInput" placeholder="Search saved items" autocomplete="off">
+        <button type="button" class="toolbar__clear" id="searchClear" aria-label="Clear search" hidden>&times;</button>
       </div>
-      <div class="stat">
-        <span class="stat-value" id="statTotal">$0</span>
-        <span class="stat-label">total value</span>
-      </div>
-      <div class="stat">
-        <span class="stat-value" id="statAvailable">0</span>
-        <span class="stat-label">available</span>
-      </div>
-    </div>
 
-    <!-- Toolbar: Search + Sort -->
-    <div class="listings-toolbar">
-      <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Search listings..." class="search-input">
+      <div class="toolbar__filters">
+        <button type="button" class="btn btn--secondary" id="filtersToggle" aria-expanded="false" aria-controls="filtersPanel">
+          <svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path d="M3 5.5h14M6 10h8M8.5 14.5h3"/>
+          </svg>
+          Filters
+          <span class="count-badge" id="filtersCount" hidden>0</span>
+        </button>
+
+        <div class="filters-panel" id="filtersPanel" hidden>
+          <% if (conditions.length) { %>
+            <fieldset class="filters-panel__group">
+              <legend>Condition</legend>
+              <% conditions.forEach(c => { %>
+                <label class="checkbox-item">
+                  <input type="checkbox" data-filter-condition value="<%= c.toLowerCase() %>">
+                  <span><%= c %></span>
+                </label>
+              <% }) %>
+            </fieldset>
+          <% } %>
+          <% if (platforms.length > 1) { %>
+            <fieldset class="filters-panel__group">
+              <legend>Marketplace</legend>
+              <% platforms.forEach(p => { %>
+                <label class="checkbox-item">
+                  <input type="checkbox" data-filter-platform value="<%= p.toLowerCase() %>">
+                  <span><%= p %></span>
+                </label>
+              <% }) %>
+            </fieldset>
+          <% } %>
+          <button type="button" class="btn btn--ghost btn--sm" id="filtersClear">Clear filters</button>
+        </div>
       </div>
-      <div class="sort-box">
-        <label for="sortSelect">Sort:</label>
+
+      <div class="toolbar__sort">
+        <label class="sr-only" for="sortSelect">Sort</label>
         <select id="sortSelect">
-          <option value="newest">Newest</option>
-          <option value="oldest">Oldest</option>
-          <option value="price-high">Price: High to Low</option>
-          <option value="price-low">Price: Low to High</option>
-          <option value="title">Title A-Z</option>
-          <option value="condition">Condition: Best First</option>
+          <option value="newest">Sort: Date saved</option>
+          <option value="oldest">Sort: Oldest first</option>
+          <option value="price-high">Sort: Price high to low</option>
+          <option value="price-low">Sort: Price low to high</option>
+          <option value="title">Sort: Title A–Z</option>
+          <option value="condition">Sort: Condition</option>
         </select>
       </div>
+
+      <%
+        // Status is mutually exclusive, so it gets a segmented control rather
+        // than looking identical to the multi-select condition filters.
+      %>
+      <div class="segmented" role="group" aria-label="Filter by status">
+        <button type="button" class="segmented__opt is-active" data-status="all" aria-pressed="true">All</button>
+        <button type="button" class="segmented__opt" data-status="available" aria-pressed="false">Still live</button>
+        <button type="button" class="segmented__opt" data-status="sold" aria-pressed="false">Gone</button>
+      </div>
     </div>
 
-    <!-- Filter Chips -->
-    <div class="filter-chips">
-      <button class="chip active" data-filter="all">All</button>
-      <button class="chip" data-filter="available">Available</button>
-      <button class="chip" data-filter="sold">Sold</button>
-      <span class="chip-divider"></span>
-      <button class="chip" data-filter="new">New</button>
-      <button class="chip" data-filter="like new">Like New</button>
-      <button class="chip" data-filter="good">Good</button>
-      <button class="chip" data-filter="fair">Fair</button>
-      <button class="chip" data-filter="poor">Poor</button>
+    <div class="active-filters" id="activeFilters" hidden>
+      <div class="active-filters__pills" id="activeFilterPills"></div>
+      <button type="button" class="link-button" id="clearAllFilters">Clear all</button>
     </div>
 
-    <!-- No Results Message -->
-    <div id="noResults" class="empty-state is-hidden">
-      <p>No listings match your filters.</p>
+    <p class="sr-only" id="resultCount" aria-live="polite" role="status"></p>
+
+    <div id="noResults" class="is-hidden">
+      <%- include('../partials/empty-state', {
+        headline: 'Nothing matches your filters',
+        body: 'Try a shorter search, or clear your filters.',
+        actionLabel: 'Clear filters',
+        actionId: 'clearFiltersEmpty'
+      }) %>
     </div>
 
-    <!-- Item List -->
     <%- include('../partials/item-list', {
       items: listings,
       categories,
@@ -81,6 +127,7 @@
   <% } %>
 </main>
 
+<script src="/js/toast.js"></script>
 <script src="/js/listings.js"></script>
 <script src="/js/dashboard.js"></script>
 <script src="/js/assign-categories.js"></script>

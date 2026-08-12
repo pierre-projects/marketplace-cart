@@ -5,6 +5,7 @@ const Category = require('../models/Category');
 const {
   computeItemStats,
   buildItemCategoryIndex,
+  computePlatformBreakdown,
   sortEntriesByNewest
 } = require('../services/categoryService');
 const { renderHtmlError } = require('../utils/httpResponses');
@@ -59,6 +60,8 @@ router.get('/dashboard', ensureAuthenticated, async (req, res) => {
       // Sorted here rather than derived in the template: the preview shows only
       // the first few, so "which items" depends on the order being right.
       savedItems: sortEntriesByNewest(allItems),
+      // Feeds the shared stats panel's per-marketplace rows.
+      breakdown: computePlatformBreakdown(allItems),
       sharedCategories,
       itemCategoryIndex: buildItemCategoryIndex(myCategories),
       stats: {

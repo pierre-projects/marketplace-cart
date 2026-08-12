@@ -1,0 +1,72 @@
+<%
+  // Shared by the dashboard and every collection page, so the two cannot drift
+  // into telling the same story two different ways.
+  //
+  // Replaces two older blocks: the three bare numbers of `.stats-bar` and the
+  // `.price-summary` section that sat below the item grid and only appeared
+  // when a collection spanned more than one marketplace — which is why it was
+  // rarely seen. One marketplace still answers "how much, and where".
+  const _label = typeof panelLabel !== 'undefined' ? panelLabel : 'Total value';
+  // `typeof`, not a truthiness check: an undefined EJS local is a ReferenceError,
+  // so `breakdown && ...` still throws. A caller with no breakdown gets the
+  // headline without the per-marketplace rows rather than a 500.
+  const _bd = typeof breakdown !== 'undefined' && breakdown ? breakdown : null;
+  const _rows = _bd && Array.isArray(_bd.platforms) ? _bd.platforms : [];
+  const _stats = typeof stats !== 'undefined' && stats ? stats : {};
+  // Bars are proportional to the largest subtotal, not to the total: with one
+  // dominant marketplace every other bar would round to invisible.
+  const _peak = _rows.reduce((m, r) => Math.max(m, r.subtotal), 0);
+  const _pct = (n) => (_peak > 0 ? Math.max(2, Math.round((n / _peak) * 100)) : 0);
+
+  const _caveats = [];
+  if ((_stats.freeCount || 0)) _caveats.push((_stats.freeCount || 0) + ' free');
+  if ((_stats.unpricedCount || 0)) _caveats.push((_stats.unpricedCount || 0) + ' with no price');
+%>
+
+<section class="stats-panel" aria-labelledby="stats-panel-label">
+  <div class="stats-panel__head">
+    <div class="stats-panel__headline">
+      <p class="stats-panel__label" id="stats-panel-label"><%= _label %></p>
+      <p class="stats-panel__figure"><%= money((_stats.totalValue || 0)) %></p>
+      <p class="stats-panel__sub">
+        <%= plural((_stats.totalItems || 0), 'item') %>
+        <% if (_rows.length) { %>· <%= plural(_rows.length, 'marketplace') %><% } %>
+        <%
+          // Stated rather than implied: these items are part of the count but
+          // contribute nothing to the figure above.
+        %>
+        <% if (_caveats.length) { %><span class="stats-panel__caveat">· <%= _caveats.join(' · ') %></span><% } %>
+      </p>
+    </div>
+
+    <dl class="stats-panel__counts">
+      <div class="stats-panel__count">
+        <dt>Still live</dt>
+        <dd><%= (_stats.availableCount || 0) %></dd>
+      </div>
+      <% if ((_stats.totalItems || 0) > (_stats.availableCount || 0)) { %>
+        <div class="stats-panel__count stats-panel__count--muted">
+          <dt>Gone</dt>
+          <dd><%= (_stats.totalItems || 0) - (_stats.availableCount || 0) %></dd>
+        </div>
+      <% } %>
+    </dl>
+  </div>
+
+  <% if (_rows.length) { %>
+    <ul class="stats-panel__rows">
+      <% _rows.forEach((row) => { %>
+        <li class="stats-panel__row">
+          <span class="stats-panel__platform">
+            <span class="badge <%= platformClass(row.platform) %>"><%= row.platform %></span>
+          </span>
+          <span class="stats-panel__count-label"><%= plural(row.items.length, 'item') %></span>
+          <span class="stats-panel__bar" aria-hidden="true">
+            <span class="stats-panel__bar-fill" style="width: <%= _pct(row.subtotal) %>%"></span>
+          </span>
+          <span class="stats-panel__amount tnum"><%= money(row.subtotal) %></span>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+</section>

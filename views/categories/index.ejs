@@ -49,10 +49,10 @@
 </main>
 
 <!-- Manage Category Modal -->
-<div id="manageCategoryModal" class="modal-overlay">
+<dialog id="manageCategoryModal" class="modal" aria-labelledby="manageCategoryModalTitle">
   <div class="modal-content modal-sm">
     <div class="modal-header">
-      <h2>Manage Category</h2>
+      <h2 id="manageCategoryModalTitle">Manage collection</h2>
       <button type="button" class="modal-close">&times;</button>
     </div>
     <div class="modal-body">
@@ -71,6 +71,6 @@
       </div>
     </div>
   </div>
-</div>
+</dialog>
 
 <script src="/js/categories.js"></script>

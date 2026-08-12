@@ -7,13 +7,6 @@
     // defaultCollection.items here would reintroduce push order.
     const savedItems = locals.savedItems || (defaultCollection ? defaultCollection.items : []);
     const userCollections = categories.filter(c => !c.isDefault);
-    const platforms = new Set(
-      savedItems
-        .map(e => (e && e.item !== undefined ? e.item : e))
-        .filter(Boolean)
-        .map(i => i.platform)
-        .filter(Boolean)
-    );
   %>
 
   <div class="page-head">
@@ -24,17 +17,17 @@
   <%- include('partials/add-listing-modal', { categories, returnTo: '/dashboard', defaultCategoryId: null }) %>
 
   <%
-    // One confident number rather than four small ones. The question a shopper
-    // opens the app to answer is "what would all this cost me?".
+    // One confident number, now with the per-marketplace split beneath it —
+    // the same panel the collection pages use, so the two never diverge.
   %>
-  <section class="hero-total" aria-labelledby="cart-total-label">
-    <p class="hero-figure"><%= money(stats.totalValue) %></p>
-    <p class="hero-sub" id="cart-total-label">
-      <%= plural(stats.totalItems, 'item') %> saved<% if (platforms.size) { %>
-        across <%= plural(platforms.size, 'marketplace') %><% } %><% if (stats.availableCount < stats.totalItems) { %>
-        · <%= stats.totalItems - stats.availableCount %> no longer live<% } %>
-    </p>
-  </section>
+  <%
+    // locals.breakdown, not breakdown: a bare identifier that is not supplied
+    // throws a ReferenceError when the include's data object is built — before
+    // the partial's own guard can run.
+  %>
+  <%- include('partials/stats-panel', {
+    stats, breakdown: locals.breakdown, panelLabel: 'Cart total'
+  }) %>
 
   <section class="dashboard-section stack">
     <div class="section-head">

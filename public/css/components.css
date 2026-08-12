@@ -1970,16 +1970,6 @@ dialog.modal .modal-body { background: transparent; }
 }
 
 /* Page furniture */
-.hero-figure {
-  font-size: var(--fs-hero);
-  font-weight: 600;
-  letter-spacing: -0.03em;
-  line-height: 1.05;
-  margin: 0;
-}
-
-.hero-sub { margin: var(--sp-2) 0 0; color: var(--text-secondary); }
-
 .section-head {
   display: flex;
   align-items: baseline;
@@ -2052,10 +2042,212 @@ dialog.modal .modal-body { background: transparent; }
 .kebab-action--danger { color: var(--danger); }
 .kebab-divider { border: 0; border-top: 1px solid var(--border); margin: var(--sp-1) 0; }
 
-.hero-total {
-  padding: var(--sp-5) 0 var(--sp-6);
-  border-bottom: 1px solid var(--border);
+./* ==========================================================================
+   Collection page header — editable title
+   ========================================================================== */
+
+/* The header splits into a title block and an actions block; `.page-head`
+   (base.css) already supplies the flex row and spacing. */
+.page-head__main { min-width: 0; }
+
+.page-head__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: none;
+}
+
+.collection-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 2px var(--sp-2);
+  margin-left: calc(var(--sp-2) * -1);   /* keep the text optically aligned */
+  border-radius: var(--radius-md);
+  cursor: text;
+}
+
+.collection-title:hover { background: var(--overlay-hover); }
+
+/* The pencil only appears on hover/focus so the heading stays a heading —
+   but it must be visible whenever the control has keyboard focus. */
+/* Truncates rather than pushing the pencil off the row on a long name. */
+.collection-title__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collection-title__pencil {
+  opacity: 0;
+  flex: none;
+  color: var(--text-muted);
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.collection-title:hover .collection-title__pencil,
+.collection-title:focus-visible .collection-title__pencil { opacity: 1; }
+
+.collection-title__input {
+  font: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  color: var(--text-primary);
+  background: var(--surface-sunken);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  padding: 2px var(--sp-2);
+  width: min(100%, 22ch);
+}
+
+.collection-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+}
+
+.collection-badges:empty { display: none; }
+
+/* ==========================================================================
+   Stats panel — shared by the dashboard and every collection page
+
+   Replaces the three bare numbers of `.stats-bar` and the `.price-summary`
+   block that used to sit below the item grid. One surface answers both
+   "how much?" and "where is it?".
+   ========================================================================== */
+
+.stats-panel {
+  padding: var(--sp-5);
   margin-bottom: var(--sp-6);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+}
+
+.stats-panel__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  flex-wrap: wrap;
+}
+
+/* Lets the headline shrink before the counts do, so the money column keeps its
+   place when the panel narrows. */
+.stats-panel__headline { min-width: 0; }
+
+.stats-panel__label {
+  margin: 0;
+  font-size: var(--fs-label);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.stats-panel__figure {
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-hero);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+.stats-panel__sub {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-meta);
+  color: var(--text-secondary);
+}
+
+/* Quieter than the counts it sits beside — it explains the figure rather than
+   adding to it. */
+.stats-panel__caveat { color: var(--text-muted); }
+
+.stats-panel__counts {
+  display: flex;
+  gap: var(--sp-5);
+  margin: 0;
+}
+
+.stats-panel__count { text-align: right; }
+.stats-panel__count dt {
+  font-size: var(--fs-label);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.stats-panel__count dd {
+  margin: 2px 0 0;
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.stats-panel__count--muted dd { color: var(--text-muted); }
+
+/* ---- per-marketplace rows ---- */
+
+.stats-panel__rows {
+  list-style: none;
+  margin: var(--sp-5) 0 0;
+  padding: var(--sp-4) 0 0;
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: var(--sp-3);
+}
+
+/* Fixed columns so the amounts form a readable right-aligned money column
+   instead of drifting with each platform's name length. */
+.stats-panel__row {
+  display: grid;
+  grid-template-columns: minmax(120px, auto) auto 1fr auto;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.stats-panel__platform { min-width: 0; }
+
+.stats-panel__count-label {
+  font-size: var(--fs-meta);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.stats-panel__bar {
+  height: 6px;
+  border-radius: var(--r-full);
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+
+.stats-panel__bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+}
+
+.stats-panel__amount {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .stats-panel { padding: var(--sp-4); }
+  .stats-panel__head { gap: var(--sp-3); }
+  .stats-panel__counts { gap: var(--sp-4); }
+  .stats-panel__count { text-align: left; }
+
+  /* The bar is decoration; at this width the numbers need the room. */
+  .stats-panel__row { grid-template-columns: 1fr auto; }
+  .stats-panel__count-label { grid-column: 1; }
+  .stats-panel__bar { display: none; }
+  .stats-panel__amount { grid-row: 1; grid-column: 2; }
 }
 
 .create-card {
@@ -2570,7 +2762,7 @@ dialog.modal .modal-body { background: transparent; }
   .page-head > .btn { width: 100%; }
 
   /* A 48px hero on a 320px screen wraps badly. */
-  .hero-figure { font-size: clamp(2rem, 12vw, 3rem); }
+  .stats-panel__figure { font-size: clamp(2rem, 12vw, 3rem); }
 
   .card__body { padding: var(--sp-3); }
 
