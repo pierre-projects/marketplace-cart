@@ -1,18 +1,9 @@
 // Toast notification helper
+// Delegates to the shared toast layer (public/js/toast.js) so client feedback
+// and server-rendered flash messages are the same component.
 function showToast(message, type = 'success') {
-  const existing = document.querySelector('.toast');
-  if (existing) existing.remove();
-
-  const toast = document.createElement('div');
-  toast.className = `toast toast-${type}`;
-  toast.textContent = message;
-  document.body.appendChild(toast);
-
-  setTimeout(() => toast.classList.add('show'), 10);
-  setTimeout(() => {
-    toast.classList.remove('show');
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
+  if (typeof window.toast === 'function') return window.toast(message, { type });
+  console.warn('toast layer unavailable:', message);
 }
 
 document.addEventListener('DOMContentLoaded', () => {

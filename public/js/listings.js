@@ -1,118 +1,250 @@
+/**
+ * Saved items: search, filter, sort — with the state mirrored into the URL.
+ *
+ * Filtering is client-side over the cards the server already rendered, so the
+ * page still works with JS disabled (unfiltered). The query string is the
+ * source of truth for the view, which makes a filtered page refreshable,
+ * shareable, and back-button correct.
+ *
+ * Note the selector: cards render as `.card`. An earlier version of this file
+ * queried `.item-card`, matched nothing, and silently disabled the entire
+ * toolbar — hence the selector assertion in the test harness.
+ */
 document.addEventListener('DOMContentLoaded', () => {
-  const items = document.querySelectorAll('.item-card');
-  if (items.length === 0) return;
+  const grid = document.querySelector('.item-list');
+  const cards = Array.from(document.querySelectorAll('.card'));
+  if (!grid || cards.length === 0) return;
 
   const searchInput = document.getElementById('searchInput');
+  const searchClear = document.getElementById('searchClear');
   const sortSelect = document.getElementById('sortSelect');
-  const chips = document.querySelectorAll('.chip');
+  const segments = Array.from(document.querySelectorAll('.segmented__opt'));
+  const filtersToggle = document.getElementById('filtersToggle');
+  const filtersPanel = document.getElementById('filtersPanel');
+  const filtersCount = document.getElementById('filtersCount');
+  const filtersClear = document.getElementById('filtersClear');
+  const conditionBoxes = Array.from(document.querySelectorAll('[data-filter-condition]'));
+  const platformBoxes = Array.from(document.querySelectorAll('[data-filter-platform]'));
+  const activeFilters = document.getElementById('activeFilters');
+  const pillHost = document.getElementById('activeFilterPills');
+  const clearAll = document.getElementById('clearAllFilters');
+  const clearFromEmpty = document.getElementById('clearFiltersEmpty');
   const noResults = document.getElementById('noResults');
-  const itemList = document.querySelector('.item-list');
+  const resultCount = document.getElementById('resultCount');
 
-  let activeFilter = 'all';
+  const state = { q: '', status: 'all', conditions: [], platforms: [], sort: 'newest' };
 
-  // Update stats based on visible items
-  function updateStats() {
-    const visible = document.querySelectorAll('.item-card:not(.is-hidden)');
-    let total = 0;
-    let available = 0;
+  // ---- URL <-> state ------------------------------------------------------
 
-    visible.forEach(card => {
-      const price = parseFloat(card.dataset.price) || 0;
-      total += price;
-      if (card.dataset.available === 'true') available++;
+  function readUrl() {
+    const p = new URLSearchParams(location.search);
+    state.q = p.get('q') || '';
+    state.status = ['all', 'available', 'sold'].includes(p.get('status')) ? p.get('status') : 'all';
+    state.conditions = (p.get('condition') || '').split(',').filter(Boolean);
+    state.platforms = (p.get('platform') || '').split(',').filter(Boolean);
+    const sort = p.get('sort');
+    state.sort = sort && [...sortSelect.options].some(o => o.value === sort) ? sort : 'newest';
+  }
+
+  function writeUrl(push) {
+    const p = new URLSearchParams();
+    if (state.q) p.set('q', state.q);
+    if (state.status !== 'all') p.set('status', state.status);
+    if (state.conditions.length) p.set('condition', state.conditions.join(','));
+    if (state.platforms.length) p.set('platform', state.platforms.join(','));
+    if (state.sort !== 'newest') p.set('sort', state.sort);
+
+    const qs = p.toString();
+    const url = location.pathname + (qs ? '?' + qs : '');
+    // replaceState while typing keeps the history stack from filling with
+    // every keystroke; discrete controls push so Back is meaningful.
+    if (push) history.pushState(null, '', url);
+    else history.replaceState(null, '', url);
+  }
+
+  // ---- controls -> state --------------------------------------------------
+
+  function syncControls() {
+    searchInput.value = state.q;
+    searchClear.hidden = !state.q;
+    sortSelect.value = state.sort;
+
+    segments.forEach(b => {
+      const on = b.dataset.status === state.status;
+      b.classList.toggle('is-active', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
 
-    document.getElementById('statCount').textContent = visible.length;
-    document.getElementById('statTotal').textContent = '$' + total.toFixed(2);
-    document.getElementById('statAvailable').textContent = available;
+    conditionBoxes.forEach(b => { b.checked = state.conditions.includes(b.value); });
+    platformBoxes.forEach(b => { b.checked = state.platforms.includes(b.value); });
 
-    // Show/hide no results message
-    if (visible.length === 0) {
-      noResults.classList.remove('is-hidden');
-      itemList.classList.add('is-hidden');
-    } else {
-      noResults.classList.add('is-hidden');
-      itemList.classList.remove('is-hidden');
+    const n = state.conditions.length + state.platforms.length;
+    filtersCount.textContent = String(n);
+    filtersCount.hidden = n === 0;
+
+    renderPills();
+  }
+
+  function renderPills() {
+    const pills = [];
+    if (state.q) pills.push({ kind: 'q', value: state.q, label: 'Search: ' + state.q });
+    if (state.status !== 'all') {
+      pills.push({ kind: 'status', value: state.status, label: state.status === 'available' ? 'Still live' : 'Gone' });
     }
-  }
+    state.conditions.forEach(c => pills.push({ kind: 'condition', value: c, label: 'Condition: ' + c }));
+    state.platforms.forEach(p => pills.push({ kind: 'platform', value: p, label: 'Marketplace: ' + p }));
 
-  // Filter items
-  function applyFilters() {
-    const query = searchInput.value.toLowerCase().trim();
-
-    items.forEach(card => {
-      const title = card.dataset.title || '';
-      const description = card.dataset.description || '';
-      const condition = card.dataset.condition || '';
-      const available = card.dataset.available;
-
-      // Search match
-      const matchesSearch = !query || title.includes(query) || description.includes(query);
-
-      // Filter match
-      let matchesFilter = true;
-      if (activeFilter === 'available') {
-        matchesFilter = available === 'true';
-      } else if (activeFilter === 'sold') {
-        matchesFilter = available === 'false';
-      } else if (['new', 'like new', 'good', 'fair', 'poor'].includes(activeFilter)) {
-        matchesFilter = condition === activeFilter;
-      }
-
-      card.classList.toggle('is-hidden', !(matchesSearch && matchesFilter));
+    pillHost.textContent = '';
+    pills.forEach(({ kind, value, label }) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'filter-pill';
+      btn.dataset.kind = kind;
+      btn.dataset.value = value;
+      btn.textContent = label;                 // textContent — labels carry scraped text
+      const x = document.createElement('span');
+      x.className = 'filter-pill__x';
+      x.setAttribute('aria-hidden', 'true');
+      x.textContent = '×';
+      btn.append(x);
+      btn.setAttribute('aria-label', 'Remove filter: ' + label);
+      pillHost.append(btn);
     });
 
-    updateStats();
+    activeFilters.hidden = pills.length === 0;
   }
 
-  // Sort items
-  function applySort() {
-    const sortBy = sortSelect.value;
-    const arr = Array.from(items);
+  // ---- state -> DOM -------------------------------------------------------
 
-    arr.sort((a, b) => {
-      switch (sortBy) {
-        case 'price-high':
-          return (parseFloat(b.dataset.price) || 0) - (parseFloat(a.dataset.price) || 0);
-        case 'price-low':
-          return (parseFloat(a.dataset.price) || 0) - (parseFloat(b.dataset.price) || 0);
-        case 'title':
-          return (a.dataset.title || '').localeCompare(b.dataset.title || '');
+  function apply() {
+    const q = state.q.toLowerCase().trim();
+
+    cards.forEach(card => {
+      const d = card.dataset;
+      const matchesSearch = !q ||
+        (d.title || '').includes(q) ||
+        (d.description || '').includes(q);
+
+      let matchesStatus = true;
+      if (state.status === 'available') matchesStatus = d.available === 'true';
+      else if (state.status === 'sold') matchesStatus = d.available === 'false';
+
+      const matchesCondition = !state.conditions.length || state.conditions.includes(d.condition || '');
+      const matchesPlatform = !state.platforms.length || state.platforms.includes(d.platform || '');
+
+      card.classList.toggle('is-hidden', !(matchesSearch && matchesStatus && matchesCondition && matchesPlatform));
+    });
+
+    const visible = cards.filter(c => !c.classList.contains('is-hidden'));
+    noResults.classList.toggle('is-hidden', visible.length > 0);
+    grid.classList.toggle('is-hidden', visible.length === 0);
+    resultCount.textContent = visible.length === cards.length
+      ? visible.length + ' items'
+      : visible.length + ' of ' + cards.length + ' items match';
+  }
+
+  function sort() {
+    const by = state.sort;
+    const num = (el, k) => parseFloat(el.dataset[k]) || 0;
+    const order = ['new', 'like new', 'good', 'fair', 'poor'];
+
+    const sorted = cards.slice().sort((a, b) => {
+      switch (by) {
+        case 'price-high': return num(b, 'price') - num(a, 'price');
+        case 'price-low':  return num(a, 'price') - num(b, 'price');
+        case 'title':      return (a.dataset.title || '').localeCompare(b.dataset.title || '');
         case 'condition': {
-          const condOrder = ['new', 'like new', 'good', 'fair', 'poor'];
-          const aIdx = condOrder.indexOf(a.dataset.condition);
-          const bIdx = condOrder.indexOf(b.dataset.condition);
-          return (aIdx === -1 ? 99 : aIdx) - (bIdx === -1 ? 99 : bIdx);
+          const ai = order.indexOf(a.dataset.condition);
+          const bi = order.indexOf(b.dataset.condition);
+          return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
         }
-        case 'oldest':
-          return (parseFloat(a.dataset.addedAt) || 0) - (parseFloat(b.dataset.addedAt) || 0);
+        case 'oldest':     return num(a, 'addedAt') - num(b, 'addedAt');
         case 'newest':
-        default:
-          return (parseFloat(b.dataset.addedAt) || 0) - (parseFloat(a.dataset.addedAt) || 0);
+        default:           return num(b, 'addedAt') - num(a, 'addedAt');
       }
     });
-
-    // Re-append in sorted order
-    arr.forEach(card => itemList.appendChild(card));
-    applyFilters();
+    sorted.forEach(c => grid.appendChild(c));
   }
 
-  // Search handler
-  searchInput.addEventListener('input', applyFilters);
+  function update(push) {
+    syncControls();
+    sort();
+    apply();
+    writeUrl(push);
+  }
 
-  // Sort handler
-  sortSelect.addEventListener('change', applySort);
+  // ---- events -------------------------------------------------------------
 
-  // Filter chip handler
-  chips.forEach(chip => {
-    chip.addEventListener('click', () => {
-      chips.forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-      activeFilter = chip.dataset.filter;
-      applyFilters();
-    });
+  let debounce;
+  searchInput.addEventListener('input', () => {
+    clearTimeout(debounce);
+    debounce = setTimeout(() => {
+      state.q = searchInput.value;
+      update(false);
+    }, 250);
   });
 
-  // Initial stats calculation
-  updateStats();
+  searchClear.addEventListener('click', () => {
+    state.q = '';
+    update(true);
+    searchInput.focus();
+  });
+
+  sortSelect.addEventListener('change', () => { state.sort = sortSelect.value; update(true); });
+
+  segments.forEach(b => b.addEventListener('click', () => { state.status = b.dataset.status; update(true); }));
+
+  function readBoxes() {
+    state.conditions = conditionBoxes.filter(b => b.checked).map(b => b.value);
+    state.platforms = platformBoxes.filter(b => b.checked).map(b => b.value);
+    update(true);
+  }
+  conditionBoxes.concat(platformBoxes).forEach(b => b.addEventListener('change', readBoxes));
+
+  filtersToggle.addEventListener('click', () => {
+    const open = filtersPanel.hasAttribute('hidden');
+    filtersPanel.toggleAttribute('hidden', !open);
+    filtersToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (filtersPanel.hasAttribute('hidden')) return;
+    if (e.target.closest('#filtersPanel') || e.target.closest('#filtersToggle')) return;
+    filtersPanel.setAttribute('hidden', '');
+    filtersToggle.setAttribute('aria-expanded', 'false');
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !filtersPanel.hasAttribute('hidden')) {
+      filtersPanel.setAttribute('hidden', '');
+      filtersToggle.setAttribute('aria-expanded', 'false');
+      filtersToggle.focus();
+    }
+  });
+
+  function reset() {
+    state.q = '';
+    state.status = 'all';
+    state.conditions = [];
+    state.platforms = [];
+    update(true);
+  }
+  [filtersClear, clearAll, clearFromEmpty].forEach(el => el && el.addEventListener('click', reset));
+
+  pillHost.addEventListener('click', (e) => {
+    const pill = e.target.closest('.filter-pill');
+    if (!pill) return;
+    const { kind, value } = pill.dataset;
+    if (kind === 'q') state.q = '';
+    else if (kind === 'status') state.status = 'all';
+    else if (kind === 'condition') state.conditions = state.conditions.filter(c => c !== value);
+    else if (kind === 'platform') state.platforms = state.platforms.filter(p => p !== value);
+    update(true);
+  });
+
+  // Back/forward must restore the view the URL describes.
+  window.addEventListener('popstate', () => { readUrl(); syncControls(); sort(); apply(); });
+
+  readUrl();
+  update(false);
 });

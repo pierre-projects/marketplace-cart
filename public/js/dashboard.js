@@ -12,7 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (!modal || !openBtn) return;
 
-  let lastFocusedElement = null;
   let pollAbort = null;
 
   // Scraping runs in a background worker now, so the client enqueues and polls.
@@ -22,13 +21,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Helpers ──────────────────────────────────────────────────────────────
 
   function openModal() {
-    lastFocusedElement = document.activeElement;
-    modal.classList.add('is-open');
-    modal.removeAttribute('aria-hidden');
     showStep(1);
     previewError.classList.remove('is-visible');
     linkInput.value = '';
-    // Defer focus so display:flex has rendered
+    // showModal() handles the top layer, backdrop, Escape and inertness;
+    // it also restores focus to the trigger on close for free.
+    if (typeof modal.showModal === 'function') modal.showModal();
+    else modal.setAttribute('open', '');
     requestAnimationFrame(() => linkInput.focus());
   }
 
@@ -38,9 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
       pollAbort.abort();
       pollAbort = null;
     }
-    modal.classList.remove('is-open');
-    modal.setAttribute('aria-hidden', 'true');
-    if (lastFocusedElement) lastFocusedElement.focus();
+    if (typeof modal.close === 'function' && modal.open) modal.close();
+    else modal.removeAttribute('open');
   }
 
   function showStep(n) {
@@ -60,32 +58,26 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Open / Close ─────────────────────────────────────────────────────────
 
   openBtn.addEventListener('click', openModal);
+  // The empty state offers the same action, so wire it to the same dialog.
+  const emptyBtn = document.getElementById('openAddModalEmpty');
+  if (emptyBtn) emptyBtn.addEventListener('click', openModal);
   closeBtn.addEventListener('click', closeModal);
 
+  // A click on ::backdrop targets the dialog itself, so compare against its box.
   modal.addEventListener('click', (e) => {
-    if (e.target === modal) closeModal();
+    if (e.target !== modal) return;
+    const r = modal.getBoundingClientRect();
+    const outside = e.clientX < r.left || e.clientX > r.right ||
+                    e.clientY < r.top  || e.clientY > r.bottom;
+    if (outside) closeModal();
   });
 
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
+  // Escape is handled natively, but the in-flight poll still needs aborting.
+  modal.addEventListener('close', () => {
+    if (pollAbort) { pollAbort.abort(); pollAbort = null; }
   });
 
-  // ── Focus trap ───────────────────────────────────────────────────────────
-
-  modal.addEventListener('keydown', (e) => {
-    if (e.key !== 'Tab') return;
-    const focusable = [...modal.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    )].filter((el) => !el.disabled && el.offsetParent !== null);
-    if (focusable.length === 0) return;
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (e.shiftKey) {
-      if (document.activeElement === first) { e.preventDefault(); last.focus(); }
-    } else {
-      if (document.activeElement === last) { e.preventDefault(); first.focus(); }
-    }
-  });
+  // Focus trapping, Escape and focus restore are handled natively by <dialog>.
 
   // ── Back button ───────────────────────────────────────────────────────────
 
