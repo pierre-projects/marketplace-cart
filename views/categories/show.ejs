@@ -1,4 +1,4 @@
-<main class="container">
+<main class="container" id="main">
   <%- include('../partials/flash-alert') %>
 
   <!-- Page Header -->
@@ -10,7 +10,7 @@
     <% if (canEdit || isOwner) { %>
       <div class="show-header-actions">
         <% if (canEdit) { %>
-          <button id="openAddModal" type="button" class="btn-primary listings-add-btn">Add listing</button>
+          <button id="openAddModal" type="button" class="btn btn--primary listings-add-btn">Save an item</button>
         <% } %>
         <% if (isOwner) { %>
           <button type="button" id="openSettingsModal" class="manage-btn">Settings</button>
@@ -28,12 +28,12 @@
         <span class="stat-label">items</span>
       </div>
       <div class="stat">
-        <span class="stat-value">$<%= stats.totalValue.toFixed(2) %></span>
-        <span class="stat-label">total value</span>
+        <span class="stat-value"><%= money(stats.totalValue) %></span>
+        <span class="stat-label">total</span>
       </div>
       <div class="stat">
         <span class="stat-value"><%= stats.availableCount %></span>
-        <span class="stat-label">available</span>
+        <span class="stat-label">still live</span>
       </div>
     </div>
   <% } %>
@@ -64,14 +64,14 @@
   <!-- Items -->
   <% if (category.items.length === 0) { %>
     <div class="empty-state">
-      <p>No items in this category yet.</p>
+      <p>Nothing in this collection yet.</p>
       <% if (canEdit) { %>
         <p class="muted">Add one using the Add listing button above.</p>
       <% } %>
     </div>
   <% } else { %>
     <%- include('../partials/item-list', {
-      items: category.items,
+      items: locals.items || category.items,
       categories,
       allowEdit: canEdit,
       allowDelete: canEdit,
@@ -83,20 +83,21 @@
     }) %>
   <% } %>
 
-  <% if (breakdown.platforms.length > 0) { %>
+  <%
+    // Reduced to one row per marketplace. Listing every item here repeated the
+    // grid directly above it on the same screen.
+  %>
+  <% if (breakdown.platforms.length > 1) { %>
     <section class="price-summary" aria-labelledby="price-summary-title">
-      <h2 id="price-summary-title" class="price-summary-title">Price breakdown</h2>
+      <h2 id="price-summary-title" class="price-summary-title">Where this money goes</h2>
       <% breakdown.platforms.forEach((group) => { %>
-        <div class="price-summary-group">
-          <p class="price-summary-platform">
-            <strong><%= group.platform %>:</strong> $<%= group.subtotal.toFixed(2) %>
-          </p>
-          <% group.items.forEach((entry) => { %>
-            <p class="price-summary-item"><%= entry.title %> — $<%= entry.price.toFixed(2) %></p>
-          <% }) %>
-        </div>
+        <p class="price-summary-platform">
+          <strong><%= group.platform %></strong>
+          <span class="muted"><%= plural(group.items.length, 'item') %></span>
+          <span class="tnum"><%= money(group.subtotal) %></span>
+        </p>
       <% }) %>
-      <p class="price-summary-total"><strong>Total:</strong> $<%= breakdown.total.toFixed(2) %></p>
+      <p class="price-summary-total"><strong>Total</strong> <span class="tnum"><%= money(breakdown.total) %></span></p>
     </section>
   <% } %>
 
@@ -104,10 +105,10 @@
 
 <!-- Settings Modal (owner only) -->
 <% if (isOwner) { %>
-  <div id="settingsModal" class="modal-overlay">
+  <dialog id="settingsModal" class="modal" aria-labelledby="settingsModalTitle">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Category Settings</h2>
+        <h2 id="settingsModalTitle">Collection settings</h2>
         <button type="button" class="modal-close">&times;</button>
       </div>
       <div class="modal-body">
@@ -166,7 +167,7 @@
 
       </div>
     </div>
-  </div>
+  </dialog>
 <% } %>
 
 <script src="/js/assign-categories.js"></script>

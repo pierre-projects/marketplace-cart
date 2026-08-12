@@ -2,7 +2,11 @@ const express = require('express');
 const router = express.Router();
 const { ensureAuthenticated } = require('../middleware/authMiddleware');
 const Category = require('../models/Category');
-const { computeItemStats, buildItemCategoryIndex } = require('../services/categoryService');
+const {
+  computeItemStats,
+  buildItemCategoryIndex,
+  sortEntriesByNewest
+} = require('../services/categoryService');
 const { renderHtmlError } = require('../utils/httpResponses');
 
 const DEFAULT_CATEGORY_NAME = 'All Listings';
@@ -52,6 +56,9 @@ router.get('/dashboard', ensureAuthenticated, async (req, res) => {
       currentPage: 'dashboard',
       user: req.user,
       categories: myCategories,
+      // Sorted here rather than derived in the template: the preview shows only
+      // the first few, so "which items" depends on the order being right.
+      savedItems: sortEntriesByNewest(allItems),
       sharedCategories,
       itemCategoryIndex: buildItemCategoryIndex(myCategories),
       stats: {

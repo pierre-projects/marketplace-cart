@@ -5,7 +5,8 @@ const Category = require('../models/Category');
 const {
   computeItemStats,
   buildItemCategoryIndex,
-  computePlatformBreakdown
+  computePlatformBreakdown,
+  sortEntriesByNewest
 } = require('../services/categoryService');
 const User = require('../models/User');
 const { redirectWithFlashError, renderHtmlError } = require('../utils/httpResponses');
@@ -102,6 +103,9 @@ router.get('/:id', async (req, res) => {
       currentPage: 'categories',
       category,
       categories,
+      // Newest first, like every other item grid. Passed separately rather than
+      // reassigning category.items, which would mark the document modified.
+      items: sortEntriesByNewest(category.items),
       // Computed here rather than in the template, which used to recompute the
       // same three numbers in EJS with its own price-coercion branch.
       stats: computeItemStats(category.items),

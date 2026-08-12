@@ -1,11 +1,19 @@
 <% const showAddedBy = typeof locals.showAddedBy !== 'undefined' ? locals.showAddedBy : false; %>
 <% const _maxItems = typeof maxItems !== 'undefined' ? maxItems : null; %>
 
-<% const displayItems = _maxItems ? items.slice(-_maxItems).reverse() : items.slice().reverse(); %>
+<%
+  // Renders exactly the order it is given — callers sort with
+  // sortEntriesByNewest before passing items in. This used to .reverse(), a
+  // positional stand-in for "newest first" that assumed push order matched
+  // date order; once the routes started sorting, the two cancelled and the
+  // grid came out oldest-first. maxItems takes from the FRONT for the same
+  // reason: slice(-n) meant "most recently pushed", not "newest".
+%>
+<% const displayItems = _maxItems ? items.slice(0, _maxItems) : items; %>
 <% const thisCategoryId = typeof categoryId !== 'undefined' ? categoryId : null; %>
 <% const _itemCategoryIndex = typeof itemCategoryIndex !== 'undefined' ? itemCategoryIndex : {}; %>
 
-<ul class="item-list">
+<ul class="item-list grid-cards">
   <% displayItems.forEach(entry => { %>
     <%
       // Shape is detected per entry, not inferred once from items[0]. Callers

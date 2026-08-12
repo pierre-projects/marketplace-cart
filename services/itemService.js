@@ -26,15 +26,23 @@ function normalizeItemData(data) {
  * Upsert an Item by link. Item.link is unique, so re-scraping a URL refreshes
  * the existing document (price, availability, title) rather than creating a
  * second copy. addedAt is preserved on refresh; updatedAt records the refresh.
+ *
+ * `addedAt` is the moment the user ASKED to save the link, which the caller
+ * must supply — it is not the same as now. This used to default to the current
+ * time, so a link whose scrape was slow, retried, or failed and later succeeded
+ * was dated by when the scrape finished. "Date saved" then sorted by scrape
+ * completion, which is not what the label promises.
  */
-async function upsertItemByLink(link, itemData, platform) {
+async function upsertItemByLink(link, itemData, platform, addedAt = new Date()) {
   const write = () => Item.findOneAndUpdate(
     { link },
     {
       // `link` is applied automatically from the filter on insert — naming it
       // here as well would be an update-path conflict.
       $set: { ...itemData, platform },
-      $setOnInsert: { addedAt: new Date() }
+      // setOnInsert, not set: re-saving a URL refreshes its data but must keep
+      // the date it was originally saved.
+      $setOnInsert: { addedAt }
     },
     { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }
   );

@@ -152,7 +152,12 @@ async function runJob(job) {
   try {
     const scraped = await scrapeItem(job.link);
     const itemData = normalizeItemData(scraped);
-    const item = await upsertItemByLink(job.link, itemData, detectPlatform(job.link));
+    // job.createdAt is when the user hit save. It survives retries untouched —
+    // claimNext only sets status/startedAt and increments attempts — so a link
+    // that failed twice before succeeding still carries its original date.
+    const item = await upsertItemByLink(
+      job.link, itemData, detectPlatform(job.link), job.createdAt
+    );
 
     await ScrapeJob.updateOne(
       { _id: job._id },
@@ -190,7 +195,13 @@ async function handleFailure(job, err) {
     { _id: job._id },
     { $set: { status: 'failed', error: { code: scrapeErr.code, message: scrapeErr.userMessage } } }
   );
-  logger.error(`Scrape queue: ${job._id} failed [${scrapeErr.code}] ${scrapeErr.message}`);
+  // The user-facing message is deliberately generic, so logging only that left
+  // the real fault invisible: a missing Chrome surfaced in the log as "Could not
+  // reach the marketplace." Append the root cause — the server log is the one
+  // place the underlying error belongs.
+  const rootCause = scrapeErr.cause?.message;
+  const detail = rootCause && rootCause !== scrapeErr.message ? ` — cause: ${rootCause}` : '';
+  logger.error(`Scrape queue: ${job._id} failed [${scrapeErr.code}] ${scrapeErr.message}${detail}`);
 }
 
 module.exports = {

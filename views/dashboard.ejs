@@ -1,58 +1,60 @@
-<main class="container">
+<main class="container" id="main">
   <%- include('partials/flash-alert') %>
 
-  <!-- Welcome Row -->
-  <div class="dashboard-welcome">
-    <div>
-      <h1>Welcome, <%= user.username %></h1>
-      <p class="dashboard-subtitle">Track and manage your marketplace listings</p>
-    </div>
-    <button id="openAddModal" class="btn-primary">Add listing</button>
+  <%
+    const defaultCollection = categories.find(c => c.isDefault);
+    // Supplied by the route, already newest-first. Deriving it from
+    // defaultCollection.items here would reintroduce push order.
+    const savedItems = locals.savedItems || (defaultCollection ? defaultCollection.items : []);
+    const userCollections = categories.filter(c => !c.isDefault);
+    const platforms = new Set(
+      savedItems
+        .map(e => (e && e.item !== undefined ? e.item : e))
+        .filter(Boolean)
+        .map(i => i.platform)
+        .filter(Boolean)
+    );
+  %>
+
+  <div class="page-head">
+    <h1>Your cart</h1>
+    <button id="openAddModal" type="button" class="btn btn--primary">Save an item</button>
   </div>
 
   <%- include('partials/add-listing-modal', { categories, returnTo: '/dashboard', defaultCategoryId: null }) %>
 
-  <!-- Stats Bar -->
-  <div class="stats-bar">
-    <div class="stat">
-      <span class="stat-value"><%= stats.totalItems %></span>
-      <span class="stat-label">listings</span>
-    </div>
-    <div class="stat">
-      <span class="stat-value">$<%= stats.totalValue.toFixed(2) %></span>
-      <span class="stat-label">total value</span>
-    </div>
-    <div class="stat">
-      <span class="stat-value"><%= stats.availableCount %></span>
-      <span class="stat-label">available</span>
-    </div>
-    <div class="stat">
-      <span class="stat-value"><%= stats.categoryCount %></span>
-      <span class="stat-label">categories</span>
-    </div>
-  </div>
+  <%
+    // One confident number rather than four small ones. The question a shopper
+    // opens the app to answer is "what would all this cost me?".
+  %>
+  <section class="hero-total" aria-labelledby="cart-total-label">
+    <p class="hero-figure"><%= money(stats.totalValue) %></p>
+    <p class="hero-sub" id="cart-total-label">
+      <%= plural(stats.totalItems, 'item') %> saved<% if (platforms.size) { %>
+        across <%= plural(platforms.size, 'marketplace') %><% } %><% if (stats.availableCount < stats.totalItems) { %>
+        · <%= stats.totalItems - stats.availableCount %> no longer live<% } %>
+    </p>
+  </section>
 
-  <!-- ===================== -->
-  <!-- Section: Recent Listings -->
-  <!-- ===================== -->
-  <section class="dashboard-section">
-    <div class="dashboard-header">
-      <h2>Recent Listings</h2>
-      <a href="/listings">View all listings</a>
+  <section class="dashboard-section stack">
+    <div class="section-head">
+      <h2>Recently saved</h2>
+      <% if (savedItems.length) { %><a href="/listings">View all saved →</a><% } %>
     </div>
 
-    <% const allListings = categories.find(c => c.isDefault); %>
-    <% if (!allListings || allListings.items.length === 0) { %>
-      <div class="empty-state">
-        <p>No listings yet.</p>
-        <p class="muted">Click "Add listing" above to save your first item.</p>
-      </div>
+    <% if (!savedItems.length) { %>
+      <%- include('partials/empty-state', {
+        headline: 'Your cart is empty',
+        body: 'Paste a link from OfferUp or Facebook Marketplace and we will pull in the price and photos.',
+        actionLabel: 'Save an item',
+        actionId: 'openAddModalEmpty'
+      }) %>
     <% } else { %>
       <%- include('partials/item-list', {
-        items: allListings.items,
+        items: savedItems,
         categories,
         itemCategoryIndex,
-        maxItems: 3,
+        maxItems: 4,
         allowEdit: true,
         allowDelete: true,
         showCategories: true,
@@ -62,61 +64,59 @@
     <% } %>
   </section>
 
-  <!-- ===================== -->
-  <!-- Section: My Categories -->
-  <!-- ===================== -->
-  <section class="dashboard-section">
-    <div class="dashboard-header">
-      <h2>My Categories</h2>
-      <a href="/categories">View all categories</a>
+  <section class="dashboard-section stack">
+    <div class="section-head">
+      <h2>Collections</h2>
+      <% if (userCollections.length) { %><a href="/categories">View all →</a><% } %>
     </div>
 
-    <% const userCategories = categories.filter(c => !c.isDefault); %>
+    <% if (!userCollections.length) { %>
+      <%- include('partials/empty-state', {
+        headline: 'Group what you are hunting for',
+        body: 'Collections keep separate hunts apart — apartment, bike build, gifts — each with its own total.',
+        actionLabel: 'New collection',
+        actionHref: '/categories'
+      }) %>
+    <% } else { %>
+      <div class="category-grid">
+        <% userCollections.slice(0, 5).forEach(category => { %>
+          <%- include('partials/category-card', {
+            category,
+            isShared: false,
+            showAvailableCount: false,
+            showManageButton: false
+          }) %>
+        <% }) %>
 
-    <div class="category-grid">
-      <% userCategories.slice(0, 5).forEach(category => { %>
-        <%- include('partials/category-card', {
-          category,
-          isShared: false,
-          showAvailableCount: false,
-          showManageButton: false
-        }) %>
-      <% }) %>
-
-      <!-- Create New Category Card -->
-      <div class="category-card create-card">
-        <p class="create-card-label">New category</p>
-        <form action="/categories/create" method="POST" class="create-card-form">
-          <input type="text" name="name" placeholder="e.g. Electronics, Furniture..." required>
-          <button type="submit" class="btn-primary">Create category</button>
-        </form>
+        <a class="category-card create-card" href="/categories">
+          <span class="create-card-plus" aria-hidden="true">+</span>
+          <span class="create-card-label">New collection</span>
+        </a>
       </div>
-    </div>
+    <% } %>
   </section>
 
-  <!-- ===================== -->
-  <!-- Section: Shared With Me -->
-  <!-- ===================== -->
-    <% if (sharedCategories && sharedCategories.length > 0) { %>
-      <section class="dashboard-section">
-        <div class="dashboard-header">
-          <h2>Shared With Me</h2>
-        </div>
+  <% if (sharedCategories && sharedCategories.length > 0) { %>
+    <section class="dashboard-section stack">
+      <div class="section-head">
+        <h2>Shared with you</h2>
+      </div>
 
-        <div class="category-grid">
-          <% sharedCategories.forEach(category => { %>
-            <%- include('partials/category-card', {
-              category,
-              isShared: true,
-              showAvailableCount: false,
-              showManageButton: false
-            }) %>
-          <% }) %>
-        </div>
-      </section>
-    <% } %>
+      <div class="category-grid">
+        <% sharedCategories.forEach(category => { %>
+          <%- include('partials/category-card', {
+            category,
+            isShared: true,
+            showAvailableCount: false,
+            showManageButton: false
+          }) %>
+        <% }) %>
+      </div>
+    </section>
+  <% } %>
 
 </main>
 
+<script src="/js/toast.js"></script>
 <script src="/js/dashboard.js"></script>
 <script src="/js/assign-categories.js"></script>

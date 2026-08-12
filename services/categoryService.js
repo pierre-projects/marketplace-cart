@@ -113,9 +113,38 @@ function computePlatformBreakdown(entries) {
   return { platforms, total };
 }
 
+/**
+ * Newest first, by the date the item was saved.
+ *
+ * Ordering used to be positional: routes rendered the category's items array in
+ * push order and `item-list.ejs` reversed it. That only approximated "newest
+ * first" — it broke as soon as a save was dated by anything other than its
+ * insert position, and it silently cancelled out the moment a route sorted
+ * properly. Order is decided here, from the data, once.
+ *
+ * Accepts either shape the item list renders: bare Item docs, or
+ * `{ item, addedBy }` wrappers. Entries whose `item` populated to null sort
+ * last instead of throwing.
+ *
+ * @param {Array} entries
+ * @returns {Array} a new array — the caller's array is not mutated
+ */
+function sortEntriesByNewest(entries) {
+  const list = Array.isArray(entries) ? entries : [];
+
+  const when = (entry) => {
+    const item = entry && entry.item !== undefined ? entry.item : entry;
+    const t = item && item.addedAt ? new Date(item.addedAt).getTime() : NaN;
+    return Number.isNaN(t) ? -Infinity : t;
+  };
+
+  return list.slice().sort((a, b) => when(b) - when(a));
+}
+
 module.exports = {
   addItemToCategory,
   computeItemStats,
   buildItemCategoryIndex,
-  computePlatformBreakdown
+  computePlatformBreakdown,
+  sortEntriesByNewest
 };
