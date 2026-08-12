@@ -14,10 +14,16 @@ const CODES = {
   NOT_FOUND: 'NOT_FOUND',
   BLOCKED: 'BLOCKED',
   PARSE_FAILED: 'PARSE_FAILED',
+  BROWSER_UNAVAILABLE: 'BROWSER_UNAVAILABLE',
 };
 
 // Codes worth retrying. Retrying UNSUPPORTED or NOT_FOUND just burns another
 // full scrape (up to 30s of Puppeteer) to reach the same conclusion.
+//
+// BROWSER_UNAVAILABLE is deliberately absent: no amount of backoff installs a
+// browser. It was previously reported as NETWORK, which IS retryable, so a
+// missing Chrome burned all three attempts before failing — and blamed the
+// user's connection while doing it.
 const RETRYABLE = new Set([CODES.NETWORK, CODES.TIMEOUT]);
 
 const USER_MESSAGES = {
@@ -27,6 +33,7 @@ const USER_MESSAGES = {
   [CODES.NOT_FOUND]: 'That listing could not be found. It may have been removed.',
   [CODES.BLOCKED]: 'The marketplace blocked this request. Try again in a few minutes.',
   [CODES.PARSE_FAILED]: 'We reached the listing but could not read its details.',
+  [CODES.BROWSER_UNAVAILABLE]: 'The scraper could not start its browser. Facebook listings need Chrome installed.',
 };
 
 class ScrapeError extends Error {
