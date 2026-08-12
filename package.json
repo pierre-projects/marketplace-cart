@@ -1,4 +1,18 @@
 {
+  "name": "marketplace-cart",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Home dashboard for saving marketplace listings into collections.",
+  "main": "server.js",
+  "engines": {
+    "node": ">=20.11"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "migrate": "node scripts/migrate.js",
+    "migrate:apply": "node scripts/migrate.js --apply"
+  },
   "dependencies": {
     "axios": "^1.13.4",
     "bcrypt": "^6.0.0",
