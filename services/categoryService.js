@@ -169,10 +169,34 @@ function sortEntriesByNewest(entries) {
   return list.slice().sort((a, b) => when(b) - when(a));
 }
 
+/**
+ * `{ [categoryId]: { stats, breakdown } }` for the collection cards.
+ *
+ * Cards used to count their own items in EJS. Computing here, with the same two
+ * helpers the collection page and dashboard use, means a card cannot report
+ * different numbers from the page it links to. Keyed by string id because the
+ * template looks entries up with `String(category._id)`.
+ */
+function buildCardStats(categories) {
+  const list = Array.isArray(categories) ? categories : [];
+  const out = {};
+
+  for (const category of list) {
+    if (!category || !category._id) continue;
+    out[String(category._id)] = {
+      stats: computeItemStats(category.items),
+      breakdown: computePlatformBreakdown(category.items),
+    };
+  }
+
+  return out;
+}
+
 module.exports = {
   addItemToCategory,
   computeItemStats,
   buildItemCategoryIndex,
   computePlatformBreakdown,
-  sortEntriesByNewest
+  sortEntriesByNewest,
+  buildCardStats
 };

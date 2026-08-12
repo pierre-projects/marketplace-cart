@@ -1,46 +1,54 @@
-<main class="container">
+<main class="container" id="main">
   <%- include('../partials/flash-alert') %>
 
-  <div class="page-header">
-    <h1>My Categories</h1>
-    <div class="categories-header-actions">
-      <form action="/categories/create" method="POST" class="create-category-form">
-        <input type="text" name="name" placeholder="New category name" required>
-        <button type="submit" class="btn-primary">Create category</button>
-      </form>
+  <div class="page-head">
+    <div>
+      <h1>Collections</h1>
+      <p class="page-head__sub">Group saved items however you like.</p>
     </div>
   </div>
 
-  <!-- Your Categories -->
   <% const userCategories = categories.filter(c => !c.isDefault); %>
 
   <% if (userCategories.length === 0) { %>
-    <div class="empty-state">
-      <p>You haven't created any categories yet.</p>
-      <p class="muted">Create one above to start organizing your listings.</p>
-    </div>
-  <% } else { %>
-    <div class="category-grid">
-      <% userCategories.forEach(category => { %>
-        <%- include('../partials/category-card', {
-          category,
-          isShared: false,
-          showAvailableCount: true,
-          showManageButton: true
-        }) %>
-      <% }) %>
-    </div>
+    <%- include('../partials/empty-state', {
+      headline: 'No collections yet',
+      body: 'Collections are just groups of saved items — one per room, project, or shopping trip.'
+    }) %>
   <% } %>
 
-  <!-- Shared With Me -->
+  <%
+    // The create form lives in the grid as its own tile rather than as a bare
+    // input in the header, so creating a collection looks like the thing it
+    // produces. Rendered in both states, so it is never more than a click away.
+  %>
+  <div class="category-grid">
+    <% userCategories.forEach(category => { %>
+      <%- include('../partials/category-card', {
+        category,
+        isShared: false,
+        showManageButton: true
+      }) %>
+    <% }) %>
+
+    <form class="collection-card create-card" action="/categories/create" method="POST">
+      <span class="create-card-plus" aria-hidden="true">+</span>
+      <label class="create-card-label" for="newCollectionName">New collection</label>
+      <div class="create-card-form">
+        <input type="text" id="newCollectionName" name="name"
+               placeholder="Name it" required maxlength="60">
+        <button type="submit" class="btn btn--primary btn--sm">Create</button>
+      </div>
+    </form>
+  </div>
+
   <% if (sharedCategories && sharedCategories.length > 0) { %>
-    <h2 class="section-title">Shared With Me</h2>
+    <h2 class="section-title">Shared with me</h2>
     <div class="category-grid">
       <% sharedCategories.forEach(category => { %>
         <%- include('../partials/category-card', {
           category,
           isShared: true,
-          showAvailableCount: true,
           showManageButton: false
         }) %>
       <% }) %>
@@ -48,27 +56,54 @@
   <% } %>
 </main>
 
-<!-- Manage Category Modal -->
 <dialog id="manageCategoryModal" class="modal" aria-labelledby="manageCategoryModalTitle">
   <div class="modal-content modal-sm">
     <div class="modal-header">
       <h2 id="manageCategoryModalTitle">Manage collection</h2>
-      <button type="button" class="modal-close">&times;</button>
+      <button type="button" class="modal-close" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
-      <form id="renameForm" class="modal-form">
-        <label for="newName">Rename</label>
-        <div class="input-group">
-          <input type="text" id="newName" name="name" required>
-          <button type="submit" class="btn-primary">Save</button>
-        </div>
-      </form>
-      <hr class="modal-divider">
-      <div class="danger-zone">
-        <p class="danger-label">Danger Zone</p>
-        <button type="button" id="deleteBtn" class="btn-danger">Delete Category</button>
-        <p class="danger-warning">This will remove the category but not the items.</p>
+
+      <div class="settings-section">
+        <h3 class="settings-label">Name</h3>
+        <form id="renameForm" class="modal-form">
+          <div class="input-group">
+            <label class="sr-only" for="newName">Collection name</label>
+            <input type="text" id="newName" name="name" required maxlength="60">
+            <button type="submit" class="btn btn--primary">Save</button>
+          </div>
+        </form>
       </div>
+
+      <hr class="modal-divider">
+
+      <%
+        // Two-step, in the modal. The old flow fired a browser confirm(), which
+        // looks like the OS rather than the app and gives no room to say what
+        // survives the delete.
+      %>
+      <div class="settings-section danger-zone">
+        <h3 class="settings-label danger-label">Danger zone</h3>
+
+        <div id="deleteResting" class="danger-row">
+          <div>
+            <p class="danger-row__title">Delete this collection</p>
+            <p class="danger-warning">The items inside are kept in Saved items.</p>
+          </div>
+          <button type="button" id="deleteBtn" class="btn btn--danger">Delete</button>
+        </div>
+
+        <div id="deleteConfirm" class="danger-confirm is-hidden">
+          <p class="danger-confirm__question">
+            Delete <strong id="deleteConfirmName"></strong>? This cannot be undone.
+          </p>
+          <div class="danger-confirm__actions">
+            <button type="button" id="deleteCancelBtn" class="btn btn--secondary">Cancel</button>
+            <button type="button" id="deleteConfirmBtn" class="btn btn--danger">Yes, delete</button>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </dialog>

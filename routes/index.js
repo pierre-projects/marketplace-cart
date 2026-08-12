@@ -6,7 +6,8 @@ const {
   computeItemStats,
   buildItemCategoryIndex,
   computePlatformBreakdown,
-  sortEntriesByNewest
+  sortEntriesByNewest,
+  buildCardStats
 } = require('../services/categoryService');
 const { renderHtmlError } = require('../utils/httpResponses');
 
@@ -62,6 +63,9 @@ router.get('/dashboard', ensureAuthenticated, async (req, res) => {
       savedItems: sortEntriesByNewest(allItems),
       // Feeds the shared stats panel's per-marketplace rows.
       breakdown: computePlatformBreakdown(allItems),
+      // The dashboard renders the same collection cards, so it needs the same
+      // per-collection numbers; without this every card would read $0.00.
+      cardStats: buildCardStats([...myCategories, ...sharedCategories]),
       sharedCategories,
       itemCategoryIndex: buildItemCategoryIndex(myCategories),
       stats: {
