@@ -199,20 +199,6 @@
     align-items: stretch;
   }
 
-  .categories-header-actions .listings-add-btn,
-      .categories-header-actions .create-category-form {
-    width: 100%;
-  }
-
-  .categories-header-actions .create-category-form {
-    flex-direction: column;
-  }
-
-  .categories-header-actions .create-category-form input,
-      .categories-header-actions .create-category-form button {
-    width: 100%;
-  }
-
   .show-header-actions {
     width: 100%;
     flex-direction: column;

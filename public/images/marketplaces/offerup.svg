@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img">
+  <title>OfferUp</title>
+  <rect width="32" height="32" rx="7" fill="#00a87e"/>
+  <path d="M16 7.25a8.75 8.75 0 1 0 0 17.5 8.75 8.75 0 0 0 0-17.5Zm0 4.4a4.35 4.35 0 1 1 0 8.7 4.35 4.35 0 0 1 0-8.7Z" fill="#fff"/>
+  <path d="M16 7.25a8.75 8.75 0 0 1 8.75 8.75H20.4a4.4 4.4 0 0 0-4.4-4.35V7.25Z" fill="#2f6fed"/>
+</svg>

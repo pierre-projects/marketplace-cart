@@ -677,7 +677,7 @@ button {
 }
 
 button:hover {
-  background: var(--success);
+  background: var(--accent-hover);
 }
 
 .category-label {
@@ -1149,15 +1149,6 @@ button:focus-visible {
   margin-top: 0;
 }
 
-.create-category-form {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.create-category-form input {
-  margin: 0;
-}
-
 .section-title {
   margin-top: 2.5rem;
   margin-bottom: 1rem;
@@ -1168,169 +1159,161 @@ button:focus-visible {
   font-weight: 500;
 }
 
-.category-card {
-  background: var(--surface-card);
-  border: 1px solid var(--border-strong);
-  border-radius: 10px;
-  padding: 1.25rem;
+/* ==========================================================================
+   Collection card
+
+   Rebuilt on the design tokens to sit beside the item `.card`. The old rules
+   used raw values (10px radius, 1.25rem padding, 0.2s) and put padding on the
+   card while the preview expected to be flush, so the image strip floated
+   inset with a band of card background around it.
+   ========================================================================== */
+
+.collection-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: border-color 0.2s, transform 0.2s;
+  background: var(--surface-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  transition: border-color var(--dur-fast) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out),
+              box-shadow var(--dur-fast) var(--ease-out);
 }
 
-.category-card:hover {
-  border-color: var(--accent);
+.collection-card:hover {
+  border-color: var(--border-hover);
   transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
-.category-card-link {
-  text-decoration: none;
-  color: inherit;
-  display: block;
-}
+/* One stretched link covers the card, so the whole tile is the target and the
+   kebab is the only thing that has to opt out of it. */
+.collection-card__link { position: absolute; inset: 0; z-index: 1; }
+.collection-card:focus-within { border-color: var(--accent); }
 
-.category-name {
-  margin: 0 0 0.25rem;
-  font-size: 1.05rem;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+/* ---- preview ---- */
 
-.category-meta {
-  margin: 0;
-  font-size: 0.82rem;
-  color: var(--muted);
-}
-
-.category-card--shared {
-  border-style: dashed;
-}
-
-.manage-btn {
-  background: transparent;
-  border: 1px solid var(--border-hover);
-  color: var(--muted);
-  padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  flex-shrink: 0;
-}
-
-.manage-btn:hover {
-  background: var(--surface-input);
-  color: var(--text);
-  border-color: var(--border-muted);
-}
-
-.manage-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.category-preview-link {
-  display: block;
-  text-decoration: none;
-  margin: -1.25rem -1.25rem 0;
-}
-
-.category-preview-link:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
-}
-
-.category-preview {
+.collection-card__media {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  height: 130px;
-  overflow: hidden;
-  border-radius: 8px 8px 0 0;
+  /* Slots divide the row evenly however many there are: one image spans the
+     full width. Padding to three with striped blanks read as a glitch. */
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  aspect-ratio: 16 / 7;
+  min-height: 0;
   background: var(--surface-sunken);
-}
-
-.category-preview-slot {
   overflow: hidden;
-  position: relative;
 }
 
-.category-preview-slot + .category-preview-slot {
-  border-left: 1px solid var(--border);
+.collection-card__slot { position: relative; overflow: hidden; }
+
+.collection-card__slot + .collection-card__slot {
+  border-left: 1px solid var(--surface-card);
 }
 
-.category-preview-img {
+.collection-card__media img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
-  transition: transform 0.3s ease;
+  transition: transform var(--dur-slow) var(--ease-out);
 }
 
-.category-card:hover .category-preview-img {
-  transform: scale(1.04);
-}
+.collection-card:hover .collection-card__media img { transform: scale(1.04); }
 
-.category-preview-slot--empty {
-  background: repeating-linear-gradient(
-    45deg,
-    var(--surface-card),
-    var(--surface-card) 6px,
-    var(--surface-sunken) 6px,
-    var(--surface-sunken) 12px
-  );
-}
-
-.category-preview-empty {
-  grid-column: 1 / -1;
+.collection-card__empty {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--border-muted);
-  font-size: 0.8rem;
-  letter-spacing: 0.03em;
-  background: var(--surface-sunken);
+  color: var(--text-faint);
+  font-size: var(--fs-meta);
 }
 
-.category-card-footer {
+/* ---- body ---- */
+
+.collection-card__body {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 0.9rem;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-4);
 }
 
-.category-card-footer .category-card-link {
-  flex: 1;
+.collection-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
   min-width: 0;
 }
 
-.category-meta-row {
+.collection-card__name {
+  margin: 0;
+  font-size: var(--fs-lead);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collection-card__value {
+  margin: 0;
+  font-size: var(--fs-price);
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.collection-card__meta {
+  margin: 0;
+  font-size: var(--fs-meta);
+  color: var(--text-muted);
+}
+
+.collection-card__platforms {
   display: flex;
-  align-items: center;
-  gap: 0.35rem;
   flex-wrap: wrap;
-  margin-top: 0.15rem;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
 }
 
-.category-meta-sep {
-  color: var(--border-muted);
-  font-size: 0.75rem;
-}
+.collection-card--shared { border-style: dashed; }
 
-.category-name-row {
-  display: flex;
+/* ---- manage ---- */
+
+.collection-card__manage {
+  position: absolute;
+  top: var(--sp-2);
+  right: var(--sp-2);
+  z-index: 2;                 /* above the stretched link */
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  min-width: 0;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--glass);
+  backdrop-filter: blur(4px);
+  color: var(--text-primary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out),
+              background-color var(--dur-fast) var(--ease-out);
 }
 
-.category-name-row .category-name {
-  flex: 1;
-  min-width: 0;
+/* Hidden until wanted, but never hidden from the keyboard. */
+.collection-card:hover .collection-card__manage,
+.collection-card__manage:focus-visible { opacity: 1; }
+
+.collection-card__manage:hover { background: var(--overlay-hover); }
+
+@media (pointer: coarse) {
+  /* No hover to reveal it, and 32px is under the touch target minimum. */
+  .collection-card__manage { opacity: 1; width: 44px; height: 44px; }
 }
+
+/* ---- create tile ---- */
 
 .empty-state {
   text-align: center;
@@ -1371,36 +1354,65 @@ button:focus-visible {
   margin: 1.5rem 0;
 }
 
-.danger-zone {
-  text-align: center;
+/* ==========================================================================
+   Danger zone — two-step delete
+
+   Was a centred red block plus a browser confirm(). The confirmation now lives
+   in the modal so it can name what is being deleted and what survives.
+   ========================================================================== */
+
+.danger-zone { text-align: left; }
+
+.danger-label { color: var(--danger); }
+
+.danger-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
 }
 
-.danger-label {
-  color: var(--danger);
-  font-size: 0.8rem;
-  margin-bottom: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.btn-danger {
-  background: var(--danger-strong);
-  color: var(--text);
-  border: none;
-  padding: 0.5rem 1.2rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.btn-danger:hover {
-  background: var(--danger);
+.danger-row__title {
+  margin: 0;
+  font-size: var(--fs-body);
+  font-weight: 600;
 }
 
 .danger-warning {
-  font-size: 0.75rem;
-  color: var(--muted);
-  margin-top: 0.5rem;
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-meta);
+  color: var(--text-muted);
+}
+
+.danger-confirm {
+  padding: var(--sp-3);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-md);
+  background: var(--danger-wash);
+}
+
+.danger-confirm__question {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--fs-body);
+}
+
+.danger-confirm__actions {
+  display: flex;
+  gap: var(--sp-2);
+  justify-content: flex-end;
+}
+
+/* The destructive variant of the shared button, which the system was missing —
+   the modal previously reached for a legacy .btn-danger instead. */
+.btn--danger {
+  background: var(--danger-strong);
+  border-color: var(--danger-strong);
+  color: var(--text-on-brand);
+}
+
+.btn--danger:hover {
+  background: var(--danger);
+  border-color: var(--danger);
 }
 
 .chip {
@@ -1483,6 +1495,206 @@ button:focus-visible {
   border-color: var(--danger-strong);
 }
 
+/* ==========================================================================
+   Collection settings modal
+   ========================================================================== */
+
+.collection-settings-modal {
+  max-width: 500px;
+}
+
+.collection-settings-modal .modal-content {
+  width: 100%;
+  max-height: none;
+  border: 0;
+  border-radius: inherit;
+  box-shadow: none;
+}
+
+.collection-settings-modal .modal-header {
+  padding: var(--sp-4) var(--sp-5);
+}
+
+.collection-settings-modal .modal-body {
+  display: grid;
+  gap: 0;
+  padding: 0 var(--sp-5) var(--sp-5);
+}
+
+.collection-settings-section {
+  padding: var(--sp-4) 0;
+  border-top: 1px solid var(--border);
+}
+
+.collection-settings-section:first-child {
+  border-top: 0;
+}
+
+.collection-settings-section__head {
+  margin-bottom: var(--sp-3);
+}
+
+.collection-settings-section__head h3 {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--fs-label);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.collection-settings-form {
+  margin: 0;
+}
+
+.collection-settings-input-row,
+.collection-settings-modal .share-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--sp-2);
+  align-items: center;
+}
+
+.collection-settings-input-row input,
+.collection-settings-modal .share-form input,
+.collection-settings-modal .share-form select,
+.collection-settings-modal .role-form select {
+  width: 100%;
+  max-width: none;
+  height: 38px;
+  margin: 0;
+}
+
+.collection-settings-modal .share-form {
+  grid-template-columns: minmax(0, 1fr) 104px auto;
+}
+
+.collection-settings-modal .collection-settings-toggle {
+  position: relative;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: var(--sp-3);
+  align-items: center;
+  padding: var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  cursor: pointer;
+  margin: 0;
+}
+
+.collection-settings-modal .collection-settings-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.collection-settings-modal .collection-settings-toggle__control {
+  position: relative;
+  width: 38px;
+  height: 22px;
+  border-radius: var(--r-full);
+  background: var(--border-hover);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.collection-settings-modal .collection-settings-toggle__control::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.collection-settings-modal .collection-settings-toggle input:checked + .collection-settings-toggle__control {
+  background: var(--accent);
+}
+
+.collection-settings-modal .collection-settings-toggle input:checked + .collection-settings-toggle__control::after {
+  transform: translateX(16px);
+}
+
+.collection-settings-modal .collection-settings-toggle input:focus-visible + .collection-settings-toggle__control {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.collection-settings-visibility-form[aria-busy='true'] .collection-settings-toggle {
+  opacity: 0.7;
+}
+
+.collection-settings-modal .collection-settings-toggle__copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.collection-settings-modal .collection-settings-toggle__title {
+  color: var(--text-primary);
+  font-size: var(--fs-body);
+  font-weight: 700;
+}
+
+.collection-settings-modal .collection-settings-toggle__hint {
+  color: var(--text-muted);
+  font-size: var(--fs-meta);
+  line-height: 1.35;
+}
+
+.collection-settings-modal .shared-users-list {
+  display: grid;
+  gap: 0;
+}
+
+.collection-settings-modal .shared-user-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) 0;
+}
+
+.collection-settings-modal .shared-user-name {
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collection-settings-modal .role-form select {
+  padding-inline: var(--sp-2);
+}
+
+.collection-settings-modal .remove-user-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+}
+
+.collection-settings-section--danger {
+  margin-top: var(--sp-1);
+  padding: var(--sp-3);
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius-md);
+  background: var(--danger-wash);
+}
+
+.collection-settings-section--danger .collection-settings-section__head {
+  margin-bottom: var(--sp-2);
+}
+
+.collection-settings-section--danger .danger-row {
+  align-items: center;
+}
+
 .create-card {
   background: var(--overlay-hover);
   border: 2px dashed var(--border-hover);
@@ -1506,12 +1718,15 @@ button:focus-visible {
   margin: 0 0 0.5rem;
 }
 
+/* Stacked, because the tile is as narrow as a card. Was already written for
+   this and simply unused; retokenised rather than duplicated. */
 .create-card-form {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 0.5rem;
+  gap: var(--sp-2);
   width: 100%;
+  margin-top: var(--sp-3);
 }
 
 .create-card-form input {
@@ -1521,22 +1736,21 @@ button:focus-visible {
   box-sizing: border-box;
   margin: 0;
   background: var(--surface-card);
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--border);
 }
 
 .create-card-form input:focus {
   border-color: var(--accent);
 }
 
-.create-card-form .btn-primary {
+.create-card-form .btn {
   width: 100%;
   box-sizing: border-box;
 }
 
 @media (max-width: 640px) {
-  .category-preview {
-    height: 110px;
-  }
+  /* The preview is sized by aspect-ratio now, so it scales on its own. */
+  .collection-card__body { padding: var(--sp-3); }
 }
 
 /* ==========================================================================
@@ -1566,7 +1780,6 @@ button:focus-visible {
 
 .modal-error { display: none; }
 .modal-error.is-visible { display: flex; }
-
 
 #previewImage { display: none; }
 #previewImage.is-visible { display: block; }
@@ -1715,6 +1928,38 @@ button:focus-visible {
   position: absolute;
   top: var(--sp-2);
   left: var(--sp-2);
+}
+
+.marketplace-logo--overlay {
+  position: absolute;
+  top: var(--sp-2);
+  left: var(--sp-2);
+  z-index: 1;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  padding: 3px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 8px;
+  background: var(--glass);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+  backdrop-filter: blur(4px);
+}
+
+.card__media .marketplace-logo__image {
+  position: static;
+  inset: auto;
+  display: block;
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  border-radius: 5px;
+}
+
+.card__media.is-gone .marketplace-logo__image {
+  filter: none;
+  opacity: 1;
 }
 
 .card__menu {
@@ -1961,6 +2206,13 @@ dialog.modal .modal-body { background: transparent; }
   font-weight: 600;
   padding: var(--sp-1) 0;
   cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out),
+              color var(--dur-fast) var(--ease-out);
+}
+
+.theme-toggle__opt:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
 }
 
 .theme-toggle__opt.is-active {
@@ -2042,13 +2294,18 @@ dialog.modal .modal-body { background: transparent; }
 .kebab-action--danger { color: var(--danger); }
 .kebab-divider { border: 0; border-top: 1px solid var(--border); margin: var(--sp-1) 0; }
 
-./* ==========================================================================
+/* ==========================================================================
    Collection page header — editable title
    ========================================================================== */
 
 /* The header splits into a title block and an actions block; `.page-head`
    (base.css) already supplies the flex row and spacing. */
-.page-head__main { min-width: 0; }
+.page-head__main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
 
 .page-head__actions {
   display: flex;
@@ -2128,15 +2385,12 @@ dialog.modal .modal-body { background: transparent; }
 }
 
 .stats-panel__head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
   gap: var(--sp-5);
-  flex-wrap: wrap;
 }
 
-/* Lets the headline shrink before the counts do, so the money column keeps its
-   place when the panel narrows. */
 .stats-panel__headline { min-width: 0; }
 
 .stats-panel__label {
@@ -2152,7 +2406,7 @@ dialog.modal .modal-body { background: transparent; }
   margin: var(--sp-1) 0 0;
   font-size: var(--fs-hero);
   font-weight: 600;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
   line-height: 1.05;
   font-variant-numeric: tabular-nums;
 }
@@ -2163,91 +2417,294 @@ dialog.modal .modal-body { background: transparent; }
   color: var(--text-secondary);
 }
 
-/* Quieter than the counts it sits beside — it explains the figure rather than
-   adding to it. */
 .stats-panel__caveat { color: var(--text-muted); }
 
-.stats-panel__counts {
-  display: flex;
-  gap: var(--sp-5);
+.stats-panel__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(72px, auto));
   margin: 0;
 }
 
-.stats-panel__count { text-align: right; }
-.stats-panel__count dt {
+.stats-panel__metric {
+  min-width: 0;
+  padding: 0 var(--sp-4);
+  border-left: 1px solid var(--border);
+}
+
+.stats-panel__metric dt {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
   font-size: var(--fs-label);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-muted);
+  white-space: nowrap;
 }
-.stats-panel__count dd {
+
+.stats-panel__metric dd {
   margin: 2px 0 0;
   font-size: var(--fs-h3);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
-.stats-panel__count--muted dd { color: var(--text-muted); }
 
-/* ---- per-marketplace rows ---- */
+.stats-panel__metric--live dd { color: var(--ok-dot); }
+.stats-panel__metric--muted dd { color: var(--text-muted); }
 
-.stats-panel__rows {
-  list-style: none;
+.stats-panel__status-dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--ok-dot);
+}
+
+/* ---- marketplace donut ------------------------------------------------ */
+
+.stats-panel__distribution {
+  display: grid;
+  grid-template-columns: minmax(190px, 0.65fr) minmax(0, 1.35fr);
+  align-items: center;
+  gap: var(--sp-6);
   margin: var(--sp-5) 0 0;
   padding: var(--sp-4) 0 0;
   border-top: 1px solid var(--border);
-  display: grid;
-  gap: var(--sp-3);
 }
 
-/* Fixed columns so the amounts form a readable right-aligned money column
-   instead of drifting with each platform's name length. */
-.stats-panel__row {
+.stats-panel__chart-block {
   display: grid;
-  grid-template-columns: minmax(120px, auto) auto 1fr auto;
-  align-items: center;
-  gap: var(--sp-3);
+  justify-items: center;
+  text-align: center;
 }
 
-.stats-panel__platform { min-width: 0; }
+.stats-panel__distribution-title {
+  margin: 0;
+  font-size: var(--fs-body);
+  font-weight: 650;
+}
 
-.stats-panel__count-label {
+.stats-panel__distribution-sub {
+  margin: var(--sp-1) 0 0;
   font-size: var(--fs-meta);
   color: var(--text-muted);
+}
+
+.stats-panel__donut {
+  position: relative;
+  display: grid;
+  width: 164px;
+  height: 164px;
+  margin-top: var(--sp-3);
+  place-items: center;
+}
+
+.stats-panel__donut svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  transform: rotate(-90deg);
+}
+
+.stats-panel__donut-track,
+.stats-panel__donut-segment {
+  fill: none;
+  stroke-width: 5.5;
+}
+
+.stats-panel__donut-track { stroke: var(--surface-sunken); }
+
+.stats-panel__donut-segment {
+  stroke: var(--p-neutral-chart);
+  pointer-events: none;
+  transition: opacity var(--dur-base) var(--ease-out),
+              stroke-width var(--dur-base) var(--ease-out),
+              filter var(--dur-base) var(--ease-out);
+  animation: stats-donut-reveal 560ms var(--ease-out) both;
+  animation-delay: var(--segment-delay, 0ms);
+}
+
+.stats-panel__donut-segment--facebook { stroke: var(--p-fb-chart); }
+.stats-panel__donut-segment--offerup { stroke: var(--p-offerup-chart); }
+.stats-panel__donut-segment--neutral { stroke: var(--p-neutral-chart); }
+
+@keyframes stats-donut-reveal {
+  from { stroke-dasharray: 0 100; opacity: 0.3; }
+}
+
+.stats-panel.has-chart-highlight .stats-panel__donut-segment.is-dimmed {
+  opacity: 0.2;
+}
+
+.stats-panel__donut-segment.is-highlighted {
+  stroke-width: 7;
+  filter: drop-shadow(0 1px 2px var(--overlay-strong));
+}
+
+.stats-panel__donut-center {
+  position: absolute;
+  inset: 27%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  pointer-events: none;
+}
+
+.stats-panel__donut-center strong {
+  font-size: var(--fs-h2);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.stats-panel__donut-center span {
+  max-width: 11ch;
+  margin-top: var(--sp-1);
+  color: var(--text-muted);
+  font-size: var(--fs-label);
+  font-weight: 600;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+/* ---- interactive legend ------------------------------------------------ */
+
+.stats-panel__legend {
+  display: grid;
+  align-self: stretch;
+  align-content: center;
+  gap: var(--sp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stats-panel__legend-button {
+  --chart-color: var(--p-neutral-chart);
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto minmax(72px, auto);
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  min-height: 54px;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  text-align: left;
+  transition: background-color var(--dur-fast) var(--ease-out),
+              border-color var(--dur-fast) var(--ease-out),
+              opacity var(--dur-base) var(--ease-out);
+}
+
+.stats-panel__legend-button--facebook { --chart-color: var(--p-fb-chart); }
+.stats-panel__legend-button--offerup { --chart-color: var(--p-offerup-chart); }
+
+.stats-panel__legend-button:hover,
+.stats-panel__legend-button:focus-visible {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.stats-panel__legend-button.is-highlighted {
+  border-color: color-mix(in srgb, var(--chart-color) 45%, transparent);
+  background: color-mix(in srgb, var(--chart-color) 10%, var(--surface-card));
+  color: var(--text-primary);
+}
+
+.stats-panel.has-chart-highlight .stats-panel__legend-button.is-dimmed {
+  opacity: 0.55;
+}
+
+.stats-panel__marketplace-mark {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--chart-color) 30%, var(--border));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--chart-color) 10%, var(--surface-card));
+  color: var(--chart-color);
+  font-size: var(--fs-meta);
+  font-weight: 700;
+}
+
+.stats-panel__marketplace-mark img {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+}
+
+.stats-panel__legend-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stats-panel__legend-name {
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.stats-panel__bar {
-  height: 6px;
-  border-radius: var(--r-full);
-  background: var(--surface-sunken);
-  overflow: hidden;
+.stats-panel__legend-count {
+  color: var(--text-muted);
+  font-size: var(--fs-label);
+  font-weight: 500;
 }
 
-.stats-panel__bar-fill {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--accent);
+.stats-panel__legend-percent {
+  color: var(--chart-color);
+  font-size: var(--fs-meta);
+  font-weight: 700;
 }
 
 .stats-panel__amount {
+  min-width: 72px;
+  color: var(--text-primary);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  text-align: right;
   white-space: nowrap;
 }
 
 @media (max-width: 640px) {
   .stats-panel { padding: var(--sp-4); }
-  .stats-panel__head { gap: var(--sp-3); }
-  .stats-panel__counts { gap: var(--sp-4); }
-  .stats-panel__count { text-align: left; }
+  .stats-panel__head { grid-template-columns: 1fr; gap: var(--sp-4); }
+  .stats-panel__metrics { width: 100%; grid-template-columns: repeat(3, 1fr); }
+  .stats-panel__metric { padding: 0 var(--sp-3); }
+  .stats-panel__metric:first-child { padding-left: 0; border-left: 0; }
 
-  /* The bar is decoration; at this width the numbers need the room. */
-  .stats-panel__row { grid-template-columns: 1fr auto; }
-  .stats-panel__count-label { grid-column: 1; }
-  .stats-panel__bar { display: none; }
-  .stats-panel__amount { grid-row: 1; grid-column: 2; }
+  .stats-panel__distribution {
+    grid-template-columns: 1fr;
+    gap: var(--sp-4);
+  }
+
+  .stats-panel__donut { width: 144px; height: 144px; }
+  .stats-panel__legend-button {
+    grid-template-columns: 32px minmax(0, 1fr) auto auto;
+    gap: var(--sp-2);
+    padding-inline: var(--sp-2);
+  }
+  .stats-panel__amount { min-width: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stats-panel__donut-segment {
+    animation: none;
+    transition: none;
+  }
+
+  .stats-panel__legend-button { transition: none; }
 }
 
 .create-card {
@@ -2398,9 +2855,6 @@ dialog.modal .modal-body { background: transparent; }
   top: auto;
   width: auto;
 }
-
-
-
 
 /* ==========================================================================
    Saved items toolbar
@@ -2761,8 +3215,7 @@ dialog.modal .modal-body { background: transparent; }
   .page-head { align-items: flex-start; }
   .page-head > .btn { width: 100%; }
 
-  /* A 48px hero on a 320px screen wraps badly. */
-  .stats-panel__figure { font-size: clamp(2rem, 12vw, 3rem); }
+  .stats-panel__figure { font-size: var(--fs-h1); }
 
   .card__body { padding: var(--sp-3); }
 
@@ -2899,6 +3352,34 @@ dialog.modal .modal-body {
   .modal-actions { flex-direction: column-reverse; gap: var(--sp-2); }
   .modal-actions .btn { width: 100%; }
 
+  .collection-settings-modal .modal-header {
+    padding-inline: var(--sp-4);
+  }
+
+  .collection-settings-modal .modal-body {
+    padding: 0 var(--sp-4) var(--sp-4);
+  }
+
+  .collection-settings-input-row,
+  .collection-settings-modal .share-form {
+    grid-template-columns: 1fr;
+  }
+
+  .collection-settings-input-row .btn,
+  .collection-settings-modal .share-form .btn {
+    width: 100%;
+  }
+
+  .collection-settings-section--danger .danger-row {
+    align-items: stretch;
+    flex-direction: column;
+    gap: var(--sp-3);
+  }
+
+  .collection-settings-section--danger .btn {
+    width: 100%;
+  }
+
   .toasts {
     right: var(--sp-3);
     left: var(--sp-3);
@@ -2993,6 +3474,7 @@ dialog.modal .modal-body {
 }
 
 .accent-swatch {
+  --accent-soft: color-mix(in srgb, var(--accent) 10%, var(--surface-card));
   display: inline-flex;
   align-items: center;
   gap: var(--sp-2);
@@ -3005,11 +3487,17 @@ dialog.modal .modal-body {
   font-size: var(--fs-meta);
   font-weight: 600;
   cursor: pointer;
-  transition: border-color var(--dur-fast) var(--ease-out),
+  transition: background-color var(--dur-fast) var(--ease-out),
+              border-color var(--dur-fast) var(--ease-out),
+              box-shadow var(--dur-fast) var(--ease-out),
               color var(--dur-fast) var(--ease-out);
 }
 
-.accent-swatch:hover { color: var(--text-primary); border-color: var(--border-hover); }
+.accent-swatch:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
 
 .accent-swatch__dot {
   width: 16px;
@@ -3020,6 +3508,7 @@ dialog.modal .modal-body {
 }
 
 .accent-swatch.is-active {
+  background: var(--accent-soft);
   border-color: var(--accent);
   color: var(--text-primary);
   box-shadow: inset 0 0 0 1px var(--accent);

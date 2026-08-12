@@ -13,6 +13,12 @@
   const _hasPrice = typeof item.price === 'number' && item.price > 0;
   const _isFree = item.price === 0;
   const _host = hostLabel(item.link);
+  const _platformKey = String(item.platform || '').toLowerCase();
+  const _platformLogo = _platformKey.includes('offerup')
+    ? { src: '/images/marketplaces/offerup.svg', alt: 'OfferUp' }
+    : _platformKey.includes('facebook')
+      ? { src: '/images/marketplaces/facebook.svg', alt: 'Facebook Marketplace' }
+      : null;
 %>
 <li class="card<%= item.available ? '' : ' card--gone' %>"
     data-title="<%= (item.title || '').toLowerCase() %>"
@@ -37,7 +43,13 @@
       </div>
     <% } %>
 
-    <% if (item.platform) { %>
+    <% if (_platformLogo) { %>
+      <span class="marketplace-logo marketplace-logo--overlay" title="<%= _platformLogo.alt %>">
+        <img class="marketplace-logo__image"
+             src="<%= _platformLogo.src %>"
+             alt="<%= _platformLogo.alt %>">
+      </span>
+    <% } else if (item.platform) { %>
       <span class="badge badge--overlay <%= platformClass(item.platform) %>"><%= item.platform %></span>
     <% } %>
 

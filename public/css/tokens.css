@@ -39,6 +39,9 @@
   --p-offerup-bg: #e7f7ee;  --p-offerup-fg: #0b5132;
   --p-fb-bg:      #e8f0fe;  --p-fb-fg:      #123a75;
   --p-neutral-bg: #f4f4f5;  --p-neutral-fg: #3f3f46;
+  --p-offerup-chart: #00a87e;
+  --p-fb-chart:      #1877f2;
+  --p-neutral-chart: #71717a;
 
   /* ── Role aliases — everything else reads only these ────────────────── */
   --surface-page:    var(--n-25);
@@ -212,6 +215,9 @@
   --p-offerup-bg: #0d2c1d;  --p-offerup-fg: #86efac;
   --p-fb-bg:      #12203a;  --p-fb-fg:      #bfdbfe;
   --p-neutral-bg: #1e1e26;  --p-neutral-fg: #a1a1aa;
+  --p-offerup-chart: #34d399;
+  --p-fb-chart:      #60a5fa;
+  --p-neutral-chart: #a1a1aa;
 
   --overlay-hover:  rgb(255 255 255 / 0.06);
   --overlay-press:  rgb(255 255 255 / 0.10);
@@ -283,6 +289,9 @@
     --p-offerup-bg: #0d2c1d;  --p-offerup-fg: #86efac;
     --p-fb-bg:      #12203a;  --p-fb-fg:      #bfdbfe;
     --p-neutral-bg: #1e1e26;  --p-neutral-fg: #a1a1aa;
+    --p-offerup-chart: #34d399;
+    --p-fb-chart:      #60a5fa;
+    --p-neutral-chart: #a1a1aa;
 
     --overlay-hover:  rgb(255 255 255 / 0.06);
     --overlay-press:  rgb(255 255 255 / 0.10);

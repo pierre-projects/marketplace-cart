@@ -76,12 +76,11 @@
           <%- include('partials/category-card', {
             category,
             isShared: false,
-            showAvailableCount: false,
             showManageButton: false
           }) %>
         <% }) %>
 
-        <a class="category-card create-card" href="/categories">
+        <a class="collection-card create-card" href="/categories">
           <span class="create-card-plus" aria-hidden="true">+</span>
           <span class="create-card-label">New collection</span>
         </a>
@@ -100,7 +99,6 @@
           <%- include('partials/category-card', {
             category,
             isShared: true,
-            showAvailableCount: false,
             showManageButton: false
           }) %>
         <% }) %>
@@ -111,5 +109,6 @@
 </main>
 
 <script src="/js/toast.js"></script>
+<script src="/js/stats-panel.js"></script>
 <script src="/js/dashboard.js"></script>
 <script src="/js/assign-categories.js"></script>

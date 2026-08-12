@@ -102,19 +102,21 @@
 
 <!-- Settings Modal (owner only) -->
 <% if (isOwner) { %>
-  <dialog id="settingsModal" class="modal" aria-labelledby="settingsModalTitle">
+  <dialog id="settingsModal" class="modal collection-settings-modal" aria-labelledby="settingsModalTitle">
     <div class="modal-content">
       <div class="modal-header">
         <h2 id="settingsModalTitle">Collection settings</h2>
-        <button type="button" class="modal-close">&times;</button>
+        <button type="button" class="modal-close" aria-label="Close collection settings">&times;</button>
       </div>
       <div class="modal-body">
 
         <!-- Rename -->
-        <div class="settings-section">
-          <h4 class="settings-label">Name</h4>
-          <form action="/categories/<%= category._id %>/edit" method="POST" class="modal-form">
-            <div class="input-group">
+        <section class="collection-settings-section" aria-labelledby="settingsNameHeading">
+          <div class="collection-settings-section__head">
+            <h3 id="settingsNameHeading">Name</h3>
+          </div>
+          <form action="/categories/<%= category._id %>/edit" method="POST" class="collection-settings-form">
+            <div class="collection-settings-input-row">
               <label class="sr-only" for="settingsRename">Collection name</label>
               <input type="text" id="settingsRename" name="name" value="<%= category.name %>"
                      required maxlength="60">
@@ -122,41 +124,49 @@
               <button type="submit" class="btn btn--primary">Save</button>
             </div>
           </form>
-        </div>
+        </section>
 
-        <hr class="modal-divider">
-
-        <!-- Visibility -->
-        <div class="settings-section">
-          <h4 class="settings-label">Visibility</h4>
-          <form action="/categories/<%= category._id %>/visibility" method="POST">
-            <label class="toggle-row">
-              <input type="checkbox" name="isPublic" value="true" onchange="this.form.submit()" <%= category.isPublic ? 'checked' : '' %>>
-              <span>Make this category public</span>
+        <section class="collection-settings-section" aria-labelledby="settingsVisibilityHeading">
+          <div class="collection-settings-section__head">
+            <h3 id="settingsVisibilityHeading">Visibility</h3>
+          </div>
+          <form action="/categories/<%= category._id %>/visibility" method="POST" class="collection-settings-visibility-form">
+            <label class="collection-settings-toggle">
+              <input type="checkbox" name="isPublic" value="true"
+                     aria-describedby="settingsVisibilityHint"
+                     <%= category.isPublic ? 'checked' : '' %>>
+              <span class="collection-settings-toggle__control" aria-hidden="true"></span>
+              <span class="collection-settings-toggle__copy">
+                <span class="collection-settings-toggle__title">Public collection</span>
+                <span id="settingsVisibilityHint" class="collection-settings-toggle__hint">Anyone with the link can view this collection.</span>
+              </span>
             </label>
           </form>
-        </div>
-
-        <hr class="modal-divider">
+        </section>
 
         <!-- Share -->
-        <div class="settings-section">
-          <h4 class="settings-label">Share</h4>
+        <section class="collection-settings-section" aria-labelledby="settingsShareHeading">
+          <div class="collection-settings-section__head">
+            <h3 id="settingsShareHeading">Share</h3>
+          </div>
           <form action="/categories/<%= category._id %>/share" method="POST" class="share-form">
-            <input type="email" name="email" placeholder="User email" required>
-            <select name="access">
+            <label class="sr-only" for="settingsShareEmail">User email</label>
+            <input type="email" id="settingsShareEmail" name="email" placeholder="User email" required>
+            <label class="sr-only" for="settingsShareAccess">Access level</label>
+            <select id="settingsShareAccess" name="access">
               <option value="viewer">Viewer</option>
               <option value="editor">Editor</option>
             </select>
-            <button type="submit" class="btn-primary">Share</button>
+            <button type="submit" class="btn btn--primary">Share</button>
           </form>
-        </div>
+        </section>
 
         <!-- Shared Users -->
         <% if (category.usersAdded && category.usersAdded.length > 0) { %>
-          <hr class="modal-divider">
-          <div class="settings-section">
-            <h4 class="settings-label">Shared With</h4>
+          <section class="collection-settings-section" aria-labelledby="settingsSharedHeading">
+            <div class="collection-settings-section__head">
+              <h3 id="settingsSharedHeading">Shared with</h3>
+            </div>
             <ul class="shared-users-list">
               <% category.usersAdded.forEach(entry => { %>
                 <li class="shared-user-row">
@@ -170,32 +180,40 @@
                   </form>
                   <form action="/categories/<%= category._id %>/remove-user" method="POST">
                     <input type="hidden" name="userId" value="<%= entry.user._id %>">
-                    <button type="submit" class="remove-user-btn" onclick="return confirm('Remove access for this user?')">&times;</button>
+                    <button type="submit" class="remove-user-btn"
+                            aria-label="Remove access for <%= entry.user.username %>"
+                            onclick="return confirm('Remove access for this user?')">&times;</button>
                   </form>
                 </li>
               <% }) %>
             </ul>
-          </div>
+          </section>
         <% } %>
 
-        <hr class="modal-divider">
-
-        <div class="settings-section danger-zone">
-          <p class="danger-label">Danger Zone</p>
-          <form action="/categories/<%= category._id %>?_method=DELETE" method="POST">
-            <button type="submit" class="btn-danger"
-                    onclick="return confirm('Delete this collection? The items stay in Saved items.')">
-              Delete collection
-            </button>
-          </form>
-          <p class="danger-warning">This removes the collection but not the items.</p>
-        </div>
+        <section class="collection-settings-section collection-settings-section--danger danger-zone" aria-labelledby="settingsDangerHeading">
+          <div class="collection-settings-section__head">
+            <h3 id="settingsDangerHeading" class="danger-label">Danger zone</h3>
+          </div>
+          <div class="danger-row">
+            <div>
+              <p class="danger-row__title">Delete this collection</p>
+              <p class="danger-warning">Items stay in Saved items.</p>
+            </div>
+            <form action="/categories/<%= category._id %>?_method=DELETE" method="POST">
+              <button type="submit" class="btn btn--danger"
+                      onclick="return confirm('Delete this collection? The items stay in Saved items.')">
+                Delete
+              </button>
+            </form>
+          </div>
+        </section>
 
       </div>
     </div>
   </dialog>
 <% } %>
 
+<script src="/js/stats-panel.js"></script>
 <script src="/js/assign-categories.js"></script>
 <% if (canEdit) { %>
   <script src="/js/dashboard.js"></script>

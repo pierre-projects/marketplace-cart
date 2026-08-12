@@ -123,5 +123,44 @@ function setupSettingsModal() {
     if (isBackdropClick(e)) closeDialog();
   });
 
+  setupVisibilityToggle(modal);
+
   // Escape is handled natively by <dialog>.
+}
+
+function setupVisibilityToggle(modal) {
+  const form = modal.querySelector('.collection-settings-visibility-form');
+  const checkbox = form?.querySelector('input[name="isPublic"]');
+  if (!form || !checkbox) return;
+
+  checkbox.addEventListener('change', async () => {
+    if (typeof fetch !== 'function') {
+      form.submit();
+      return;
+    }
+
+    const previous = !checkbox.checked;
+    const body = new URLSearchParams(new FormData(form));
+    checkbox.disabled = true;
+    form.setAttribute('aria-busy', 'true');
+
+    try {
+      const res = await fetch(form.action, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body
+      });
+
+      if (!res.ok) throw new Error('Visibility update failed');
+    } catch (err) {
+      checkbox.checked = previous;
+      console.warn('Could not update collection visibility.', err);
+    } finally {
+      checkbox.disabled = false;
+      form.removeAttribute('aria-busy');
+    }
+  });
 }
