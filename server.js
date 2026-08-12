@@ -36,7 +36,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(methodOverride('_method'));
-app.use(morgan('dev'));
+// The add-item modal polls job status once a second, so a single 4s Facebook
+// scrape produced ~14 log lines and looked like repeated scraping. Skip the
+// poll route; the enqueue and the result still show.
+app.use(morgan('dev', {
+  skip: (req) => req.method === 'GET' && /^\/items\/jobs\//.test(req.path)
+}));
 
 // View Engine — one layout owns the HTML shell so it cannot drift per page.
 // extractScripts hoists each view's own <script> tags into the layout, which
@@ -44,6 +49,11 @@ app.use(morgan('dev'));
 // the view that needs them.
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+
+// Presentation helpers available in every template, so no view ever
+// hand-formats currency or a date again.
+Object.assign(app.locals, require('./lib/format'));
+
 app.use(expressLayouts);
 app.set('layout', 'layouts/main');
 app.set('layout extractScripts', true);
@@ -159,6 +169,7 @@ async function startServer() {
     app.use('/items', require('./routes/items'));     // Add/view item links
     app.use('/listings', require('./routes/listings'));
     app.use('/categories', require('./routes/categories'));
+    app.use('/settings', require('./routes/settings'));
 
     // Global Error Handler — goes through the same helper as every route so the
     // error view has exactly one contract for its locals.

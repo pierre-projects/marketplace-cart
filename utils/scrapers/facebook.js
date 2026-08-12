@@ -43,53 +43,89 @@ function normalizePriceRaw(priceRaw) {
 
 // --- Multi-candidate extraction ---
 
+// How far either side of the listing's anchor to read its fields. A Marketplace
+// listing object serialises well inside this; the related-items rail begins far
+// outside it.
+const ANCHOR_WINDOW = 6000;
+
+/**
+ * Every offset in `text` where this listing identifies itself.
+ *
+ * Without this the field regexes ran against the whole script and `pick`
+ * returned the FIRST match — and a Marketplace page embeds dozens of
+ * `listing_price` nodes for the related-items rail. The stored price was
+ * therefore whichever listing happened to serialise first, which is how a
+ * pressure washer ended up recorded at $0 on a page carrying $20/$30/$350.
+ */
+function anchorOffsets(text, listingId) {
+  const offsets = [];
+  for (const needle of [`"id":"${listingId}"`, `/marketplace\\/item\\/${listingId}`, listingId]) {
+    let from = 0;
+    for (;;) {
+      const at = text.indexOf(needle, from);
+      if (at === -1) break;
+      offsets.push(at);
+      from = at + needle.length;
+      if (offsets.length > 40) break;   // pathological page; scoring sorts it out
+    }
+    if (offsets.length) break;          // most specific needle that matched wins
+  }
+  return offsets;
+}
+
 function extractCandidatesFromScripts({ scripts, listingId }) {
   const candidates = [];
 
-  const idNeedle1 = `"id":"${listingId}"`;
-  const idNeedle2 = `"share_uri":"https:\\/\\/www.facebook.com\\/marketplace\\/item\\/${listingId}\\/`;
+  for (const script of scripts) {
+    // One candidate per anchor, each read from a window around that anchor,
+    // so a candidate always describes THIS listing rather than a neighbour.
+    for (const at of anchorOffsets(script, listingId)) {
+      const text = script.slice(
+        Math.max(0, at - ANCHOR_WINDOW),
+        at + ANCHOR_WINDOW
+      );
 
-  for (const text of scripts) {
-    // Only process scripts that reference this listing
-    if (!text.includes(idNeedle1) && !text.includes(idNeedle2) && !text.includes(listingId)) continue;
+      const title =
+        pick(text, /"marketplace_listing_title":"([^"]+)"/) ||
+        pick(text, /"base_marketplace_listing_title":"([^"]+)"/);
 
-    const title =
-      pick(text, /"marketplace_listing_title":"([^"]+)"/) ||
-      pick(text, /"base_marketplace_listing_title":"([^"]+)"/);
+      const priceRaw =
+        pick(text, /"listing_price":\{[^}]*"amount":"([^"]+)"/) ||
+        pick(text, /"formatted_amount_zeros_stripped":"([^"]+)"/);
 
-    const priceRaw =
-      pick(text, /"listing_price":\{[^}]*"amount":"([^"]+)"/) ||
-      pick(text, /"formatted_amount_zeros_stripped":"([^"]+)"/);
+      const location = pick(text, /"location_text":\{"text":"([^"]+)"/);
 
-    const location = pick(text, /"location_text":\{"text":"([^"]+)"/);
+      const description =
+        pick(text, /"redacted_description":\{"text":"([\s\S]*?)"\}/) ||
+        pick(text, /"description":\{"text":"([\s\S]*?)"\}/);
 
-    const description =
-      pick(text, /"redacted_description":\{"text":"([\s\S]*?)"\}/) ||
-      pick(text, /"description":\{"text":"([\s\S]*?)"\}/);
+      const isLive = pick(text, /"is_live":(true|false)/);
+      const isSold = pick(text, /"is_sold":(true|false)/);
+      const isPending = pick(text, /"is_pending":(true|false)/);
 
-    const isLive = pick(text, /"is_live":(true|false)/);
-    const isSold = pick(text, /"is_sold":(true|false)/);
-    const isPending = pick(text, /"is_pending":(true|false)/);
+      const condition = pick(text, /"attribute_name":"Condition"[^}]*"label":"([^"]+)"/);
+      const shareUri = pick(text, /"share_uri":"([^"]+)"/);
 
-    const condition = pick(text, /"attribute_name":"Condition"[^}]*"label":"([^"]+)"/);
-    const shareUri = pick(text, /"share_uri":"([^"]+)"/);
+      // Only keep candidates with at least something useful
+      if (!title && !priceRaw && !location && !description && !condition) continue;
 
-    // Only keep candidates with at least something useful
-    if (!title && !priceRaw && !location && !description && !condition) continue;
-
-    candidates.push({
-      title: title ? safeDecode(title) : null,
-      priceRaw: priceRaw ? safeDecode(priceRaw) : null,
-      price: normalizePriceRaw(priceRaw),
-      location: location ? safeDecode(location) : null,
-      description: description ? safeDecode(description) : null,
-      condition: condition ? safeDecode(condition) : null,
-      isLive: isLive === 'true' ? true : isLive === 'false' ? false : null,
-      isSold: isSold === 'true' ? true : isSold === 'false' ? false : null,
-      isPending: isPending === 'true' ? true : isPending === 'false' ? false : null,
-      shareUri: shareUri ? safeDecode(shareUri) : null,
-      _len: text.length,
-    });
+      candidates.push({
+        title: title ? safeDecode(title) : null,
+        priceRaw: priceRaw ? safeDecode(priceRaw) : null,
+        // null means "no price node in this listing's window" — distinct from a
+        // listing Facebook really prices at $0. Collapsing both to 0 is how a
+        // failed extraction became an item confidently labelled free.
+        price: normalizePriceRaw(priceRaw),
+        location: location ? safeDecode(location) : null,
+        description: description ? safeDecode(description) : null,
+        condition: condition ? safeDecode(condition) : null,
+        isLive: isLive === 'true' ? true : isLive === 'false' ? false : null,
+        isSold: isSold === 'true' ? true : isSold === 'false' ? false : null,
+        isPending: isPending === 'true' ? true : isPending === 'false' ? false : null,
+        shareUri: shareUri ? safeDecode(shareUri) : null,
+        _len: text.length,
+      });
+    }
   }
 
   return candidates;
@@ -118,8 +154,8 @@ function scoreCandidate(c, listingId) {
   if (c.isSold === true) s -= 6;
   if (c.isPending === true) s -= 3;
 
-  // Longer payloads often include more fields
-  if (c._len > 200000) s += 1;
+  // Candidates are now fixed-size windows around an anchor, so the old
+  // "longer payload wins" tiebreak no longer discriminates and was removed.
 
   return s;
 }
@@ -129,7 +165,9 @@ function mergeCandidates(primary, others) {
 
   for (const c of others) {
     if (!out.title && c.title) out.title = c.title;
-    if ((out.price == null || out.price === 0) && c.price != null) out.price = c.price;
+    // Only fill an UNKNOWN price. Treating 0 as fillable would let a
+    // neighbouring listing's price overwrite a genuine "$0 / Free".
+    if (out.price == null && c.price != null) out.price = c.price;
     if (!out.location && c.location) out.location = c.location;
     if (!out.condition && c.condition) out.condition = c.condition;
     if (!out.description && c.description) out.description = c.description;
@@ -192,7 +230,12 @@ async function scrape(url) {
     ctx = await browser.createBrowserContext();
   } catch (err) {
     releaseSlot();
-    throw asScrapeError(err, CODES.NETWORK);
+    // A browser that will not start is NOT a network failure. Classifying it as
+    // one produced "Check your connection" for a missing Chrome, and — because
+    // NETWORK is retryable — three attempts before giving up. asScrapeError
+    // passes a real ScrapeError through, so the resolver's actionable message
+    // (naming the install command) survives.
+    throw asScrapeError(err, CODES.BROWSER_UNAVAILABLE);
   }
 
   try {
@@ -262,6 +305,17 @@ async function scrape(url) {
     const best = pickBestCandidate(candidates, listingId);
     const meta = pageData.meta;
 
+    /**
+     * Resolve a price without collapsing "free" into "unknown".
+     * `||` cannot be used here: a genuine 0 is falsy, so it fell through to the
+     * meta tag and then to 0, making both states indistinguishable downstream.
+     */
+    const resolvePrice = (candidatePrice) => {
+      if (candidatePrice != null) return candidatePrice;
+      const fromMeta = parseFloat(meta.price);
+      return Number.isFinite(fromMeta) ? fromMeta : null;
+    };
+
     // Build result from best candidate or meta fallback
     let result;
 
@@ -269,7 +323,7 @@ async function scrape(url) {
       logger.debug('Facebook: Using __bbox data -', best.title);
       result = {
         title: best.title || meta.title || 'Untitled',
-        price: best.price || parseFloat(meta.price) || 0,
+        price: resolvePrice(best.price),
         description: best.description || meta.description || null,
         condition: best.condition || null,
         location: best.location || null,
@@ -280,7 +334,7 @@ async function scrape(url) {
       logger.debug('Facebook: Falling back to OG meta tags only');
       result = {
         title: meta.title || 'Untitled',
-        price: parseFloat(meta.price) || 0,
+        price: resolvePrice(null),
         description: meta.description || null,
         condition: null,
         location: null,
@@ -311,4 +365,16 @@ async function scrape(url) {
   }
 }
 
-module.exports = { scrape };
+module.exports = {
+  scrape,
+  // Exposed for the harness: the extractor is where mis-attributed fields come
+  // from, and it cannot be exercised through scrape() without a live page.
+  _internals: {
+    anchorOffsets,
+    extractCandidatesFromScripts,
+    pickBestCandidate,
+    scoreCandidate,
+    mergeCandidates,
+    normalizePriceRaw,
+  },
+};

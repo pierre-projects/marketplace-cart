@@ -163,6 +163,11 @@ async function runJob(job) {
       { _id: job._id },
       { $set: { status: 'done', item: item._id, error: { code: null, message: null } } }
     );
+    // A job that needed more than one attempt succeeded only after something
+    // went wrong. Say so unconditionally, or the retry stays invisible.
+    if (job.attempts > 1) {
+      logger.error(`Scrape queue: ${job._id} succeeded on attempt ${job.attempts} after an earlier failure`);
+    }
     logger.debug(`Scrape queue: ${job._id} done in ${Date.now() - started}ms`);
   } catch (err) {
     await handleFailure(job, err);
@@ -187,7 +192,15 @@ async function handleFailure(job, err) {
         }
       }
     );
-    logger.debug(`Scrape queue: ${job._id} retrying in ${delayMs}ms [${scrapeErr.code}]`);
+    // logger.error, not logger.debug: debug is a no-op unless NODE_ENV is
+    // 'development', so transient failures that later succeeded left no trace
+    // at any log level — the job just looked slow.
+    const cause = scrapeErr.cause?.message;
+    logger.error(
+      `Scrape queue: ${job._id} attempt ${job.attempts} failed [${scrapeErr.code}] ` +
+      `${scrapeErr.message}${cause && cause !== scrapeErr.message ? ` — cause: ${cause}` : ''} ` +
+      `— retrying in ${delayMs}ms`
+    );
     return;
   }
 

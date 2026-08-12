@@ -53,8 +53,8 @@
 }
 
 .alert-error {
-  border-color: var(--danger-border-hover);
-  background: var(--danger-bg-hover);
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
   color: var(--danger-text);
 }
 
@@ -68,8 +68,8 @@
   position: sticky;
   top: 0;
   z-index: 1200;
-  border-bottom: 1px solid rgba(207, 229, 255, 0.2);
-  background: rgba(2, 4, 10, 0.7);
+  border-bottom: 1px solid var(--overlay-strong);
+  background: var(--surface-nav);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   font-family: 'Helvetica Neue', sans-serif;
@@ -91,7 +91,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
-  color: var(--text-brand);
+  color: var(--text-primary);
   text-decoration: none;
   font-weight: 650;
   letter-spacing: 0.01em;
@@ -110,8 +110,8 @@
   align-items: center;
   justify-content: center;
   color: var(--accent-tint);
-  background: rgba(196, 61, 140, 0.2);
-  border: 1px solid rgba(196, 61, 140, 0.38);
+  background: var(--accent-wash);
+  border: 1px solid var(--accent-edge);
 }
 
 .nav-brand-text {
@@ -140,7 +140,7 @@
   min-height: 38px;
   padding: 0.45rem 0.9rem;
   border-radius: 999px;
-  color: var(--text-nav-link);
+  color: var(--text-secondary);
   text-decoration: none;
   font-weight: 560;
   font-size: 0.98rem;
@@ -149,15 +149,15 @@
 
 .nav-link:hover {
   color: var(--text);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--overlay-hover);
   text-decoration: none;
 }
 
 .nav-link.active {
   color: var(--text);
   font-weight: 620;
-  background: rgba(196, 61, 140, 0.38);
-  border: 1px solid rgba(214, 74, 154, 0.55);
+  background: var(--accent-edge);
+  border: 1px solid var(--accent-edge);
 }
 
 .nav-link:focus-visible,
@@ -193,24 +193,24 @@
 }
 
 .nav-auth-link--primary {
-  color: var(--text-nav-strong);
-  background: var(--surface-nav-primary);
-  border: 1px solid var(--border-nav-primary);
+  color: var(--text-primary);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-strong);
 }
 
 .nav-auth-link--primary:hover {
-  background: var(--surface-nav-primary-hover);
+  background: var(--surface-hover);
   color: var(--text);
 }
 
 .nav-auth-link--secondary {
-  color: var(--text-nav-strong);
+  color: var(--text-primary);
   background: transparent;
-  border: 1px solid rgba(219, 232, 255, 0.35);
+  border: 1px solid var(--overlay-strong);
 }
 
 .nav-auth-link--secondary:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--overlay-hover);
 }
 
 .account-menu {
@@ -223,9 +223,9 @@
   gap: 0.5rem;
   min-height: 40px;
   border-radius: 999px;
-  border: 1px solid rgba(207, 229, 255, 0.26);
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--text-nav);
+  border: 1px solid var(--overlay-strong);
+  background: var(--overlay-hover);
+  color: var(--text-secondary);
   font-size: 0.9rem;
   font-weight: 550;
   padding: 0.25rem 0.55rem 0.25rem 0.3rem;
@@ -235,8 +235,8 @@
 
 .account-trigger:hover,
 .account-menu.is-open .account-trigger {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(207, 229, 255, 0.5);
+  background: var(--overlay-hover);
+  border-color: var(--overlay-strong);
 }
 
 .account-trigger:focus-visible {
@@ -266,7 +266,7 @@
 
 .account-chevron {
   font-size: 0.8rem;
-  color: var(--text-nav-muted);
+  color: var(--text-muted);
 }
 
 .account-dropdown {
@@ -275,15 +275,15 @@
   right: 0;
   width: 220px;
   border-radius: 12px;
-  border: 1px solid rgba(207, 229, 255, 0.22);
-  background: rgba(11, 16, 26, 0.95);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--overlay-strong);
+  background: var(--surface-card);
+  box-shadow: 0 16px 36px var(--overlay-strong);
   padding: 0.7rem;
 }
 
 .account-dropdown-label {
   margin: 0;
-  color: var(--text-nav-dim);
+  color: var(--text-muted);
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -291,7 +291,7 @@
 
 .account-dropdown-name {
   margin: 0.3rem 0 0.7rem;
-  color: var(--text-nav-strong);
+  color: var(--text-primary);
   font-size: 0.95rem;
   font-weight: 600;
 }
@@ -323,7 +323,7 @@
   outline-offset: 2px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .nav-container {
     grid-template-columns: 1fr auto;
     grid-template-areas: "brand account"
@@ -401,7 +401,7 @@
 
 .item-card {
   list-style: none;
-  background: var(--surface);
+  background: var(--surface-card);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
   padding: 1.25rem;
@@ -412,7 +412,7 @@
 
 .item-card:hover {
   border-color: var(--border-hover);
-  background-color: var(--surface-hover-subtle);
+  background-color: var(--surface-hover);
 }
 
 .card-grid {
@@ -433,7 +433,7 @@
   width: 96px;
   height: 96px;
   background: var(--surface-input);
-  color: var(--text-placeholder);
+  color: var(--text-faint);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -478,12 +478,12 @@
 }
 
 .badge-available {
-  background: rgba(30, 215, 96, 0.15);
+  background: var(--success-wash);
   color: var(--success);
 }
 
 .badge-unavailable {
-  background: rgba(255, 75, 75, 0.15);
+  background: var(--danger-wash);
   color: var(--danger);
 }
 
@@ -543,7 +543,7 @@
   border-radius: 50%;
   border: none;
   background: transparent;
-  color: var(--text-icon);
+  color: var(--text-secondary);
   cursor: pointer;
   opacity: 0;
   visibility: hidden;
@@ -567,7 +567,7 @@
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
-  color: var(--text-icon);
+  color: var(--text-secondary);
 }
 
 .kebab-btn:hover {
@@ -586,10 +586,10 @@
   top: 100%;
   right: 0;
   min-width: 220px;
-  background: var(--surface);
+  background: var(--surface-card);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-md);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  box-shadow: 0 8px 24px var(--overlay-strong);
   padding: 0.5rem;
   z-index: 100;
 }
@@ -642,7 +642,7 @@
 }
 
 .kebab-action--danger:hover {
-  background: rgba(255, 75, 75, 0.15);
+  background: var(--danger-wash);
 }
 
 .category-label {
@@ -655,7 +655,7 @@
 }
 
 .view-link {
-  color: var(--success-strong);
+  color: var(--success);
   text-decoration: underline;
 }
 
@@ -695,7 +695,7 @@ button:hover {
 }
 
 .picker-toggle {
-  background: var(--surface);
+  background: var(--surface-card);
   border: 1px solid var(--border-strong);
   color: var(--text);
   padding: 0.5rem 1rem;
@@ -725,14 +725,14 @@ button:hover {
   position: absolute;
   top: 100%;
   right: 0;
-  background: var(--surface);
+  background: var(--surface-card);
   border: 1px solid var(--border-strong);
   border-radius: 8px;
   padding: 0.5rem;
   min-width: 200px;
   z-index: 100;
   margin-top: 4px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  box-shadow: 0 4px 12px var(--overlay-strong);
 }
 
 /* Emitted by item-card.ejs but never styled — it relied entirely on its
@@ -784,7 +784,7 @@ button:hover {
   transform: translateY(20px);
   transition: all 0.3s ease;
   z-index: 2000;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 12px var(--overlay-strong);
 }
 
 .toast.show {
@@ -800,7 +800,7 @@ button:hover {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: var(--scrim);
   backdrop-filter: blur(4px);
   align-items: center;
   justify-content: center;
@@ -810,15 +810,17 @@ button:hover {
 }
 
 .modal-content {
-  background: var(--surface);
+  background: var(--surface-card);
   border-radius: var(--radius-lg);
-  width: clamp(320px, 90vw, 560px);
-  max-height: min(90vh, 700px);
+  /* The 320px floor overflowed a 320px viewport once padding was added, and
+     vh overshoots on mobile where browser chrome is counted. */
+  width: min(560px, 100%);
+  max-height: min(90dvh, 700px);
   overflow-y: auto;
   overflow-x: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 20px 60px var(--scrim);
   box-sizing: border-box;
-  border: 1px solid var(--border-modal);
+  border: 1px solid var(--border);
 }
 
 .modal-content::-webkit-scrollbar {
@@ -842,7 +844,7 @@ button:hover {
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
-  background: var(--surface);
+  background: var(--surface-card);
   z-index: 1;
 }
 
@@ -1011,7 +1013,7 @@ button:focus-visible {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid var(--overlay-strong);
   border-top-color: var(--text);
   border-radius: 50%;
   animation: btn-spin 0.65s linear infinite;
@@ -1025,7 +1027,7 @@ button:focus-visible {
   padding: 1rem;
   border-radius: var(--radius-md);
   margin-bottom: 1.25rem;
-  border: 1px solid var(--border-modal);
+  border: 1px solid var(--border);
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -1103,8 +1105,8 @@ button:focus-visible {
 .modal-error {
   align-items: flex-start;
   gap: 0.5rem;
-  background: rgba(255, 107, 107, 0.08);
-  border: 1px solid rgba(255, 107, 107, 0.25);
+  background: var(--danger-wash);
+  border: 1px solid var(--danger-wash);
   border-radius: var(--radius-sm);
   padding: 0.65rem 0.85rem;
   margin-top: 0.75rem;
@@ -1167,7 +1169,7 @@ button:focus-visible {
 }
 
 .category-card {
-  background: var(--surface);
+  background: var(--surface-card);
   border: 1px solid var(--border-strong);
   border-radius: 10px;
   padding: 1.25rem;
@@ -1247,7 +1249,7 @@ button:focus-visible {
   height: 130px;
   overflow: hidden;
   border-radius: 8px 8px 0 0;
-  background: var(--surface-preview);
+  background: var(--surface-sunken);
 }
 
 .category-preview-slot {
@@ -1256,7 +1258,7 @@ button:focus-visible {
 }
 
 .category-preview-slot + .category-preview-slot {
-  border-left: 1px solid var(--border-slot);
+  border-left: 1px solid var(--border);
 }
 
 .category-preview-img {
@@ -1274,10 +1276,10 @@ button:focus-visible {
 .category-preview-slot--empty {
   background: repeating-linear-gradient(
     45deg,
-    var(--surface),
-    var(--surface) 6px,
-    var(--surface-subtle) 6px,
-    var(--surface-subtle) 12px
+    var(--surface-card),
+    var(--surface-card) 6px,
+    var(--surface-sunken) 6px,
+    var(--surface-sunken) 12px
   );
 }
 
@@ -1289,7 +1291,7 @@ button:focus-visible {
   color: var(--border-muted);
   font-size: 0.8rem;
   letter-spacing: 0.03em;
-  background: var(--surface-preview);
+  background: var(--surface-sunken);
 }
 
 .category-card-footer {
@@ -1392,7 +1394,7 @@ button:focus-visible {
 }
 
 .btn-danger:hover {
-  background: var(--danger-strong-hover);
+  background: var(--danger);
 }
 
 .danger-warning {
@@ -1402,7 +1404,7 @@ button:focus-visible {
 }
 
 .chip {
-  background: var(--surface);
+  background: var(--surface-card);
   border: 1px solid var(--border-strong);
   color: var(--muted);
   padding: 0.35rem 0.9rem;
@@ -1482,7 +1484,7 @@ button:focus-visible {
 }
 
 .create-card {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--overlay-hover);
   border: 2px dashed var(--border-hover);
   justify-content: center;
   flex-direction: column;
@@ -1492,7 +1494,7 @@ button:focus-visible {
 .create-card:hover {
   border-color: var(--accent);
   transform: none;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--overlay-hover);
 }
 
 .create-card-label {
@@ -1518,7 +1520,7 @@ button:focus-visible {
   max-width: 100%;
   box-sizing: border-box;
   margin: 0;
-  background: var(--surface);
+  background: var(--surface-card);
   border: 1px solid var(--border-strong);
 }
 
@@ -1556,13 +1558,1283 @@ button:focus-visible {
 .modal-step { display: none; }
 .modal-step.is-active { display: block; }
 
-.item-card.is-hidden { display: none; }
-.item-list.is-hidden { display: none; }
+/* A visibility utility, not a per-component state. #noResults carried a bare
+   `is-hidden` that matched none of the component-scoped rules, so the empty
+   state rendered permanently alongside the results it was meant to replace.
+   !important is deliberate: "hidden" must beat any component display value. */
+.is-hidden { display: none !important; }
 
 .modal-error { display: none; }
 .modal-error.is-visible { display: flex; }
 
-.empty-state.is-hidden { display: none; }
 
 #previewImage { display: none; }
 #previewImage.is-visible { display: block; }
+
+/* ==========================================================================
+   Redesign — buttons, cards, status, empty states, toasts, dialogs
+
+   Everything below supersedes the older equivalents earlier in this file; the
+   later declaration wins, which is how the redesign lands without unpicking
+   every legacy rule by hand.
+   ========================================================================== */
+
+/* Buttons.
+   Exactly one --primary per screen. The old sheet filled every action pink,
+   which left nothing to indicate what the page actually wanted you to do. */
+.btn,
+.btn-primary,
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  height: 38px;
+  padding-inline: var(--sp-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background var(--dur-fast) var(--ease-out),
+              border-color var(--dur-fast) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out);
+}
+
+.btn:active,
+.btn-primary:active,
+.btn-secondary:active { transform: scale(0.98); }
+
+.btn:hover,
+.btn-primary:hover,
+.btn-secondary:hover { text-decoration: none; }
+
+.btn--primary,
+.btn-primary {
+  background: var(--accent);
+  color: var(--text-on-brand);
+  border-color: var(--accent);
+}
+
+.btn--primary:hover,
+.btn-primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: var(--text-on-brand);
+  transform: none;
+}
+
+.btn--secondary,
+.btn-secondary {
+  background: var(--surface-card);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.btn--secondary:hover,
+.btn-secondary:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: transparent;
+}
+
+.btn--ghost:hover { background: var(--surface-hover); color: var(--text-primary); }
+
+.btn--sm { height: 30px; padding-inline: var(--sp-3); font-size: var(--fs-meta); }
+
+/* Card.
+   Photo-first and vertical. The old card was a full-width band with a 90px
+   thumbnail, which is close to zero information per pixel. */
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: border-color var(--dur-base) var(--ease-out),
+              transform var(--dur-base) var(--ease-out),
+              box-shadow var(--dur-base) var(--ease-out);
+}
+
+.card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.card:focus-within {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.card__media {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: var(--surface-sunken);
+  overflow: hidden;
+  /* Flex items default to min-height: auto, so the image's intrinsic height
+     inflated this box past its aspect-ratio and every card was a different
+     height. */
+  min-height: 0;
+  flex: none;
+}
+
+.card__media img {
+  /* Absolute so the image contributes nothing to the parent's content height —
+     the aspect-ratio alone decides the box. */
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Listing health lives on the photo; buyer status lives in the body. */
+.card__media.is-gone img { filter: grayscale(1); opacity: 0.5; }
+
+.card__noimg {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: var(--text-faint);
+}
+
+.card__media .badge--overlay {
+  position: absolute;
+  top: var(--sp-2);
+  left: var(--sp-2);
+}
+
+.card__menu {
+  position: absolute;
+  top: var(--sp-2);
+  right: var(--sp-2);
+  z-index: 2;
+}
+
+.card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+}
+
+.card__title {
+  font-size: var(--fs-lead);
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: 0;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card__title a { color: var(--text-primary); text-decoration: none; }
+.card__title a:hover { text-decoration: none; }
+
+/* Full-card click target from one semantic anchor — no handler on a div. */
+.card__link::after { content: ''; position: absolute; inset: 0; z-index: 1; }
+
+.card__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.card__price {
+  font-size: var(--fs-price);
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* "Free" is a real price, so it keeps the accent — but it is not a figure, so
+   it drops a step in size rather than shouting at the same weight as $250. */
+.card__price--free {
+  font-size: var(--fs-body);
+}
+
+/* "Price unavailable" is an absence, not a value: muted, normal weight, so it
+   never reads as something the seller is asking. */
+.card__price--unknown {
+  font-size: var(--fs-meta);
+  font-weight: 400;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.card__meta {
+  margin: 0;
+  font-size: var(--fs-meta);
+  color: var(--text-muted);
+}
+
+.card__tags { margin: 0; display: flex; flex-wrap: wrap; gap: var(--sp-1); }
+
+.card__by {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-meta);
+  color: var(--text-muted);
+}
+
+.card__avatar {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.625rem;
+  font-weight: 700;
+}
+
+/* The most-clicked action on the page, previously a 12px grey glyph. */
+.card__out {
+  position: relative;
+  z-index: 2;
+  margin-top: var(--sp-1);
+  width: 100%;
+}
+
+/* Status: dot plus label, not a filled pill.
+   One pill per card across a grid of twenty is a lot of visual weight for a
+   binary. A dot carries the same information for a fraction of it. */
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status__dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+
+.status--live { color: var(--ok-dot); }
+.status--gone { color: var(--text-muted); }
+
+/* Badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px var(--sp-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-label);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.badge--offerup { background: var(--p-offerup-bg); color: var(--p-offerup-fg); }
+.badge--fb      { background: var(--p-fb-bg);      color: var(--p-fb-fg); }
+.badge--neutral { background: var(--p-neutral-bg); color: var(--p-neutral-fg); }
+
+/* On a photo it needs its own backdrop to survive any image behind it. */
+.badge--overlay {
+  background: var(--glass);
+  color: var(--text-primary);
+  backdrop-filter: blur(4px);
+}
+
+.category-label {
+  display: inline-flex;
+  padding: 2px var(--sp-2);
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  font-size: var(--fs-label);
+  font-weight: 600;
+}
+
+/* Empty state */
+.empty {
+  display: grid;
+  place-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-8) var(--sp-5);
+  text-align: center;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+}
+
+.empty__icon { color: var(--text-faint); }
+.empty__headline { margin: 0; font-size: var(--fs-h3); }
+.empty__body { margin: 0; color: var(--text-secondary); max-width: 42ch; }
+
+/* Toasts.
+   Same visual language as flash-alert.ejs, so a server flash and a client
+   toast are recognisably one component with two entry points. */
+.toasts {
+  position: fixed;
+  right: var(--sp-4);
+  bottom: var(--sp-4);
+  z-index: var(--z-toast);
+  display: grid;
+  gap: var(--sp-2);
+  width: min(360px, calc(100% - var(--sp-6)));
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-card);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-lg);
+  font-size: var(--fs-body);
+  animation: toast-in var(--dur-base) var(--ease-out);
+}
+
+.toast--error   { border-color: var(--danger-border); background: var(--danger-bg); color: var(--danger-text); }
+.toast--success { border-color: var(--success-border); background: var(--success-bg); color: var(--success-text); }
+
+@keyframes toast-in  { from { opacity: 0; transform: translateY(8px); } }
+@keyframes toast-out { to   { opacity: 0; transform: translateY(8px); } }
+
+/* Native dialog.
+   showModal() supplies the top layer, ::backdrop, Escape handling and an
+   inert background, replacing a hand-rolled focus trap. */
+dialog.modal {
+  border: 1px solid var(--border);
+  padding: 0;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  background: var(--surface-card);
+  color: var(--text-primary);
+  max-width: 520px;
+  width: calc(100% - var(--sp-6));
+}
+
+dialog.modal::backdrop { background: var(--scrim); }
+dialog.modal[open] { animation: dialog-in var(--dur-base) var(--ease-out); }
+
+@keyframes dialog-in { from { opacity: 0; transform: translateY(8px) scale(0.98); } }
+
+dialog.modal .modal-header,
+dialog.modal .modal-body { background: transparent; }
+
+/* Theme toggle */
+.theme-toggle {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  margin: var(--sp-3) 0;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+
+.theme-toggle__opt {
+  border: 0;
+  border-radius: calc(var(--radius-md) - 2px);
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  padding: var(--sp-1) 0;
+  cursor: pointer;
+}
+
+.theme-toggle__opt.is-active {
+  background: var(--surface-card);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Page furniture */
+.hero-figure {
+  font-size: var(--fs-hero);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin: 0;
+}
+
+.hero-sub { margin: var(--sp-2) 0 0; color: var(--text-secondary); }
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+
+.section-head h2 { font-size: var(--fs-h3); }
+
+/* Navbar reads from theme roles now that light is the default canvas. */
+.navbar {
+  background: var(--surface-nav);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-link { color: var(--text-secondary); }
+.nav-link:hover { color: var(--text-primary); background: var(--surface-hover); }
+
+.nav-link.active {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-edge);
+  font-weight: 600;
+}
+
+.account-trigger { color: var(--text-secondary); background: var(--surface-card); }
+.account-dropdown { background: var(--surface-card); }
+.account-signout-btn { background: var(--accent); color: var(--text-on-brand); }
+.account-signout-btn:hover { background: var(--accent-hover); }
+.account-avatar { background: var(--accent); color: var(--text-on-brand); }
+
+/* Kebab menu on a light card */
+.kebab-btn {
+  background: var(--glass);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  width: 30px; height: 30px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.kebab-btn:hover { color: var(--text-primary); background: var(--surface-card); }
+
+.kebab-dropdown {
+  background: var(--surface-card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  min-width: 200px;
+}
+
+.kebab-action {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: var(--fs-body);
+  padding: var(--sp-2) var(--sp-3);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.kebab-action:hover { background: var(--surface-hover); text-decoration: none; }
+.kebab-action--danger { color: var(--danger); }
+.kebab-divider { border: 0; border-top: 1px solid var(--border); margin: var(--sp-1) 0; }
+
+.hero-total {
+  padding: var(--sp-5) 0 var(--sp-6);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--sp-6);
+}
+
+.create-card {
+  display: grid;
+  place-items: center;
+  gap: var(--sp-2);
+  min-height: 140px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+}
+
+.create-card:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.create-card-plus {
+  font-size: var(--fs-h2);
+  font-weight: 400;
+  line-height: 1;
+}
+
+.create-card-label { font-weight: 600; font-size: var(--fs-body); }
+
+/* ==========================================================================
+   App shell — persistent sidebar for signed-in pages
+   ========================================================================== */
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 264px minmax(0, 1fr);
+  min-height: 100dvh;
+}
+
+.app-shell__content { min-width: 0; }
+
+.app-shell .container {
+  width: min(1200px, calc(100% - var(--sp-7)));
+  padding-block: var(--sp-6) var(--sp-8);
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-5) var(--sp-4);
+  border-right: 1px solid var(--border);
+  background: var(--surface-sunken);
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+}
+
+.sidebar__head { padding-inline: var(--sp-2); }
+
+.sidebar__brand {
+  display: block;
+  font-size: var(--fs-lead);
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.sidebar__brand:hover { text-decoration: none; }
+
+.sidebar__sub {
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-meta);
+  color: var(--text-muted);
+}
+
+.sidebar__nav { flex: 1; }
+
+.sidebar__nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--sp-1);
+}
+
+.sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-3);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: var(--fs-body);
+  text-decoration: none;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.sidebar__link:hover {
+  background: var(--overlay-hover);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+/* The active item is a filled brand pill, as in the mockup. */
+.sidebar__link.is-active {
+  background: var(--accent);
+  color: var(--text-on-brand);
+}
+
+.sidebar__link.is-active:hover { background: var(--accent-hover); color: var(--text-on-brand); }
+
+.sidebar__icon { display: inline-flex; flex: none; }
+
+.sidebar__foot {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.sidebar__account {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: var(--sp-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sidebar__account:hover { background: var(--surface-hover); color: var(--text-primary); }
+
+.sidebar__foot .account-menu { position: relative; }
+
+.sidebar__foot .account-dropdown {
+  position: absolute;
+  bottom: calc(100% + var(--sp-2));
+  left: 0;
+  right: 0;
+  top: auto;
+  width: auto;
+}
+
+
+
+
+/* ==========================================================================
+   Saved items toolbar
+   ========================================================================== */
+
+.page-head__sub {
+  margin: var(--sp-1) 0 0;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  padding: var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  margin-bottom: var(--sp-3);
+}
+
+.toolbar__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 240px;
+  min-width: 200px;
+}
+
+.toolbar__search-icon {
+  position: absolute;
+  left: var(--sp-3);
+  display: inline-flex;
+  color: var(--text-faint);
+  pointer-events: none;
+}
+
+.toolbar__search input {
+  width: 100%;
+  max-width: none;
+  height: 38px;
+  margin: 0;
+  padding: 0 var(--sp-7) 0 calc(var(--sp-4) + 18px);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: var(--fs-body);
+}
+
+.toolbar__search input::-webkit-search-cancel-button { display: none; }
+
+.toolbar__clear {
+  position: absolute;
+  right: var(--sp-2);
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.toolbar__clear:hover { background: var(--surface-hover); color: var(--text-primary); }
+
+.toolbar__filters { position: relative; }
+
+.count-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--r-full);
+  background: var(--accent);
+  color: var(--text-on-brand);
+  font-size: var(--fs-label);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.filters-panel {
+  position: absolute;
+  top: calc(100% + var(--sp-2));
+  left: 0;
+  z-index: var(--z-dropdown);
+  min-width: 220px;
+  display: grid;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-lg);
+}
+
+.filters-panel[hidden] { display: none; }
+
+.filters-panel__group { border: 0; margin: 0; padding: 0; display: grid; gap: 2px; }
+
+.filters-panel__group legend {
+  padding: 0 0 var(--sp-1);
+  font-size: var(--fs-label);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.toolbar__sort select {
+  height: 38px;
+  margin: 0;
+  max-width: none;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: var(--fs-body);
+  padding: 0 var(--sp-3);
+}
+
+/* Mutually exclusive, so it must not look like the multi-select filters. */
+.segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  margin-left: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+
+.segmented__opt {
+  border: 0;
+  border-radius: calc(var(--radius-md) - 2px);
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  padding: var(--sp-2) var(--sp-4);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.segmented__opt.is-active {
+  background: var(--surface-card);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.active-filters {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-4);
+}
+
+.active-filters[hidden] { display: none; }
+
+.active-filters__pills { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3);
+  border: 0;
+  border-radius: var(--r-full);
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.filter-pill:hover { background: var(--surface-hover); color: var(--text-primary); }
+.filter-pill__x { font-size: 1rem; line-height: 1; }
+
+.link-button {
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: var(--fs-meta);
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
+.link-button:hover { color: var(--text-primary); }
+
+/* ==========================================================================
+   Card — tighter proportions, gone treatment
+   ========================================================================== */
+
+.card__body {
+  gap: var(--sp-1);
+  padding: var(--sp-3) var(--sp-3) var(--sp-3);
+}
+
+.card__row { align-items: center; margin-top: 2px; }
+
+/* Strikethrough beats desaturation alone for signalling a dead listing. */
+.card--gone .card__title a { text-decoration: line-through; color: var(--text-muted); }
+.card--gone .card__price { color: var(--text-muted); }
+
+.card__out {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+  width: auto;
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.card__out:hover { color: var(--accent); text-decoration: none; }
+
+/* ==========================================================================
+   Mobile
+
+   Two breakpoints only:
+     900px — tablet and below: the rail becomes a header + bottom tab bar
+     640px — phone: single-column stacking, full-width controls
+
+   Plus pointer: coarse for touch ergonomics, which is orthogonal to width —
+   a touch laptop needs big targets at 1400px, a mouse-driven small window
+   does not.
+   ========================================================================== */
+
+/* The tab bar is mobile-only; the rail owns navigation above 900px. */
+.tabbar { display: none; }
+
+@media (max-width: 900px) {
+  .app-shell { grid-template-columns: minmax(0, 1fr); }
+
+  /* The rail becomes a compact header: brand + account only. Navigation moves
+     to the bottom bar, so nothing needs to scroll sideways any more. */
+  .sidebar {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-nav);
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    padding: var(--sp-3) var(--sp-4);
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-card);
+    overflow: visible;            /* was overflow-x: auto — the sideways scroll */
+  }
+
+  .sidebar__head { padding-inline: 0; min-width: 0; }
+  .sidebar__nav { display: none; }
+
+  .sidebar__foot {
+    display: block;
+    margin: 0;
+  }
+
+  .sidebar__foot .account-dropdown {
+    bottom: auto;
+    top: calc(100% + var(--sp-2));
+    left: auto;
+    right: 0;
+    width: 240px;
+    max-width: calc(100vw - var(--sp-6));
+  }
+
+  .app-shell .container {
+    width: min(1200px, calc(100% - var(--sp-5)));
+    /* Clear the fixed bar and the home indicator on notched devices. */
+    padding-bottom: calc(72px + var(--sp-5) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .tabbar {
+    display: block;
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: var(--z-nav);
+    background: var(--surface-card);
+    border-top: 1px solid var(--border);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .tabbar ul {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .tabbar__link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-height: 56px;
+    padding: var(--sp-2) var(--sp-1);
+    color: var(--text-muted);
+    font-size: var(--fs-label);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .tabbar__link:hover { text-decoration: none; }
+  .tabbar__link.is-active { color: var(--accent); }
+  .tabbar__icon { display: inline-flex; }
+  .tabbar__label { line-height: 1.2; }
+}
+
+@media (max-width: 640px) {
+  /* Toolbar stacks: search on its own row, then the controls, then status. */
+  .toolbar { gap: var(--sp-2); }
+  .toolbar__search { flex: 1 1 100%; min-width: 0; }
+  .toolbar__filters { flex: 1 1 auto; }
+  .toolbar__filters > .btn { width: 100%; }
+  .toolbar__sort { flex: 1 1 auto; min-width: 0; }
+  .toolbar__sort select { width: 100%; }
+
+  .segmented {
+    margin-left: 0;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .segmented__opt { padding-inline: var(--sp-2); }
+
+  /* Anchored panels must never push the page sideways. */
+  .filters-panel {
+    left: 0;
+    right: auto;
+    width: max-content;
+    max-width: calc(100vw - var(--sp-6));
+  }
+
+  .page-head { align-items: flex-start; }
+  .page-head > .btn { width: 100%; }
+
+  /* A 48px hero on a 320px screen wraps badly. */
+  .hero-figure { font-size: clamp(2rem, 12vw, 3rem); }
+
+  .card__body { padding: var(--sp-3); }
+
+  /* Fields fill their container rather than stopping at the desktop cap. */
+  input[type="text"],
+  input[type="url"],
+  input[type="email"],
+  input[type="search"],
+  input[type="password"],
+  select,
+  textarea { max-width: 100%; }
+
+  .form-box { padding: var(--sp-5) var(--sp-4); }
+}
+
+/* The kebab panel sits inside a ~335px card near the right edge; without a
+   cap a 220px panel with long collection names pushes the page sideways. */
+.kebab-dropdown,
+.account-dropdown,
+.picker-dropdown {
+  max-width: calc(100vw - var(--sp-5));
+}
+
+/* Grid and flex children default to min-width:auto, which lets long content
+   force a track wider than the viewport. This is the standard guard. */
+.app-shell__content,
+.card__body,
+.card__title,
+.toolbar__search,
+.sidebar__head { min-width: 0; }
+
+.card__title,
+.card__meta,
+.sidebar__brand { overflow-wrap: anywhere; }
+
+/* ==========================================================================
+   Touch ergonomics
+
+   Applied by pointer type rather than width, so desktop density is untouched
+   while every touch device gets a 44px target. Where growing the box would
+   loosen the design, a transparent ::after expands only the hit area.
+   ========================================================================== */
+
+@media (pointer: coarse) {
+  /* Safari zooms the viewport when a focused field is under 16px, and does not
+     zoom back out. This affects every form in the app. */
+  input,
+  select,
+  textarea,
+  .toolbar__search input,
+  .toolbar__sort select { font-size: 16px; }
+
+  .btn,
+  .btn-primary,
+  .btn-secondary { min-height: 44px; }
+
+  .btn--sm { min-height: 40px; }
+
+  .kebab-btn,
+  .toolbar__clear,
+  .modal-close {
+    position: relative;
+  }
+
+  .kebab-btn::after,
+  .toolbar__clear::after,
+  .modal-close::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+  }
+
+  .segmented__opt { min-height: 44px; }
+  .theme-toggle__opt { min-height: 40px; }
+  .filter-pill { min-height: 36px; }
+  .checkbox-item { min-height: 44px; }
+  .kebab-action { padding-block: var(--sp-3); }
+  .picker-toggle { min-height: 44px; }
+  .sidebar__link { min-height: 44px; }
+  .account-signout-btn { min-height: 44px; }
+  .tabbar__link { min-height: 60px; }
+
+  /* Hover lift is meaningless without a hover state and can leave cards stuck
+     in the hovered position after a tap. */
+  .card:hover { transform: none; box-shadow: none; }
+}
+
+/* ==========================================================================
+   Dialogs on small screens
+   ========================================================================== */
+
+dialog.modal {
+  /* Keep the dialog inside the visual viewport when the keyboard is up. */
+  max-height: calc(100dvh - var(--sp-6));
+  overflow: hidden;
+}
+
+/* display belongs ONLY on [open]. Setting it on the base selector overrides the
+   UA rule `dialog:not([open]) { display: none }` and leaves every dialog
+   permanently visible — which is exactly what happened. */
+dialog.modal:not([open]) { display: none; }
+
+dialog.modal[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+dialog.modal .modal-body {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 640px) {
+  /* Bottom sheet: closer to the thumb and the expected mobile idiom. */
+  dialog.modal {
+    margin: 0 0 0 auto;
+    margin-block-start: auto;
+    width: 100%;
+    max-width: none;
+    max-height: calc(100dvh - var(--sp-7));
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    border-bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  dialog.modal[open] { animation: sheet-in var(--dur-base) var(--ease-out); }
+
+  @keyframes sheet-in { from { transform: translateY(16px); opacity: 0; } }
+
+  .modal-actions { flex-direction: column-reverse; gap: var(--sp-2); }
+  .modal-actions .btn { width: 100%; }
+
+  .toasts {
+    right: var(--sp-3);
+    left: var(--sp-3);
+    bottom: calc(72px + var(--sp-3) + env(safe-area-inset-bottom, 0px));
+    width: auto;
+  }
+}
+
+/* ==========================================================================
+   Sidebar footer — avatar + name + settings gear
+   ========================================================================== */
+
+.sidebar__account {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: var(--sp-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.sidebar__account:hover {
+  background: var(--overlay-hover);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.sidebar__account[aria-current='page'] {
+  background: var(--accent-soft);
+  border-color: var(--accent-edge);
+  color: var(--accent);
+}
+
+.sidebar__account .account-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.sidebar__gear { display: inline-flex; flex: none; opacity: 0.75; }
+.sidebar__account:hover .sidebar__gear { opacity: 1; }
+
+/* ==========================================================================
+   Settings page
+   ========================================================================== */
+
+.settings-page { max-width: 720px; }
+
+.settings-section {
+  padding: var(--sp-5) 0;
+  border-top: 1px solid var(--border);
+}
+
+.settings-section:first-of-type { border-top: 0; padding-top: 0; }
+
+.settings-section__head { margin-bottom: var(--sp-4); }
+.settings-section__head h2 { font-size: var(--fs-h3); }
+.settings-section__head p { margin: var(--sp-1) 0 0; font-size: var(--fs-meta); }
+
+.settings-section .theme-toggle {
+  margin: 0;
+  max-width: 320px;
+}
+
+.settings-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--sp-2) var(--sp-5);
+  margin: 0 0 var(--sp-5);
+  font-size: var(--fs-body);
+}
+
+.settings-list dt { color: var(--text-muted); }
+.settings-list dd { margin: 0; color: var(--text-primary); }
+
+/* ---- accent swatches ----------------------------------------------------
+   Each swatch carries its own data-accent, so its dot renders through the very
+   token the app would use — the preview cannot drift from the real value. */
+.accent-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.accent-swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-full);
+  background: var(--surface-card);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out),
+              color var(--dur-fast) var(--ease-out);
+}
+
+.accent-swatch:hover { color: var(--text-primary); border-color: var(--border-hover); }
+
+.accent-swatch__dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex: none;
+}
+
+.accent-swatch.is-active {
+  border-color: var(--accent);
+  color: var(--text-primary);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+@media (max-width: 640px) {
+  .accent-picker { display: grid; grid-template-columns: repeat(2, 1fr); }
+  .accent-swatch { justify-content: flex-start; }
+  .settings-section .theme-toggle { max-width: none; }
+}

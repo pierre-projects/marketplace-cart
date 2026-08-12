@@ -10,10 +10,19 @@ const { normalizeCondition } = require('../utils/conditionMap');
  * path is gone: the client no longer supplies item content at all, so there is
  * exactly one input shape here — whatever a scraper returned.
  */
+/** A number, or null when there is no readable price. Never NaN. */
+function normalizePrice(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const n = typeof value === 'number' ? value : parseFloat(value);
+  return Number.isFinite(n) ? n : null;
+}
+
 function normalizeItemData(data) {
   return {
     title: data.title || '',
-    price: typeof data.price === 'number' ? data.price : parseFloat(data.price) || 0,
+    // `parseFloat(x) || 0` turned both "free" and "unreadable" into 0. Keep
+    // null when the scraper reported no price at all.
+    price: normalizePrice(data.price),
     condition: normalizeCondition(data.condition) || null,
     description: data.description || null,
     location: data.location || '',
