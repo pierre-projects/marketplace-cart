@@ -2,14 +2,14 @@ const express = require('express');
 const router = express.Router();
 const { ensureAuthenticated } = require('../middleware/authMiddleware');
 const Category = require('../models/Category');
+const { buildItemCategoryIndex } = require('../services/categoryService');
 const { renderHtmlError } = require('../utils/httpResponses');
 
-// GET /listings - all listings from "All Listings" category
+// GET /listings - every item in the user's default category
 router.get('/', ensureAuthenticated, async (req, res) => {
   try {
-    // Load All Listings with nested item/add info
-    const allListingsCategory = await Category.findOne({
-      name: 'All Listings',
+    const defaultCategory = await Category.findOne({
+      isDefault: true,
       user: req.user._id
     }).populate('items.item').populate('items.addedBy');
 
@@ -19,8 +19,11 @@ router.get('/', ensureAuthenticated, async (req, res) => {
       .populate('items.addedBy');
 
     res.render('listings/index', {
-      listings: allListingsCategory ? allListingsCategory.items : [],
+      title: 'My Listings',
+      currentPage: 'listings',
+      listings: defaultCategory ? defaultCategory.items : [],
       categories,
+      itemCategoryIndex: buildItemCategoryIndex(categories),
       user: req.user,
       isOwner: true
     });

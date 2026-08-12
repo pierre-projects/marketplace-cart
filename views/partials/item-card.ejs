@@ -6,6 +6,17 @@
     data-platform="<%= (item.platform || '').toLowerCase() %>"
     data-added-at="<%= item.addedAt ? new Date(item.addedAt).getTime() : 0 %>"
     data-available="<%= item.available ? 'true' : 'false' %>">
+    <%
+      // Which non-default categories hold this item. Precomputed once per
+      // request by buildItemCategoryIndex — this used to be a nested .some()
+      // over every category's items, recomputed three times per card.
+      const _memberOf = (typeof itemCategoryIndex !== 'undefined' && itemCategoryIndex)
+        ? (itemCategoryIndex[String(item._id)] || [])
+        : [];
+      const _assignable = (typeof categories !== 'undefined' && categories)
+        ? categories.filter(c => !c.isDefault)
+        : [];
+    %>
     <div class="card-grid">
       
       <!-- Left Side: Thumbnail -->
@@ -49,12 +60,7 @@
 
         <% if (showCategories && categories) { %>
           <p style="margin-top:0.5rem">
-            <% categories.forEach(cat => {
-                const match = cat.items.some(i => {
-                  const iId = i.item ? i.item._id : i._id;
-                  return iId.toString() === item._id.toString();
-                });
-                if (cat.name !== 'All Listings' && match) { %>
+            <% _assignable.forEach(cat => { if (_memberOf.includes(String(cat._id))) { %>
               <span class="category-label"><%= cat.name %></span>
             <% }}) %>
           </p>
@@ -76,37 +82,23 @@
             <circle cx="10" cy="16" r="2.3" fill="currentColor"/>
           </svg>
         </button>
-        <div class="kebab-dropdown" style="display:none;">
+        <div class="kebab-dropdown">
 
           <% if (allowEdit && categories) { %>
-            <%
-              const catCount = categories.filter(c =>
-                c.name !== 'All Listings' &&
-                c.items.some(i => {
-                  const iId = i.item ? i.item._id : i._id;
-                  return iId.toString() === item._id.toString();
-                })
-              ).length;
-            %>
             <div class="category-picker">
               <button type="button" class="picker-toggle" data-item-id="<%= item._id %>">
                 <span>Assign categories</span>
-                <span class="cat-count"><%= catCount %></span>
+                <span class="cat-count"><%= _memberOf.length %></span>
               </button>
-              <div class="picker-dropdown" style="display:none;">
+              <div class="picker-dropdown">
                 <form class="category-checkbox-form" data-item-id="<%= item._id %>">
-                  <% categories.forEach(cat => {
-                      if (cat.name !== 'All Listings') {
-                        const isChecked = cat.items.some(i => {
-                          const iId = i.item ? i.item._id : i._id;
-                          return iId.toString() === item._id.toString();
-                        });
-                  %>
+                  <% _assignable.forEach(cat => { %>
                     <label class="checkbox-item">
-                      <input type="checkbox" name="categories" value="<%= cat._id %>" <%= isChecked ? 'checked' : '' %>>
+                      <input type="checkbox" name="categories" value="<%= cat._id %>"
+                             <%= _memberOf.includes(String(cat._id)) ? 'checked' : '' %>>
                       <span><%= cat.name %></span>
                     </label>
-                  <% }}) %>
+                  <% }) %>
                   <button type="submit" class="save-btn">Save</button>
                 </form>
               </div>

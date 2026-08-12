@@ -1,7 +1,13 @@
 <%
   const modalCategories = (typeof categories !== 'undefined' && Array.isArray(categories)) ? categories : [];
-  const allListingsCategory = modalCategories.find((category) => category.name === 'All Listings');
-  const defaultCategoryIdValue = allListingsCategory ? allListingsCategory._id : '';
+  const defaultCategory = modalCategories.find((category) => category.isDefault);
+  const defaultCategoryIdValue = defaultCategory ? defaultCategory._id : '';
+  const defaultCategoryName = defaultCategory ? defaultCategory.name : 'All Listings';
+  // Keyed off the count of *assignable* categories, not the total. The old
+  // `length > 1` check rendered no select and no hidden fallback for a user
+  // whose only category was the auto-created default, so the form posted no
+  // category field at all.
+  const assignableCategories = modalCategories.filter((category) => !category.isDefault);
   const modalReturnTo = typeof returnTo === 'string' && returnTo.trim() ? returnTo : '/dashboard';
   const modalFormAction = typeof formAction === 'string' && formAction.trim() ? formAction : '/items/add';
   const rawLockedCategoryId = (typeof lockedCategoryId !== 'undefined' && lockedCategoryId !== null)
@@ -17,7 +23,7 @@
      aria-modal="true"
      aria-labelledby="modalTitle"
      aria-hidden="true"
-     style="display:none;">
+     >
   <div class="modal-content">
 
     <div class="modal-header">
@@ -38,7 +44,7 @@
     <div class="modal-body">
 
       <!-- Step 1: URL Input -->
-      <div id="step1" class="modal-step">
+      <div id="step1" class="modal-step is-active">
         <p class="step1-hint">Paste an OfferUp listing URL to fetch its details.</p>
         <form id="previewForm">
           <label for="link">Listing URL</label>
@@ -54,14 +60,14 @@
             Preview
           </button>
         </form>
-        <div id="previewError" class="modal-error" role="alert" aria-live="polite" style="display:none;">
+        <div id="previewError" class="modal-error" role="alert" aria-live="polite">
           <i class="modal-error-icon" aria-hidden="true">&#9888;</i>
           <span id="previewErrorText"></span>
         </div>
       </div>
 
       <!-- Step 2: Preview & Confirm -->
-      <div id="step2" class="modal-step" style="display:none;">
+      <div id="step2" class="modal-step">
         <div class="preview-card">
           <img id="previewImage" src="" alt="Item preview">
           <div class="preview-info">
@@ -85,14 +91,12 @@
 
           <% if (useLockedCategory) { %>
             <input type="hidden" name="category" value="<%= rawLockedCategoryId %>">
-          <% } else if (modalCategories.length > 1) { %>
+          <% } else if (assignableCategories.length > 0) { %>
             <label for="category">Add to category</label>
             <select name="category" id="category">
-              <option value="">None (All Listings only)</option>
-              <% modalCategories.forEach(category => { %>
-                <% if (category.name !== 'All Listings') { %>
-                  <option value="<%= category._id %>"><%= category.name %></option>
-                <% } %>
+              <option value="">None (<%= defaultCategoryName %> only)</option>
+              <% assignableCategories.forEach(category => { %>
+                <option value="<%= category._id %>"><%= category.name %></option>
               <% }) %>
             </select>
           <% } %>

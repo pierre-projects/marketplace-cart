@@ -6,7 +6,7 @@ const router = express.Router();
 
 // Show the register form (GET)
 router.get('/register', (req, res) => {
-    res.render('auth/register', { formData: {}, errorMessage: null });
+    res.render('auth/register', { title: 'Register', formData: {}, errorMessage: null });
 });
 
 //  Handle user registration (POST)
@@ -20,6 +20,7 @@ router.post('/register', async (req, res) => {
 
         if (!username || !email || !password) {
             return res.status(400).render('auth/register', {
+                title: 'Register',
                 formData: { username: username || '', email: email || '' },
                 errorMessage: 'Username, email, and password are required.'
             });
@@ -31,6 +32,7 @@ router.post('/register', async (req, res) => {
 
         if (existingUser) {
             return res.status(409).render('auth/register', {
+                title: 'Register',
                 formData: { username, email },
                 errorMessage: 'An account with that username or email already exists. Try logging in instead.'
             });
@@ -53,6 +55,7 @@ router.post('/register', async (req, res) => {
     } catch (err) {
         console.error('Error registering user:', err);
         return res.status(500).render('auth/register', {
+            title: 'Register',
             formData: {
                 username: req.body.username?.trim() || '',
                 email: req.body.email?.trim().toLowerCase() || ''
@@ -67,7 +70,7 @@ router.post('/register', async (req, res) => {
 
 //  Show the login form
 router.get('/login', (req, res) => {
-    res.render('auth/login'); // This should match "views/login.ejs"
+    res.render('auth/login', { title: 'Login' });
 });
 
 

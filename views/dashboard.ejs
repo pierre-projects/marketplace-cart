@@ -1,135 +1,122 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Dashboard</title>
-  <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
+<main class="container">
+  <%- include('partials/flash-alert') %>
 
-  <% const currentPage = 'dashboard'; %>
-  <%- include('partials/navbar') %>
+  <!-- Welcome Row -->
+  <div class="dashboard-welcome">
+    <div>
+      <h1>Welcome, <%= user.username %></h1>
+      <p class="dashboard-subtitle">Track and manage your marketplace listings</p>
+    </div>
+    <button id="openAddModal" class="btn-primary">Add listing</button>
+  </div>
 
-  <main class="container">
-    <%- include('partials/flash-alert') %>
+  <%- include('partials/add-listing-modal', { categories, returnTo: '/dashboard', defaultCategoryId: null }) %>
 
-    <!-- Welcome Row -->
-    <div class="dashboard-welcome">
-      <div>
-        <h1>Welcome, <%= user.username %></h1>
-        <p class="dashboard-subtitle">Track and manage your marketplace listings</p>
-      </div>
-      <button id="openAddModal" class="btn-primary">Add listing</button>
+  <!-- Stats Bar -->
+  <div class="stats-bar">
+    <div class="stat">
+      <span class="stat-value"><%= stats.totalItems %></span>
+      <span class="stat-label">listings</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">$<%= stats.totalValue.toFixed(2) %></span>
+      <span class="stat-label">total value</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value"><%= stats.availableCount %></span>
+      <span class="stat-label">available</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value"><%= stats.categoryCount %></span>
+      <span class="stat-label">categories</span>
+    </div>
+  </div>
+
+  <!-- ===================== -->
+  <!-- Section: Recent Listings -->
+  <!-- ===================== -->
+  <section class="dashboard-section">
+    <div class="dashboard-header">
+      <h2>Recent Listings</h2>
+      <a href="/listings">View all listings</a>
     </div>
 
-    <%- include('partials/add-listing-modal', { categories, returnTo: '/dashboard', defaultCategoryId: null }) %>
+    <% const allListings = categories.find(c => c.isDefault); %>
+    <% if (!allListings || allListings.items.length === 0) { %>
+      <div class="empty-state">
+        <p>No listings yet.</p>
+        <p class="muted">Click "Add listing" above to save your first item.</p>
+      </div>
+    <% } else { %>
+      <%- include('partials/item-list', {
+        items: allListings.items,
+        categories,
+        itemCategoryIndex,
+        maxItems: 3,
+        allowEdit: true,
+        allowDelete: true,
+        showCategories: true,
+        user: user,
+        isOwner: true
+      }) %>
+    <% } %>
+  </section>
 
-    <!-- Stats Bar -->
-    <div class="stats-bar">
-      <div class="stat">
-        <span class="stat-value"><%= stats.totalItems %></span>
-        <span class="stat-label">listings</span>
-      </div>
-      <div class="stat">
-        <span class="stat-value">$<%= stats.totalValue.toFixed(2) %></span>
-        <span class="stat-label">total value</span>
-      </div>
-      <div class="stat">
-        <span class="stat-value"><%= stats.availableCount %></span>
-        <span class="stat-label">available</span>
-      </div>
-      <div class="stat">
-        <span class="stat-value"><%= stats.categoryCount %></span>
-        <span class="stat-label">categories</span>
-      </div>
+  <!-- ===================== -->
+  <!-- Section: My Categories -->
+  <!-- ===================== -->
+  <section class="dashboard-section">
+    <div class="dashboard-header">
+      <h2>My Categories</h2>
+      <a href="/categories">View all categories</a>
     </div>
 
-    <!-- ===================== -->
-    <!-- Section: Recent Listings -->
-    <!-- ===================== -->
-    <section class="dashboard-section">
-      <div class="dashboard-header">
-        <h2>Recent Listings</h2>
-        <a href="/listings">View all listings</a>
-      </div>
+    <% const userCategories = categories.filter(c => !c.isDefault); %>
 
-      <% const allListings = categories.find(c => c.name === 'All Listings'); %>
-      <% if (!allListings || allListings.items.length === 0) { %>
-        <div class="empty-state">
-          <p>No listings yet.</p>
-          <p class="muted">Click "Add listing" above to save your first item.</p>
-        </div>
-      <% } else { %>
-        <%- include('partials/item-list', {
-          items: allListings.items,
-          categories,
-          maxItems: 3,
-          allowEdit: true,
-          allowDelete: true,
-          showCategories: true,
-          user: user,
-          isOwner: true
+    <div class="category-grid">
+      <% userCategories.slice(0, 5).forEach(category => { %>
+        <%- include('partials/category-card', {
+          category,
+          isShared: false,
+          showAvailableCount: false,
+          showManageButton: false
         }) %>
-      <% } %>
-    </section>
+      <% }) %>
 
-    <!-- ===================== -->
-    <!-- Section: My Categories -->
-    <!-- ===================== -->
-    <section class="dashboard-section">
-      <div class="dashboard-header">
-        <h2>My Categories</h2>
-        <a href="/categories">View all categories</a>
+      <!-- Create New Category Card -->
+      <div class="category-card create-card">
+        <p class="create-card-label">New category</p>
+        <form action="/categories/create" method="POST" class="create-card-form">
+          <input type="text" name="name" placeholder="e.g. Electronics, Furniture..." required>
+          <button type="submit" class="btn-primary">Create category</button>
+        </form>
       </div>
+    </div>
+  </section>
 
-      <% const userCategories = categories.filter(c => c.name !== 'All Listings'); %>
-
-      <div class="category-grid">
-        <% userCategories.slice(0, 5).forEach(category => { %>
-          <%- include('partials/category-card', {
-            category,
-            isShared: false,
-            showAvailableCount: false,
-            showManageButton: false
-          }) %>
-        <% }) %>
-
-        <!-- Create New Category Card -->
-        <div class="category-card create-card">
-          <p class="create-card-label">New category</p>
-          <form action="/categories/create" method="POST" class="create-card-form">
-            <input type="text" name="name" placeholder="e.g. Electronics, Furniture..." required>
-            <button type="submit" class="btn-primary">Create category</button>
-          </form>
+  <!-- ===================== -->
+  <!-- Section: Shared With Me -->
+  <!-- ===================== -->
+    <% if (sharedCategories && sharedCategories.length > 0) { %>
+      <section class="dashboard-section">
+        <div class="dashboard-header">
+          <h2>Shared With Me</h2>
         </div>
-      </div>
-    </section>
 
-    <!-- ===================== -->
-    <!-- Section: Shared With Me -->
-    <!-- ===================== -->
-      <% if (sharedCategories && sharedCategories.length > 0) { %>
-        <section class="dashboard-section">
-          <div class="dashboard-header">
-            <h2>Shared With Me</h2>
-          </div>
+        <div class="category-grid">
+          <% sharedCategories.forEach(category => { %>
+            <%- include('partials/category-card', {
+              category,
+              isShared: true,
+              showAvailableCount: false,
+              showManageButton: false
+            }) %>
+          <% }) %>
+        </div>
+      </section>
+    <% } %>
 
-          <div class="category-grid">
-            <% sharedCategories.forEach(category => { %>
-              <%- include('partials/category-card', {
-                category,
-                isShared: true,
-                showAvailableCount: false,
-                showManageButton: false
-              }) %>
-            <% }) %>
-          </div>
-        </section>
-      <% } %>
+</main>
 
-  </main>
-
-  <script src="/js/dashboard.js"></script>
-  <script src="/js/assign-categories.js"></script>
-
-</body>
-</html>
+<script src="/js/dashboard.js"></script>
+<script src="/js/assign-categories.js"></script>

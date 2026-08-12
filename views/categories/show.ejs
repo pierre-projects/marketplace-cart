@@ -1,186 +1,178 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title><%= category.name %></title>
-  <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-  <% const currentPage = 'categories'; %>
-  <%- include('../partials/navbar') %>
+<main class="container">
+  <%- include('../partials/flash-alert') %>
 
-  <main class="container">
-    <%- include('../partials/flash-alert') %>
-
-    <!-- Page Header -->
-    <div class="show-header">
-      <div class="show-header-left">
-        <a href="/categories" class="back-link">&larr; Categories</a>
-        <h1><%= category.name %></h1>
-      </div>
-      <% if (canEdit || isOwner) { %>
-        <div class="show-header-actions">
-          <% if (canEdit) { %>
-            <button id="openAddModal" type="button" class="btn-primary listings-add-btn">Add listing</button>
-          <% } %>
-          <% if (isOwner) { %>
-            <button type="button" id="openSettingsModal" class="manage-btn">Settings</button>
-          <% } %>
-        </div>
-      <% } %>
+  <!-- Page Header -->
+  <div class="show-header">
+    <div class="show-header-left">
+      <a href="/categories" class="back-link">&larr; Categories</a>
+      <h1><%= category.name %></h1>
     </div>
-
-    <!-- Stats Bar -->
-    <% const itemCount = category.items.length; %>
-    <% let totalValue = 0; let availCount = 0; %>
-    <% category.items.forEach(entry => {
-      const it = entry.item || entry;
-      const p = typeof it.price === 'number' ? it.price : parseFloat(it.price) || 0;
-      totalValue += p;
-      if (it.available) availCount++;
-    }); %>
-
-    <% if (itemCount > 0) { %>
-      <div class="stats-bar">
-        <div class="stat">
-          <span class="stat-value"><%= itemCount %></span>
-          <span class="stat-label">items</span>
-        </div>
-        <div class="stat">
-          <span class="stat-value">$<%= totalValue.toFixed(2) %></span>
-          <span class="stat-label">total value</span>
-        </div>
-        <div class="stat">
-          <span class="stat-value"><%= availCount %></span>
-          <span class="stat-label">available</span>
-        </div>
-      </div>
-    <% } %>
-
-    <!-- Shared Info (non-owner viewers) -->
-    <% if (!isOwner && user) { %>
-      <div class="shared-notice">
-        Shared with you
-        <% if (canEdit) { %> &middot; You can edit<% } %>
-      </div>
-    <% } %>
-
-    <!-- Public badge -->
-    <% if (category.isPublic && !isOwner) { %>
-      <div class="shared-notice">Public category</div>
-    <% } %>
-
-    <% if (canEdit) { %>
-      <%- include('../partials/add-listing-modal', {
-        categories,
-        returnTo: `/categories/${category._id}`,
-        formAction: `/categories/${category._id}/add-item`,
-        lockedCategoryId: String(category._id),
-        lockCategorySelection: true
-      }) %>
-    <% } %>
-
-    <!-- Items -->
-    <% if (category.items.length === 0) { %>
-      <div class="empty-state">
-        <p>No items in this category yet.</p>
+    <% if (canEdit || isOwner) { %>
+      <div class="show-header-actions">
         <% if (canEdit) { %>
-          <p class="muted">Add one using the Add listing button above.</p>
+          <button id="openAddModal" type="button" class="btn-primary listings-add-btn">Add listing</button>
+        <% } %>
+        <% if (isOwner) { %>
+          <button type="button" id="openSettingsModal" class="manage-btn">Settings</button>
         <% } %>
       </div>
-    <% } else { %>
-      <%- include('../partials/item-list', {
-        items: category.items,
-        categories,
-        allowEdit: canEdit,
-        allowDelete: canEdit,
-        showCategories: false,
-        categoryId: category._id,
-        user: user,
-        isOwner: isOwner,
-        showAddedBy: true
-      }) %>
     <% } %>
+  </div>
 
-  </main>
+  <!-- Stats Bar -->
 
-  <!-- Settings Modal (owner only) -->
-  <% if (isOwner) { %>
-    <div id="settingsModal" class="modal-overlay" style="display:none;">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Category Settings</h2>
-          <button type="button" class="modal-close">&times;</button>
-        </div>
-        <div class="modal-body">
-
-          <!-- Visibility -->
-          <div class="settings-section">
-            <h4 class="settings-label">Visibility</h4>
-            <form action="/categories/<%= category._id %>/visibility" method="POST">
-              <label class="toggle-row">
-                <input type="checkbox" name="isPublic" value="true" onchange="this.form.submit()" <%= category.isPublic ? 'checked' : '' %>>
-                <span>Make this category public</span>
-              </label>
-            </form>
-          </div>
-
-          <hr class="modal-divider">
-
-          <!-- Share -->
-          <div class="settings-section">
-            <h4 class="settings-label">Share</h4>
-            <form action="/categories/<%= category._id %>/share" method="POST" class="share-form">
-              <input type="email" name="email" placeholder="User email" required>
-              <select name="access">
-                <option value="viewer">Viewer</option>
-                <option value="editor">Editor</option>
-              </select>
-              <button type="submit" class="btn-primary">Share</button>
-            </form>
-          </div>
-
-          <!-- Shared Users -->
-          <% if (category.usersAdded && category.usersAdded.length > 0) { %>
-            <hr class="modal-divider">
-            <div class="settings-section">
-              <h4 class="settings-label">Shared With</h4>
-              <ul class="shared-users-list">
-                <% category.usersAdded.forEach(entry => { %>
-                  <li class="shared-user-row">
-                    <span class="shared-user-name"><%= entry.user.username %></span>
-                    <form action="/categories/<%= category._id %>/update-role" method="POST" class="role-form">
-                      <input type="hidden" name="userId" value="<%= entry.user._id %>">
-                      <select name="newRole" onchange="this.form.submit()">
-                        <option value="viewer" <%= entry.role === 'viewer' ? 'selected' : '' %>>Viewer</option>
-                        <option value="editor" <%= entry.role === 'editor' ? 'selected' : '' %>>Editor</option>
-                      </select>
-                    </form>
-                    <form action="/categories/<%= category._id %>/remove-user" method="POST">
-                      <input type="hidden" name="userId" value="<%= entry.user._id %>">
-                      <button type="submit" class="remove-user-btn" onclick="return confirm('Remove access for this user?')">&times;</button>
-                    </form>
-                  </li>
-                <% }) %>
-              </ul>
-            </div>
-          <% } %>
-
-        </div>
+  <% if (stats.totalItems > 0) { %>
+    <div class="stats-bar">
+      <div class="stat">
+        <span class="stat-value"><%= stats.totalItems %></span>
+        <span class="stat-label">items</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value">$<%= stats.totalValue.toFixed(2) %></span>
+        <span class="stat-label">total value</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value"><%= stats.availableCount %></span>
+        <span class="stat-label">available</span>
       </div>
     </div>
   <% } %>
 
-  <script src="/js/assign-categories.js"></script>
-  <script>
-    const itemData = <%- JSON.stringify(category.items) %>;
-  </script>
-  <script src="/js/totals.js"></script>
-  <% if (canEdit) { %>
-    <script src="/js/dashboard.js"></script>
-  <% } %>
-  <% if (isOwner) { %>
-    <script src="/js/category-show.js"></script>
+  <!-- Shared Info (non-owner viewers) -->
+  <% if (!isOwner && user) { %>
+    <div class="shared-notice">
+      Shared with you
+      <% if (canEdit) { %> &middot; You can edit<% } %>
+    </div>
   <% } %>
 
-</body>
-</html>
+  <!-- Public badge -->
+  <% if (category.isPublic && !isOwner) { %>
+    <div class="shared-notice">Public category</div>
+  <% } %>
+
+  <% if (canEdit) { %>
+    <%- include('../partials/add-listing-modal', {
+      categories,
+      returnTo: `/categories/${category._id}`,
+      formAction: `/categories/${category._id}/add-item`,
+      lockedCategoryId: String(category._id),
+      lockCategorySelection: true
+    }) %>
+  <% } %>
+
+  <!-- Items -->
+  <% if (category.items.length === 0) { %>
+    <div class="empty-state">
+      <p>No items in this category yet.</p>
+      <% if (canEdit) { %>
+        <p class="muted">Add one using the Add listing button above.</p>
+      <% } %>
+    </div>
+  <% } else { %>
+    <%- include('../partials/item-list', {
+      items: category.items,
+      categories,
+      allowEdit: canEdit,
+      allowDelete: canEdit,
+      showCategories: false,
+      categoryId: category._id,
+      user: user,
+      isOwner: isOwner,
+      showAddedBy: true
+    }) %>
+  <% } %>
+
+  <% if (breakdown.platforms.length > 0) { %>
+    <section class="price-summary" aria-labelledby="price-summary-title">
+      <h2 id="price-summary-title" class="price-summary-title">Price breakdown</h2>
+      <% breakdown.platforms.forEach((group) => { %>
+        <div class="price-summary-group">
+          <p class="price-summary-platform">
+            <strong><%= group.platform %>:</strong> $<%= group.subtotal.toFixed(2) %>
+          </p>
+          <% group.items.forEach((entry) => { %>
+            <p class="price-summary-item"><%= entry.title %> — $<%= entry.price.toFixed(2) %></p>
+          <% }) %>
+        </div>
+      <% }) %>
+      <p class="price-summary-total"><strong>Total:</strong> $<%= breakdown.total.toFixed(2) %></p>
+    </section>
+  <% } %>
+
+</main>
+
+<!-- Settings Modal (owner only) -->
+<% if (isOwner) { %>
+  <div id="settingsModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Category Settings</h2>
+        <button type="button" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+
+        <!-- Visibility -->
+        <div class="settings-section">
+          <h4 class="settings-label">Visibility</h4>
+          <form action="/categories/<%= category._id %>/visibility" method="POST">
+            <label class="toggle-row">
+              <input type="checkbox" name="isPublic" value="true" onchange="this.form.submit()" <%= category.isPublic ? 'checked' : '' %>>
+              <span>Make this category public</span>
+            </label>
+          </form>
+        </div>
+
+        <hr class="modal-divider">
+
+        <!-- Share -->
+        <div class="settings-section">
+          <h4 class="settings-label">Share</h4>
+          <form action="/categories/<%= category._id %>/share" method="POST" class="share-form">
+            <input type="email" name="email" placeholder="User email" required>
+            <select name="access">
+              <option value="viewer">Viewer</option>
+              <option value="editor">Editor</option>
+            </select>
+            <button type="submit" class="btn-primary">Share</button>
+          </form>
+        </div>
+
+        <!-- Shared Users -->
+        <% if (category.usersAdded && category.usersAdded.length > 0) { %>
+          <hr class="modal-divider">
+          <div class="settings-section">
+            <h4 class="settings-label">Shared With</h4>
+            <ul class="shared-users-list">
+              <% category.usersAdded.forEach(entry => { %>
+                <li class="shared-user-row">
+                  <span class="shared-user-name"><%= entry.user.username %></span>
+                  <form action="/categories/<%= category._id %>/update-role" method="POST" class="role-form">
+                    <input type="hidden" name="userId" value="<%= entry.user._id %>">
+                    <select name="newRole" onchange="this.form.submit()">
+                      <option value="viewer" <%= entry.role === 'viewer' ? 'selected' : '' %>>Viewer</option>
+                      <option value="editor" <%= entry.role === 'editor' ? 'selected' : '' %>>Editor</option>
+                    </select>
+                  </form>
+                  <form action="/categories/<%= category._id %>/remove-user" method="POST">
+                    <input type="hidden" name="userId" value="<%= entry.user._id %>">
+                    <button type="submit" class="remove-user-btn" onclick="return confirm('Remove access for this user?')">&times;</button>
+                  </form>
+                </li>
+              <% }) %>
+            </ul>
+          </div>
+        <% } %>
+
+      </div>
+    </div>
+  </div>
+<% } %>
+
+<script src="/js/assign-categories.js"></script>
+<% if (canEdit) { %>
+  <script src="/js/dashboard.js"></script>
+<% } %>
+<% if (isOwner) { %>
+  <script src="/js/category-show.js"></script>
+<% } %>

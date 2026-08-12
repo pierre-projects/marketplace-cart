@@ -2,6 +2,11 @@ const express = require('express');
 const router = express.Router();
 const { ensureAuthenticated } = require('../middleware/authMiddleware');
 const Category = require('../models/Category');
+const {
+  computeItemStats,
+  buildItemCategoryIndex,
+  computePlatformBreakdown
+} = require('../services/categoryService');
 const User = require('../models/User');
 const { redirectWithFlashError, renderHtmlError } = require('../utils/httpResponses');
 
@@ -21,6 +26,8 @@ router.get('/', ensureAuthenticated, async (req, res) => {
         .populate('usersAdded.user');
 
       return res.render('categories/index', {
+        title: 'My Categories',
+        currentPage: 'categories',
         categories: myCategories,
         sharedCategories,
         user: req.user
@@ -91,8 +98,15 @@ router.get('/:id', async (req, res) => {
       : [];
 
     return res.render('categories/show', {
+      title: category.name,
+      currentPage: 'categories',
       category,
       categories,
+      // Computed here rather than in the template, which used to recompute the
+      // same three numbers in EJS with its own price-coercion branch.
+      stats: computeItemStats(category.items),
+      breakdown: computePlatformBreakdown(category.items),
+      itemCategoryIndex: buildItemCategoryIndex(categories),
       user: req.user,
       canEdit: isOwner || isEditor,
       isOwner

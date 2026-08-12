@@ -1,63 +1,37 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Register</title>
-  <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-  <%- include('../partials/navbar') %>
+<main class="form-page">
+  <div class="form-box">
+    <h1>Register</h1>
 
-  <main class="form-page">
-    <div class="form-box">
-      <h1>Register</h1>
+    <% const safeFormData = (typeof formData !== 'undefined' && formData) ? formData : {}; %>
 
-      <%
-        const safeFormData = (typeof formData !== 'undefined' && formData) ? formData : {};
-        const safeErrorMessage = (typeof errorMessage !== 'undefined') ? errorMessage : null;
-        const registerErrors = [];
-        if (safeErrorMessage) registerErrors.push(safeErrorMessage);
-        if (Array.isArray(error_msg)) {
-          registerErrors.push(...error_msg);
-        } else if (error_msg) {
-          registerErrors.push(error_msg);
-        }
-      %>
+    <%- include('../partials/flash-alert', {
+      flashVariant: 'form',
+      extraErrors: typeof errorMessage !== 'undefined' ? errorMessage : null
+    }) %>
 
-      <% if (registerErrors.length) { %>
-        <div class="form-alerts" aria-live="polite">
-          <% registerErrors.forEach((message) => { %>
-            <p class="alert alert-error"><%= message %></p>
-          <% }) %>
-        </div>
-      <% } %>
+    <form action="/auth/register" method="POST">
+      <input
+        type="text"
+        name="username"
+        placeholder="Username"
+        value="<%= safeFormData.username || '' %>"
+        autocomplete="username"
+        required
+      >
+      <input
+        type="email"
+        name="email"
+        placeholder="Email"
+        value="<%= safeFormData.email || '' %>"
+        autocomplete="email"
+        required
+      >
+      <input type="password" name="password" placeholder="Password" required>
+      <button type="submit">Register</button>
+    </form>
 
-      <form action="/auth/register" method="POST">
-        <input
-          type="text"
-          name="username"
-          placeholder="Username"
-          value="<%= safeFormData.username || '' %>"
-          autocomplete="username"
-          required
-        >
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value="<%= safeFormData.email || '' %>"
-          autocomplete="email"
-          required
-        >
-        <input type="password" name="password" placeholder="Password" required>
-        <button type="submit">Register</button>
-      </form>
-
-      <p class="form-footer">
-        Already have an account? <a href="/auth/login">Login</a>
-      </p>
-    </div>
-  </main>
-</body>
-</html>
+    <p class="form-footer">
+      Already have an account? <a href="/auth/login">Login</a>
+    </p>
+  </div>
+</main>

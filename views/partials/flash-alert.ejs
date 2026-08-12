@@ -1,14 +1,20 @@
 <%
-  const successMessages = Array.isArray(success_msg)
-    ? success_msg
-    : (success_msg ? [success_msg] : []);
-  const errorMessages = Array.isArray(error_msg)
-    ? error_msg
-    : (error_msg ? [error_msg] : []);
+  // Single implementation of flash normalization. connect-flash yields arrays,
+  // but a directly-passed local may be a bare string, so both are coerced here
+  // rather than in each view.
+  const toList = (value) => Array.isArray(value) ? value : (value ? [value] : []);
+
+  const successMessages = toList(typeof success_msg !== 'undefined' ? success_msg : null);
+  const errorMessages = toList(typeof error_msg !== 'undefined' ? error_msg : null)
+    .concat(toList(locals.extraErrors));
+
+  // Auth forms render alerts inside the form box; page views render them above
+  // the content. Same markup, different wrapper.
+  const wrapperClass = locals.flashVariant === 'form' ? 'form-alerts' : 'flash-stack';
 %>
 
 <% if (successMessages.length || errorMessages.length) { %>
-  <section class="flash-stack" aria-live="polite">
+  <section class="<%= wrapperClass %>" aria-live="polite">
     <% successMessages.forEach((message) => { %>
       <p class="alert alert-success"><%= message %></p>
     <% }) %>
@@ -17,4 +23,3 @@
     <% }) %>
   </section>
 <% } %>
-

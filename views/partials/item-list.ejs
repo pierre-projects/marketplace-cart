@@ -3,6 +3,7 @@
 
 <% const displayItems = _maxItems ? items.slice(-_maxItems).reverse() : items.slice().reverse(); %>
 <% const thisCategoryId = typeof categoryId !== 'undefined' ? categoryId : null; %>
+<% const _itemCategoryIndex = typeof itemCategoryIndex !== 'undefined' ? itemCategoryIndex : {}; %>
 
 <ul class="item-list">
   <% displayItems.forEach(entry => { %>
@@ -20,6 +21,7 @@
           item,
           addedBy,
           categories,
+          itemCategoryIndex: _itemCategoryIndex,
           allowEdit,
           allowDelete,
           showCategories,

@@ -139,7 +139,7 @@ router.post('/:id/assign-categories', ensureAuthenticated, async (req, res) => {
   const categoryIds = Array.isArray(req.body.categoryIds) ? req.body.categoryIds : [];
 
   try {
-    const userCategories = await Category.find({ user: req.user._id, name: { $ne: 'All Listings' } });
+    const userCategories = await Category.find({ user: req.user._id, isDefault: { $ne: true } });
 
     // Remove from all non-default categories
     await Promise.all(userCategories.map(cat =>

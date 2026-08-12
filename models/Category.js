@@ -3,6 +3,10 @@ const mongoose = require('mongoose');
 const categorySchema = new mongoose.Schema({
   name:     { type: String, required: true },
   user:     { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // creator
+  // The auto-created catch-all category. Identity used to be inferred by
+  // matching the literal name 'All Listings' in 20 places, which broke the UI
+  // if a user happened to name a category that.
+  isDefault: { type: Boolean, default: false },
   items: [{
     item:    { type: mongoose.Schema.Types.ObjectId, ref: 'Item' },
     addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }

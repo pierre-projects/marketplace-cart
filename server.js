@@ -8,10 +8,12 @@ const methodOverride = require('method-override');
 const morgan = require('morgan');
 const path = require('path');
 const flash = require('connect-flash');
+const expressLayouts = require('express-ejs-layouts');
 const logger = require('./utils/logger');
 const { closeBrowser } = require('./utils/browser');
 const scrapeQueue = require('./services/scrapeQueue');
 const maintenance = require('./services/maintenance');
+const { renderHtmlError } = require('./utils/httpResponses');
 
 // Load Passport config
 require('./config/passport')(passport);
@@ -36,8 +38,16 @@ app.use(express.json());
 app.use(methodOverride('_method'));
 app.use(morgan('dev'));
 
-// View Engine
+// View Engine — one layout owns the HTML shell so it cannot drift per page.
+// extractScripts hoists each view's own <script> tags into the layout, which
+// keeps per-page scripts (categories/show has five, two conditional) local to
+// the view that needs them.
 app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+app.use(expressLayouts);
+app.set('layout', 'layouts/main');
+app.set('layout extractScripts', true);
+app.set('layout extractStyles', true);
 
 // Shutdown hooks — drain in-flight scrapes, then close the shared browser so a
 // half-finished job isn't left 'running' for the next boot to reclaim.
@@ -54,6 +64,18 @@ async function shutdown() {
 
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
+
+async function backfillDefaultCategories() {
+  const Category = require('./models/Category');
+  const result = await Category.updateMany(
+    { name: 'All Listings', isDefault: { $ne: true } },
+    { $set: { isDefault: true } }
+  );
+  if (result.modifiedCount > 0) {
+    logger.info(`Backfilled isDefault on ${result.modifiedCount} category(ies)`);
+  }
+  return result.modifiedCount;
+}
 
 function validateEnv() {
   const missing = ['MONGO_URI', 'SESSION_SECRET'].filter((key) => !process.env[key]);
@@ -138,7 +160,8 @@ async function startServer() {
     app.use('/listings', require('./routes/listings'));
     app.use('/categories', require('./routes/categories'));
 
-    // Global Error Handler
+    // Global Error Handler — goes through the same helper as every route so the
+    // error view has exactly one contract for its locals.
     app.use((err, req, res, next) => {
       logger.error('Unhandled error:', err.stack);
       const statusCode = err.status || 500;
@@ -146,12 +169,12 @@ async function startServer() {
         ? 'Something went wrong. Please try again.'
         : (err.message || 'Something went wrong.');
 
-      res.status(statusCode).render('error', {
-        message,
-        statusCode,
-        user: req.user || null
-      });
+      renderHtmlError(req, res, statusCode, message);
     });
+
+    // Backfill isDefault for categories created before the flag existed.
+    // Idempotent: a no-op on every boot after the first.
+    await backfillDefaultCategories();
 
     // Background workers start only after Mongo is connected — both read from it.
     scrapeQueue.start();

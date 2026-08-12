@@ -1,88 +1,76 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>My Categories</title>
-  <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-  <% const currentPage = 'categories'; %>
-  <%- include('../partials/navbar') %>
+<main class="container">
+  <%- include('../partials/flash-alert') %>
 
-  <main class="container">
-    <%- include('../partials/flash-alert') %>
-
-    <div class="page-header">
-      <h1>My Categories</h1>
-      <div class="categories-header-actions">
-        <form action="/categories/create" method="POST" class="create-category-form">
-          <input type="text" name="name" placeholder="New category name" required>
-          <button type="submit" class="btn-primary">Create category</button>
-        </form>
-      </div>
-    </div>
-
-    <!-- Your Categories -->
-    <% const userCategories = categories.filter(c => c.name !== 'All Listings'); %>
-
-    <% if (userCategories.length === 0) { %>
-      <div class="empty-state">
-        <p>You haven't created any categories yet.</p>
-        <p class="muted">Create one above to start organizing your listings.</p>
-      </div>
-    <% } else { %>
-      <div class="category-grid">
-        <% userCategories.forEach(category => { %>
-          <%- include('../partials/category-card', {
-            category,
-            isShared: false,
-            showAvailableCount: true,
-            showManageButton: true
-          }) %>
-        <% }) %>
-      </div>
-    <% } %>
-
-    <!-- Shared With Me -->
-    <% if (sharedCategories && sharedCategories.length > 0) { %>
-      <h2 class="section-title">Shared With Me</h2>
-      <div class="category-grid">
-        <% sharedCategories.forEach(category => { %>
-          <%- include('../partials/category-card', {
-            category,
-            isShared: true,
-            showAvailableCount: true,
-            showManageButton: false
-          }) %>
-        <% }) %>
-      </div>
-    <% } %>
-  </main>
-
-  <!-- Manage Category Modal -->
-  <div id="manageCategoryModal" class="modal-overlay" style="display:none;">
-    <div class="modal-content modal-sm">
-      <div class="modal-header">
-        <h2>Manage Category</h2>
-        <button type="button" class="modal-close">&times;</button>
-      </div>
-      <div class="modal-body">
-        <form id="renameForm" class="modal-form">
-          <label for="newName">Rename</label>
-          <div class="input-group">
-            <input type="text" id="newName" name="name" required>
-            <button type="submit" class="btn-primary">Save</button>
-          </div>
-        </form>
-        <hr class="modal-divider">
-        <div class="danger-zone">
-          <p class="danger-label">Danger Zone</p>
-          <button type="button" id="deleteBtn" class="btn-danger">Delete Category</button>
-          <p class="danger-warning">This will remove the category but not the items.</p>
-        </div>
-      </div>
+  <div class="page-header">
+    <h1>My Categories</h1>
+    <div class="categories-header-actions">
+      <form action="/categories/create" method="POST" class="create-category-form">
+        <input type="text" name="name" placeholder="New category name" required>
+        <button type="submit" class="btn-primary">Create category</button>
+      </form>
     </div>
   </div>
 
-  <script src="/js/categories.js"></script>
-</body>
-</html>
+  <!-- Your Categories -->
+  <% const userCategories = categories.filter(c => !c.isDefault); %>
+
+  <% if (userCategories.length === 0) { %>
+    <div class="empty-state">
+      <p>You haven't created any categories yet.</p>
+      <p class="muted">Create one above to start organizing your listings.</p>
+    </div>
+  <% } else { %>
+    <div class="category-grid">
+      <% userCategories.forEach(category => { %>
+        <%- include('../partials/category-card', {
+          category,
+          isShared: false,
+          showAvailableCount: true,
+          showManageButton: true
+        }) %>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <!-- Shared With Me -->
+  <% if (sharedCategories && sharedCategories.length > 0) { %>
+    <h2 class="section-title">Shared With Me</h2>
+    <div class="category-grid">
+      <% sharedCategories.forEach(category => { %>
+        <%- include('../partials/category-card', {
+          category,
+          isShared: true,
+          showAvailableCount: true,
+          showManageButton: false
+        }) %>
+      <% }) %>
+    </div>
+  <% } %>
+</main>
+
+<!-- Manage Category Modal -->
+<div id="manageCategoryModal" class="modal-overlay">
+  <div class="modal-content modal-sm">
+    <div class="modal-header">
+      <h2>Manage Category</h2>
+      <button type="button" class="modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="renameForm" class="modal-form">
+        <label for="newName">Rename</label>
+        <div class="input-group">
+          <input type="text" id="newName" name="name" required>
+          <button type="submit" class="btn-primary">Save</button>
+        </div>
+      </form>
+      <hr class="modal-divider">
+      <div class="danger-zone">
+        <p class="danger-label">Danger Zone</p>
+        <button type="button" id="deleteBtn" class="btn-danger">Delete Category</button>
+        <p class="danger-warning">This will remove the category but not the items.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/categories.js"></script>

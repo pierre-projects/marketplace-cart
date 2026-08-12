@@ -1,98 +1,86 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>All Listings</title>
-  <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-  <% const currentPage = 'listings'; %>
-  <%- include('../partials/navbar') %>
+<main class="container">
+  <%- include('../partials/flash-alert') %>
 
-  <main class="container">
-    <%- include('../partials/flash-alert') %>
+  <div class="page-header">
+    <h1>All My Listings</h1>
+    <button id="openAddModal" type="button" class="btn-primary listings-add-btn">Add listing</button>
+  </div>
 
-    <div class="page-header">
-      <h1>All My Listings</h1>
-      <button id="openAddModal" type="button" class="btn-primary listings-add-btn">Add listing</button>
+  <%- include('../partials/add-listing-modal', { categories, returnTo: '/listings', defaultCategoryId: null }) %>
+
+  <% if (listings.length === 0) { %>
+    <div class="empty-state">
+      <p>No listings yet.</p>
+      <p class="muted">Click "Add listing" above to save your first item.</p>
+    </div>
+  <% } else { %>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+      <div class="stat">
+        <span class="stat-value" id="statCount"><%= listings.length %></span>
+        <span class="stat-label">listings</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="statTotal">$0</span>
+        <span class="stat-label">total value</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="statAvailable">0</span>
+        <span class="stat-label">available</span>
+      </div>
     </div>
 
-    <%- include('../partials/add-listing-modal', { categories, returnTo: '/listings', defaultCategoryId: null }) %>
-
-    <% if (listings.length === 0) { %>
-      <div class="empty-state">
-        <p>No listings yet.</p>
-        <p class="muted">Click "Add listing" above to save your first item.</p>
+    <!-- Toolbar: Search + Sort -->
+    <div class="listings-toolbar">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search listings..." class="search-input">
       </div>
-    <% } else { %>
-
-      <!-- Stats Bar -->
-      <div class="stats-bar">
-        <div class="stat">
-          <span class="stat-value" id="statCount"><%= listings.length %></span>
-          <span class="stat-label">listings</span>
-        </div>
-        <div class="stat">
-          <span class="stat-value" id="statTotal">$0</span>
-          <span class="stat-label">total value</span>
-        </div>
-        <div class="stat">
-          <span class="stat-value" id="statAvailable">0</span>
-          <span class="stat-label">available</span>
-        </div>
+      <div class="sort-box">
+        <label for="sortSelect">Sort:</label>
+        <select id="sortSelect">
+          <option value="newest">Newest</option>
+          <option value="oldest">Oldest</option>
+          <option value="price-high">Price: High to Low</option>
+          <option value="price-low">Price: Low to High</option>
+          <option value="title">Title A-Z</option>
+          <option value="condition">Condition: Best First</option>
+        </select>
       </div>
+    </div>
 
-      <!-- Toolbar: Search + Sort -->
-      <div class="listings-toolbar">
-        <div class="search-box">
-          <input type="text" id="searchInput" placeholder="Search listings..." class="search-input">
-        </div>
-        <div class="sort-box">
-          <label for="sortSelect">Sort:</label>
-          <select id="sortSelect">
-            <option value="newest">Newest</option>
-            <option value="oldest">Oldest</option>
-            <option value="price-high">Price: High to Low</option>
-            <option value="price-low">Price: Low to High</option>
-            <option value="title">Title A-Z</option>
-            <option value="condition">Condition: Best First</option>
-          </select>
-        </div>
-      </div>
+    <!-- Filter Chips -->
+    <div class="filter-chips">
+      <button class="chip active" data-filter="all">All</button>
+      <button class="chip" data-filter="available">Available</button>
+      <button class="chip" data-filter="sold">Sold</button>
+      <span class="chip-divider"></span>
+      <button class="chip" data-filter="new">New</button>
+      <button class="chip" data-filter="like new">Like New</button>
+      <button class="chip" data-filter="good">Good</button>
+      <button class="chip" data-filter="fair">Fair</button>
+      <button class="chip" data-filter="poor">Poor</button>
+    </div>
 
-      <!-- Filter Chips -->
-      <div class="filter-chips">
-        <button class="chip active" data-filter="all">All</button>
-        <button class="chip" data-filter="available">Available</button>
-        <button class="chip" data-filter="sold">Sold</button>
-        <span class="chip-divider"></span>
-        <button class="chip" data-filter="new">New</button>
-        <button class="chip" data-filter="like new">Like New</button>
-        <button class="chip" data-filter="good">Good</button>
-        <button class="chip" data-filter="fair">Fair</button>
-        <button class="chip" data-filter="poor">Poor</button>
-      </div>
+    <!-- No Results Message -->
+    <div id="noResults" class="empty-state is-hidden">
+      <p>No listings match your filters.</p>
+    </div>
 
-      <!-- No Results Message -->
-      <div id="noResults" class="empty-state" style="display:none;">
-        <p>No listings match your filters.</p>
-      </div>
+    <!-- Item List -->
+    <%- include('../partials/item-list', {
+      items: listings,
+      categories,
+      allowEdit: true,
+      allowDelete: true,
+      showCategories: true,
+      user: user,
+      isOwner: true
+    }) %>
 
-      <!-- Item List -->
-      <%- include('../partials/item-list', {
-        items: listings,
-        categories,
-        allowEdit: true,
-        allowDelete: true,
-        showCategories: true,
-        user: user,
-        isOwner: true
-      }) %>
+  <% } %>
+</main>
 
-    <% } %>
-  </main>
-
-  <script src="/js/listings.js"></script>
-  <script src="/js/dashboard.js"></script>
-  <script src="/js/assign-categories.js"></script>
-</body>
-</html>
+<script src="/js/listings.js"></script>
+<script src="/js/dashboard.js"></script>
+<script src="/js/assign-categories.js"></script>
