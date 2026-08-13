@@ -1,229 +1,202 @@
 # MarketplaceCart Scraper System
 
-Complete documentation of the scraper architecture, data flow, and implementation details.
+How a pasted link becomes a saved item: the queue that runs the scrape, the registry that picks a
+scraper, the two scrapers themselves, and the failure contract they share.
+
+For setup and the wider app, see [README.md](README.md).
 
 ---
 
-## System Overview
+## System overview
 
-The scraper system extracts product listing data (title, price, condition, location, images, availability) from marketplace URLs. It uses a **registry pattern** to route URLs to platform-specific scrapers, a **service layer** to manage the preview/create lifecycle, and a **condition normalizer** for consistent data storage.
-
-### Data Flow
+Scraping does **not** happen inside the HTTP request. A request enqueues a job and returns; a
+worker in the same process does the work and writes the item.
 
 ```
-User enters URL in dashboard modal
-        |
-        v
-  POST /items/preview  (AJAX)
-        |
-        v
-  itemService.previewItem(link)
-        |
-        v
-  scrapers/index.js  -->  scrapeItem(url)
-        |                       |
-        |           +-----------+-----------+
-        |           |                       |
-        v           v                       v
-   getScraper()   offerup.scrape()    facebook.scrape()
-                  (axios + cheerio)   (Puppeteer + __bbox)
-        |
-        v
-  Return scraped data --> Frontend shows preview
-  User caches data in hidden form fields
-        |
-        v
-  User clicks "Add Listing"
-        |
-        v
-  POST /items/add  (form submit with cached data)
-        |
-        v
-  itemService.createItem(link, cachedData)
-        |
-        v
-  normalizeItemData() + normalizeCondition()
-        |
-        v
-  new Item({...data, link, platform}).save()
-        |
-        v
-  Category.$addToSet(item) --> Redirect to /dashboard
+POST /items/preview ─────────────────► 202 { jobId }
+      │                                (validated against the registry first;
+      │                                 an unsupported link never creates a job)
+      ▼
+services/scrapeQueue.js
+      │  atomic claim: findOneAndUpdate({ status: 'queued', nextAttemptAt: <= now })
+      │  deduped: an existing queued/running job for this link + user is reused
+      ▼
+utils/scrapers/index.js  ──► offerup.js  (axios + cheerio)
+                         └─► facebook.js (Puppeteer)
+      │
+      ▼
+services/itemService.js  upsertItemByLink()   ◄── the Item is written HERE
+      │
+      ▼
+GET /items/jobs/:id  polled once a second  ──► queued | running | done | failed
+      │
+      ▼
+POST /items/add ──► addItemToCategory        (looks the item up; never re-scrapes)
 ```
 
-### Key Design Decisions
+### Key design decisions
 
-- **Two-step flow**: Preview first, then save. Cached data avoids re-scraping.
-- **Registry pattern**: Adding a new scraper = one file + one line in the registry.
-- **Condition normalization**: All platforms' conditions map to 5 canonical values at the service layer, not in each scraper.
-- **Browser singleton**: Puppeteer-based scrapers share one browser instance across the app lifecycle.
+- **The item is saved before the user confirms.** `/items/add` attaches an existing item to
+  collections. An abandoned preview therefore leaves an Item that no collection references, which
+  `services/maintenance.js` sweeps every 6 hours, ignoring anything saved in the last hour.
+- **Upsert, not insert.** `Item.link` is unique, so re-scraping a URL refreshes the existing
+  document rather than creating a second copy. `addedAt` is set with `$setOnInsert` and survives.
+- **One failure contract.** Every scraper throws a `ScrapeError`; nothing returns `null`. Callers
+  cannot otherwise tell "not found" from "blocked" from "markup changed".
+- **The registry is the single source of truth** for which marketplaces exist and what they are
+  called. `detectPlatform` reads the same list, which is why it can no longer claim support for a
+  marketplace that has no scraper.
+
+### Queue behaviour
+
+| Setting | Value | Where |
+|---|---|---|
+| Concurrent jobs | 2 | `MAX_CONCURRENT_JOBS` |
+| Attempts | 3 | `MAX_ATTEMPTS` |
+| Backoff | 2s, 4s, 8s | `2000 * 2^(attempts-1)` |
+| Job record TTL | 24h | `JOB_TTL_SECONDS` |
+| Client poll / give-up | 1s / 90s | `POLL_INTERVAL_MS`, `POLL_CEILING_MS` |
+
+Jobs left `running` by a crash are reclaimed at boot. A retry keeps the original `job.createdAt`,
+which is what the item's `addedAt` is taken from — so a scrape that succeeds on the third attempt is
+still dated when you asked for it.
 
 ---
 
-## Scraper Registry
+## Failure contract
+
+**File:** `utils/scrapers/errors.js`
+
+| Code | Meaning | Retried |
+|---|---|---|
+| `UNSUPPORTED` | No scraper matches the URL | no |
+| `NETWORK` | Could not reach the marketplace | **yes** |
+| `TIMEOUT` | Marketplace too slow | **yes** |
+| `NOT_FOUND` | 404 / 410 — listing removed | no |
+| `BLOCKED` | 401 / 403 / 429 | no |
+| `PARSE_FAILED` | Reached the page, could not read it | no |
+| `BROWSER_UNAVAILABLE` | No Chrome could be resolved | no |
+
+Retrying `UNSUPPORTED` or `NOT_FOUND` burns another full scrape to reach the same answer.
+`BROWSER_UNAVAILABLE` is deliberately excluded for a stronger reason: no amount of backoff installs
+a browser. It previously came through as `NETWORK` — which *is* retryable — so a missing Chrome
+consumed all three attempts and told the user to check their connection.
+
+`asScrapeError(err, fallbackCode)` wraps anything a scraper throws, so a stray `TypeError` in an
+extractor surfaces as `PARSE_FAILED` rather than leaking. `classifyAxiosError(err)` maps HTTP
+status codes onto the table above.
+
+Each error carries a `userMessage` safe to render, while the server log gets the underlying cause.
+
+---
+
+## Scraper registry
 
 **File:** `utils/scrapers/index.js`
 
-The registry maps URL patterns to scraper modules. Every scrape flows through `scrapeItem()`.
+```js
+const scrapers = [
+  { pattern: /offerup\.com\/item/,      platform: 'OfferUp',              scraper: offerupScraper },
+  { pattern: /facebook\.com\/marketplace/, platform: 'Facebook Marketplace', scraper: facebookScraper },
+];
+```
 
-### Registered Scrapers
-
-| Pattern | Scraper | Method |
-|---|---|---|
-| `/offerup\.com\/item/` | `./offerup` | HTTP (axios + cheerio) |
-| `/facebook\.com\/marketplace/` | `./facebook` | Browser (Puppeteer) |
+| Export | Purpose |
+|---|---|
+| `scrapeItem(url)` | Route to a scraper and run it; throws `UNSUPPORTED` if none matches |
+| `getScraper(url)` | The scraper module, or `null` |
+| `isSupported(url)` | Whether any pattern matches — used to reject links before enqueuing |
+| `detectPlatform(url)` | Display name from the same registry |
 
 ### Interface
 
-Every scraper module must export:
+A scraper exports one function:
 
 ```js
-module.exports = { scrape };
-```
-
-Where `scrape(url)` is an async function returning:
-
-```js
-{
-  title: string,
-  price: number,
-  description: string | null,
-  condition: string | null,
-  location: string | null,
-  imageLinks: string[],
-  available: boolean
+async function scrape(url) → {
+  title,        // string
+  price,        // number, 0 for free, null if unreadable
+  description,  // string | null
+  condition,    // raw marketplace wording; normalised later
+  location,     // string
+  imageLinks,   // string[]
+  available     // boolean
 }
 ```
 
-### Functions
-
-| Function | Purpose |
-|---|---|
-| `scrapeItem(url)` | Find matching scraper, run it, log timing |
-| `getScraper(url)` | Return scraper module for a URL (or null) |
-| `isSupported(url)` | Check if any scraper handles this URL |
-
-### Timing
-
-`scrapeItem()` logs execution time for every scrape:
-
-```
-Scrape [offerup\.com\/item]: 1102ms
-Scrape [facebook\.com\/marketplace]: 8234ms
-```
+Throw a `ScrapeError` on failure. **Never return `null`, and never substitute `0` for a price you
+could not read** — `0` means the listing is genuinely free, and the UI renders the two differently.
 
 ---
 
-## OfferUp Scraper
+## OfferUp scraper
 
-**File:** `utils/scrapers/offerup.js`
-**Method:** HTTP request via axios, HTML parsing via cheerio
-**No browser required**
+**File:** `utils/scrapers/offerup.js` · axios + cheerio · no browser · 15s timeout, max 5 redirects
 
-### How It Works
+1. Fetch the HTML with a spoofed User-Agent
+2. Parse with cheerio
+3. Read JSON-LD (`<script type="application/ld+json">`) and Open Graph meta tags
+4. Per field, try structured data first, then fall back through DOM selectors
 
-1. Fetch page HTML with axios (spoofed User-Agent)
-2. Parse HTML with cheerio
-3. Extract JSON-LD structured data (`<script type="application/ld+json">`)
-4. Extract Open Graph meta tags
-5. For each field, try structured data first, then fall back through DOM selectors
+### Fallback chains
 
-### Fallback Chains
+The first successful source wins.
 
-Each field has a prioritized extraction chain. The first successful source wins.
+**Title:** JSON-LD `name` → `og:title` (strips the " - OfferUp" suffix) →
+`[data-testid="listing-title"]` → first `<h1>`
 
-**Title:**
-1. JSON-LD `name`
-2. Meta `og:title` (strips " - OfferUp" suffix)
-3. `[data-testid="listing-title"]`
-4. First `<h1>` element
+**Price:** JSON-LD `offers.price` → `product:price:amount` → `[data-testid="price"]` /
+`[data-qa="price"]` → `p.MuiTypography-h4` → first `$XXX` in the HTML
 
-**Price:**
-1. JSON-LD `offers.price`
-2. Meta `product:price:amount`
-3. `[data-testid="price"]` or `[data-qa="price"]`
-4. `p.MuiTypography-h4`
-5. Regex: first `$XXX` pattern in HTML
+**Description:** JSON-LD `description` → `og:description` → `<h2>`"Description" + sibling paragraph
+→ `h2.MuiTypography-h5` + `p.MuiTypography-body1`
 
-**Description:**
-1. JSON-LD `description`
-2. Meta `og:description`
-3. `<h2>` with text "Description" + sibling paragraph
-4. MUI class: `h2.MuiTypography-h5` "Description" + `p.MuiTypography-body1`
+**Condition:** JSON-LD `offers.itemCondition` (parses the schema.org URI, `UsedCondition` → `Used`)
+→ `product:condition` → `p.MuiTypography-body1` containing "Condition:"
 
-**Condition:**
-1. JSON-LD `offers.itemCondition` (parses schema.org URI, e.g. `UsedCondition` -> `Used`)
-2. Meta `product:condition`
-3. `p.MuiTypography-body1` containing "Condition:"
+**Images:** JSON-LD `image` → `og:image` → every `<img>` whose `src` contains `offerup.com`, skipping
+the first when there are several (usually the seller avatar)
 
-**Images:**
-1. JSON-LD `image` (array or single)
-2. Meta `og:image`
-3. All `<img>` with `src` containing `offerup.com` (skips first if multiple — usually profile pic)
+**Location:** `span.MuiTypography-body1` matching `/^in /`
 
-**Location:**
-- `span.MuiTypography-body1` matching `/^in /` (strips "in " prefix)
+**Availability:** `false` when the HTML contains "This item is no longer available"
 
-**Availability:**
-- `false` if HTML contains `"This item is no longer available"`
+### Errors
 
-### Error Handling
-
-Returns `null` on any error (axios failure, parse error). Logged via `logger.error()`.
+Network and HTTP failures go through `classifyAxiosError`; a missing title after parsing throws
+`PARSE_FAILED`. Nothing is swallowed.
 
 ---
 
-## Facebook Marketplace Scraper
+## Facebook Marketplace scraper
 
-**File:** `utils/scrapers/facebook.js`
-**Method:** Puppeteer browser automation
-**Requires:** `utils/browser.js` singleton
+**File:** `utils/scrapers/facebook.js` · Puppeteer · 25s navigation timeout
 
-### How It Works
+Facebook server-renders listing data into `__bbox` Relay payloads inside `<script>` tags. There is
+no stable DOM to target, so the data is pulled out of those payloads.
 
-1. Extract listing ID from URL (`/item/(\d+)/`)
-2. Get shared browser via `getBrowser()`
-3. Create isolated incognito context
-4. Navigate to URL with `domcontentloaded` (no need to wait for async requests)
-5. Fire-and-forget modal dismiss (`[aria-label="Close"]`)
-6. Single `page.evaluate()` extracts scripts, meta tags, and images
-7. Multi-candidate scoring selects best data from multiple `__bbox` payloads
-8. Close context (not browser)
+1. Extract the listing id from the URL
+2. Open an isolated `BrowserContext`, block images/stylesheets/fonts/media
+3. Navigate with `domcontentloaded` — the payloads are in the initial HTML
+4. Collect scripts that contain both `__bbox` and the listing id (max 10, 300KB each)
+5. Build candidates, score them, merge the strong ones
+6. Fall back to Open Graph tags if nothing scored
 
-### Why Multi-Candidate?
+### Extraction is anchored to the listing
 
-Facebook splits listing data across multiple `__bbox` Relay payloads in different `<script>` tags. A single script rarely contains all fields. The scraper extracts candidates from ALL matching scripts, scores them, and merges the best ones.
+**This is the subtle part.** A Marketplace page embeds dozens of `listing_price` nodes for the
+related-items rail. Matching a field regex against the whole script returns the *first* hit, which
+is frequently a different seller's listing. Measured live, that produced a "Hoverboard" candidate at
+$20 on a pressure-washer page, and an "Anime figures" candidate at $5 on an Xbox page.
 
-### Script Extraction (in page.evaluate)
+So each candidate is built from a **±6000 character window around an occurrence of the listing id**,
+not from the whole script. Scoring then compares candidates that all genuinely describe the target.
 
-```
-Filter: __bbox + listingId in script text
-Caps: max 10 scripts, 300KB each, skip < 200 chars
-```
-
-### Candidate Extraction
-
-For each matching script, regex-extract these fields:
-
-| Field | Primary Pattern | Fallback Pattern |
-|---|---|---|
-| Title | `"marketplace_listing_title":"..."` | `"base_marketplace_listing_title":"..."` |
-| Price | `"listing_price":{..."amount":"..."}` | `"formatted_amount_zeros_stripped":"..."` |
-| Location | `"location_text":{"text":"..."}` | — |
-| Description | `"redacted_description":{"text":"..."}` | `"description":{"text":"..."}` |
-| Condition | `"attribute_name":"Condition"..."label":"..."` | — |
-| Sold/Live/Pending | `"is_sold":true/false` etc. | — |
-| Share URI | `"share_uri":"..."` | — |
-
-Only candidates with at least one useful field are kept.
-
-### Scoring Algorithm
-
-Each candidate gets a deterministic score:
+### Scoring
 
 | Signal | Points |
 |---|---|
-| `share_uri` contains listing ID | +6 |
+| `share_uri` contains the listing id | +6 |
 | Has title | +3 |
 | Has price | +3 |
 | Has location | +2 |
@@ -231,321 +204,185 @@ Each candidate gets a deterministic score:
 | Description > 120 chars | +2 |
 | Description > 40 chars | +1 |
 | Has condition | +1 |
-| Script > 200KB | +1 |
-| `is_sold === true` | -6 |
-| `is_pending === true` | -3 |
+| `is_sold === true` | −6 |
+| `is_pending === true` | −3 |
 
-### Candidate Merging
+### Merging
 
-1. Sort candidates by score (highest first)
-2. Take the best candidate
-3. Merge in fields from runners-up within 4 points of top score
-4. Merge rule: fill missing fields only, never overwrite existing
-5. Exception: use longer description if secondary is 30+ chars longer
-6. Calculate `available = (isLive !== false) && !isSold && !isPending`
+1. Sort by score, take the best
+2. Merge in fields from candidates within 4 points of the top
+3. Fill **missing** fields only — never overwrite
+4. A price of `0` counts as present, not missing. Treating it as fillable would let a neighbouring
+   listing's price overwrite a genuine "Free"
+5. Prefer a description 30+ characters longer
+6. `available = (isLive !== false) && !isSold && !isPending`
 
-### OG Meta Fallback
+### Price resolution
 
-If no candidates extracted, fall back to Open Graph meta tags:
-- `og:title`, `og:description`, `og:image`, `product:price:amount`
-- Sets `condition: null`, `location: null`, `available: true`
-
-### Performance Optimizations
-
-| Optimization | Impact |
-|---|---|
-| Browser singleton (no `puppeteer.launch()` per scrape) | ~1-3s saved |
-| `domcontentloaded` instead of `networkidle2` | ~3-8s saved |
-| Block images/CSS/fonts via request interception | Bandwidth saved |
-| Single `page.evaluate()` (scripts + meta + images) | ~0.5s saved |
-| Fire-and-forget modal dismiss (no 5s wait) | ~2-6s saved |
-| Script caps (10 scripts, 300KB each) | ~0.3-1s saved |
-
-### String Decoding
-
-`safeDecode()` unescapes JSON strings from `__bbox` data:
-- `\"` -> `"`
-- `\n` -> newline
-- `\u2019` -> right single quote
-- `\u201c` / `\u201d` -> smart double quotes
+`null` (no price node in the window) and `0` (Facebook reports `$0`) are kept distinct all the way
+to the database. `||` cannot be used to pick a fallback here, because a genuine `0` is falsy and
+would fall through to the meta tag and then to `0`, collapsing both states.
 
 ---
 
-## Browser Singleton
+## Browser lifecycle
 
 **File:** `utils/browser.js`
 
-Manages a single Puppeteer browser instance shared across the app.
+### Resolving a Chrome
 
-| Function | Purpose |
-|---|---|
-| `getBrowser()` | Return existing browser or lazy-launch one. Checks `browser.isConnected()` for stale instances. |
-| `closeBrowser()` | Close browser and null the reference. Called on shutdown. |
+`puppeteer.launch()` with no options uses `puppeteer.executablePath()`, which returns a path whether
+or not anything is installed there — so a machine that never ran the browser download failed at
+*launch* with an opaque error rather than at resolution. The chain now resolves up front, memoized,
+and prefers a browser that exists:
 
-### Launch Config
+1. `PUPPETEER_EXECUTABLE_PATH` — an explicit override; a stale value logs and falls through rather
+   than taking scraping down
+2. Puppeteer's managed download, **only if the file is really on disk**
+3. The system Chrome
 
-```js
-puppeteer.launch({
-  headless: true,
-  args: ['--no-sandbox', '--disable-setuid-sandbox']
-})
-```
+Failing all three throws `BROWSER_UNAVAILABLE` naming the install command.
 
-### Shutdown Hooks
+### One browser, bounded contexts
 
-In `server.js`, SIGINT and SIGTERM call `closeBrowser()` before `process.exit(0)`.
+The launch **promise** is memoized, not the resolved browser. Memoizing the browser left a window
+where two concurrent callers both saw `null`, both called `launch()`, and the second assignment
+orphaned the first Chromium beyond the reach of `closeBrowser()`. The memo is cleared on rejection
+so a transient failure does not poison every later call.
 
-### Usage in Scrapers
+Each scrape takes a slot from a 2-permit semaphore (`MAX_CONCURRENT_CONTEXTS`) and creates its own
+`BrowserContext`, released in a `finally`. Contexts are real browser profiles, not cheap handles, so
+they are bounded independently of queue concurrency.
 
-```js
-const browser = await getBrowser();             // Shared instance
-const ctx = await browser.createBrowserContext(); // Isolated context
-const page = await ctx.newPage();
-// ... scrape ...
-await ctx.close();  // Close context, NOT browser
-```
+`closeBrowser()` runs from the server's shutdown hooks.
 
 ---
 
-## Condition Normalizer
+## Condition normalizer
 
 **File:** `utils/conditionMap.js`
 
-Maps raw condition strings from any marketplace to 5 canonical values.
+Canonical values, best to worst: `New`, `Like New`, `Good`, `Fair`, `Poor`.
 
-### Canonical Conditions (ordered best to worst)
+Matching is substring-based on the lowercased string, and **order matters** — "like new" is checked
+before "new", or every "Like New" would be filed as "New".
 
-`New` > `Like New` > `Good` > `Fair` > `Poor`
-
-### Mapping Rules
-
-| Input Contains (case-insensitive) | Maps To |
+| Keywords | Canonical |
 |---|---|
-| "like new", "likenew" | Like New |
-| "new", "brand new", "sealed" | New |
-| "very good", "excellent" | Good |
-| "good" | Good |
-| "fair", "acceptable", "decent" | Fair |
-| "poor", "parts", "salvage", "broken" | Poor |
+| `like new`, `likenew` | Like New |
+| `new`, `brand new`, `sealed` | New |
+| `very good`, `excellent` | Good |
+| `good` | Good |
+| `fair`, `acceptable`, `decent` | Fair |
+| `poor`, `parts`, `salvage`, `broken` | Poor |
 
-**Order matters**: "like new" is checked before "new" so "Used - Like New" maps to "Like New", not "New".
-
-If no pattern matches, the original string is returned unchanged.
-
-### Where It's Applied
-
-In `itemService.js` -> `normalizeItemData()`:
-```js
-condition: normalizeCondition(data.condition || data.cachedCondition) || null
-```
-
-Scrapers return raw strings. Normalization happens at the service boundary.
+Anything unrecognised returns **`null`**, not the raw text. `Item.condition` is enum-constrained, so
+passing scraped wording through would fail validation on every save. This is applied once, in
+`normalizeItemData`, so scrapers stay free to return whatever the marketplace said.
 
 ---
 
-## Item Service
+## Item service
 
 **File:** `services/itemService.js`
 
-### previewItem(link)
-
-Scrape-only, no database save. Used for AJAX preview.
-
-1. Check `isSupported(link)` -> throw if unsupported
-2. `scrapeItem(link)` -> get raw data
-3. Validate title exists -> throw if missing
-4. Return raw scraped data
-
-### createItem(link, cachedData = null)
-
-Scrape (or use cache) + save to database.
-
-1. If `cachedData` has title -> use cached data (skip scraping)
-2. Else -> scrape fresh + validate
-3. `normalizeItemData()` -> consistent types + condition normalization
-4. `detectPlatform(link)` -> "OfferUp", "Facebook Marketplace", etc.
-5. `new Item({...data, link, platform}).save()`
-6. Return saved document
-
-### normalizeItemData(data)
-
-Handles both fresh scraped data and cached form data (prefixed with `cached`):
-
-| Field | Logic |
+| Function | Purpose |
 |---|---|
-| title | `data.title \|\| data.cachedTitle \|\| ''` |
-| price | Parse as float, default 0 |
-| condition | `normalizeCondition(raw)`, default null |
-| description | String or null |
-| location | String, default `''` |
-| imageLinks | Parse JSON if string, default `[]` |
-| available | Coerce `'true'` string to boolean |
+| `upsertItemByLink(link, itemData, platform, addedAt)` | Insert or refresh by unique link |
+| `normalizeItemData(data)` | Coerce scraper output to the schema's shapes |
+| `detectPlatform(link)` | Re-exported from the registry |
+| `isSupported(link)` | Re-exported from the registry |
 
-### detectPlatform(link)
+`upsertItemByLink` uses `$set` for the scraped fields and `$setOnInsert` for `addedAt`, so a refresh
+updates price and availability while preserving the date you first saved it. `E11000` from two
+concurrent upserts of the same link is retried once: the second pass finds the now-existing document
+and updates it.
 
-| URL Contains | Platform |
-|---|---|
-| `offerup.com` | OfferUp |
-| `ebay.com` | eBay |
-| `mercari.com` | Mercari |
-| `facebook.com/marketplace` | Facebook Marketplace |
-| (default) | Unknown |
+`addedAt` is supplied by the caller — the queue passes `job.createdAt`, the moment the user hit save.
+It used to default to "now", which dated an item by when its scrape *finished*, so a slow or retried
+scrape jumped the queue in "Date saved" ordering.
+
+`normalizeItemData` accepts exactly one input shape: whatever a scraper returned. It previously also
+accepted `cached*` fields posted back from the browser; that path is gone.
 
 ---
 
-## Item Model
+## Item model
 
 **File:** `models/Items.js`
 
-| Field | Type | Default | Required |
-|---|---|---|---|
-| `title` | String | — | No |
-| `price` | Number | 0 | No |
-| `condition` | String | — | No |
-| `description` | String | — | No |
-| `imageLinks` | [String] | — | No |
-| `location` | String | — | No |
-| `link` | String | — | **Yes** |
-| `platform` | String | 'Unknown' | No |
-| `available` | Boolean | true | No |
-| `addedAt` | Date | Date.now | No |
+| Field | Notes |
+|---|---|
+| `link` | **unique**, trimmed — the identity of an item |
+| `price` | `Number`, default `null`. `null` = unreadable, `0` = free |
+| `condition` | enum of the five canonical values, or `null` |
+| `platform` | from the registry, default `Unknown` |
+| `available` | boolean |
+| `addedAt` | when the user asked to save it |
+| `createdAt` / `updatedAt` | Mongoose timestamps; `updatedAt` records refreshes |
 
 ---
 
-## Frontend Flow
+## Adding a scraper
 
-**File:** `public/js/dashboard.js`
-
-### Step 1: Preview
-
-1. User enters URL in modal input
-2. Click "Preview" -> AJAX `POST /items/preview` with `{ link }`
-3. Button shows "Loading..." while waiting
-4. On success: populate preview fields (title, price, condition, location, description, image)
-5. Cache all scraped data in hidden form fields (`cachedTitle`, `cachedPrice`, etc.)
-6. Show Step 2
-
-### Step 2: Confirm & Add
-
-1. User sees preview data + selects optional category
-2. Click "Add Listing" -> form POST to `/items/add`
-3. Sends cached data + link + category IDs
-4. Server uses cached data (no re-scrape) -> saves to DB
-5. Redirect to dashboard
-
-### Error Handling
-
-- AJAX errors show inline error message, keep Step 1 visible
-- Form errors redirect with flash message
-
----
-
-## HTTP Endpoints
-
-| Method | Path | Purpose | Auth |
-|---|---|---|---|
-| POST | `/items/preview` | AJAX scrape preview | Yes |
-| POST | `/items/add` | Save item + assign categories | Yes |
-| DELETE | `/items/:id` | Delete item + remove from all categories | Yes |
-| POST | `/items/:id/assign-categories` | Reassign item to categories | Yes |
-
-All endpoints log execution time in the server console.
-
----
-
-## Adding a New Scraper
-
-To add support for a new marketplace (e.g., eBay):
-
-### 1. Create the scraper file
-
-```
-utils/scrapers/ebay.js
-```
-
-Export a `scrape(url)` function that returns the standard item object:
+**1.** Create `utils/scrapers/newsite.js`:
 
 ```js
+const { ScrapeError, CODES, classifyAxiosError } = require('./errors');
+
 async function scrape(url) {
-  // Fetch and parse the listing page
-  // Return: { title, price, description, condition, location, imageLinks, available }
+  let html;
+  try {
+    ({ data: html } = await axios.get(url, { timeout: 15000 }));
+  } catch (err) {
+    throw classifyAxiosError(err);
+  }
+
+  // ...extract...
+  if (!title) throw new ScrapeError(CODES.PARSE_FAILED);
+
+  return { title, price, description, condition, location, imageLinks, available };
 }
 
 module.exports = { scrape };
 ```
 
-**Choose your method:**
-- **HTTP (axios + cheerio)**: Faster, simpler. Use if the site serves data in HTML/JSON-LD/meta tags.
-- **Puppeteer**: Use if the site requires JavaScript rendering. Import `getBrowser()` from `../browser`.
-
-### 2. Register in the index
-
-In `utils/scrapers/index.js`:
+**2.** Register it — this is the only place the marketplace is named:
 
 ```js
-const ebayScraper = require('./ebay');
-
 const scrapers = [
-  { pattern: /offerup\.com\/item/, scraper: offerupScraper },
-  { pattern: /facebook\.com\/marketplace/, scraper: facebookScraper },
-  { pattern: /ebay\.com\/itm/, scraper: ebayScraper },
+  // ...
+  { pattern: /newsite\.com\/listing/, platform: 'NewSite', scraper: require('./newsite') },
 ];
 ```
 
-### 3. Add platform detection
-
-In `services/itemService.js` -> `detectPlatform()`:
-
-```js
-if (link.includes('ebay.com')) return 'eBay';
-```
-
-### 4. Done
-
-No other changes needed. The condition normalizer, item model, frontend, and routes all work automatically with any scraper that follows the interface.
+**3.** There is no step three. `detectPlatform`, `isSupported`, the queue, the condition normalizer,
+the item model, and the entire frontend pick it up from the registry.
 
 ---
 
 ## Logging
 
-**File:** `utils/logger.js`
-
-| Method | Prefix | Active When |
-|---|---|---|
-| `logger.info()` | `[INFO]` | All environments except `test` |
-| `logger.error()` | `[ERROR]` | Always |
-| `logger.debug()` | `[DEBUG]` | Only when `NODE_ENV=development` |
-
-Scrapers use `logger.debug()` to log which data source was used for each field, candidate scores, and extraction steps. Set `NODE_ENV=development` to see these.
+`utils/logger.js` exposes `info`, `error` and `debug`. **`debug` is a no-op unless
+`NODE_ENV=development`**, which is worth knowing: queue retries were logged at `debug` for a while,
+so a transient failure that later succeeded left no trace at any level. Anything you need to see in
+production belongs at `error`.
 
 ---
 
-## File Map
+## File map
 
-```
-utils/
-  browser.js              Puppeteer singleton (getBrowser, closeBrowser)
-  conditionMap.js          Condition normalizer (New/Like New/Good/Fair/Poor)
-  logger.js                Environment-aware logging
-  scrapers/
-    index.js               Scraper registry (URL pattern -> scraper routing)
-    offerup.js             OfferUp scraper (axios + cheerio)
-    facebook.js            Facebook scraper (Puppeteer + multi-candidate scoring)
-
-services/
-  itemService.js           Preview/create flows, normalization, platform detection
-
-models/
-  Items.js                 Mongoose schema for Item documents
-
-routes/
-  items.js                 HTTP endpoints for preview/add/delete/assign
-
-middleware/
-  validation.js            URL validation (express-validator)
-
-public/js/
-  dashboard.js             Frontend preview/add modal flow
-
-server.js                  Shutdown hooks for browser cleanup
-```
+| File | Role |
+|---|---|
+| `services/scrapeQueue.js` | Claim, run, retry, reclaim |
+| `services/maintenance.js` | Sweep abandoned previews |
+| `services/itemService.js` | Upsert and normalise |
+| `models/ScrapeJob.js` | Job records, 24h TTL, dedupe index |
+| `utils/scrapers/index.js` | Registry and routing |
+| `utils/scrapers/errors.js` | `ScrapeError`, codes, retry policy |
+| `utils/scrapers/offerup.js` | axios + cheerio |
+| `utils/scrapers/facebook.js` | Puppeteer + anchored `__bbox` extraction |
+| `utils/browser.js` | Chrome resolution, launch memo, context semaphore |
+| `utils/conditionMap.js` | Raw condition → canonical or `null` |
+| `routes/items.js` | `/preview`, `/jobs/:id`, `/add` |
+| `public/js/dashboard.js` | Enqueue and poll from the modal |
