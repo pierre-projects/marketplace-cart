@@ -546,7 +546,6 @@
   color: var(--text-secondary);
   cursor: pointer;
   opacity: 0;
-  visibility: hidden;
   pointer-events: none;
   transition: opacity 0.2s, background-color 0.2s, color 0.2s;
 }
@@ -561,11 +560,10 @@
   fill: currentColor;
 }
 
-.item-card:hover .kebab-btn,
-  .item-card:focus-within .kebab-btn,
+.card:hover .kebab-btn,
+  .card:focus-within .kebab-btn,
   .kebab-menu.open .kebab-btn {
   opacity: 1;
-  visibility: visible;
   pointer-events: auto;
   color: var(--text-secondary);
 }
@@ -3290,6 +3288,11 @@ dialog.modal .modal-body { background: transparent; }
     width: 44px;
     height: 44px;
     transform: translate(-50%, -50%);
+  }
+
+  .kebab-btn {
+    opacity: 1;
+    pointer-events: auto;
   }
 
   .segmented__opt { min-height: 44px; }

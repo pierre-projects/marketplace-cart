@@ -19,11 +19,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (m !== menu) {
           m.classList.remove('open');
           m.querySelector('.kebab-dropdown').classList.remove('is-open');
+          m.querySelector('.kebab-btn').setAttribute('aria-expanded', 'false');
         }
       });
 
       const nowOpen = dropdown.classList.toggle('is-open');
       menu.classList.toggle('open', nowOpen);
+      btn.setAttribute('aria-expanded', nowOpen ? 'true' : 'false');
     });
   });
 
@@ -33,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.kebab-menu').forEach(m => {
         m.classList.remove('open');
         m.querySelector('.kebab-dropdown').classList.remove('is-open');
+        m.querySelector('.kebab-btn').setAttribute('aria-expanded', 'false');
       });
     }
   });
