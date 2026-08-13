@@ -12,6 +12,7 @@
 <% const displayItems = _maxItems ? items.slice(0, _maxItems) : items; %>
 <% const thisCategoryId = typeof categoryId !== 'undefined' ? categoryId : null; %>
 <% const _itemCategoryIndex = typeof itemCategoryIndex !== 'undefined' ? itemCategoryIndex : {}; %>
+<% const _returnTo = typeof returnTo !== 'undefined' ? returnTo : '/dashboard'; %>
 
 <ul class="item-list grid-cards">
   <% displayItems.forEach(entry => { %>
@@ -34,6 +35,7 @@
           allowDelete,
           showCategories,
           categoryId: thisCategoryId,
+          returnTo: _returnTo,
           user,
           isOwner,
           showAddedBy

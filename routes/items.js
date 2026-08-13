@@ -98,23 +98,29 @@ router.post('/add', ensureAuthenticated, async (req, res) => {
   }
 });
 
-// DELETE /items/:id — Remove item from DB and clean from all categories
-router.delete('/:id', ensureAuthenticated, async (req, res) => {
+// DELETE /items/:id/saved — Unsave for this user without deleting shared data.
+router.delete('/:id/saved', ensureAuthenticated, async (req, res) => {
+  const returnTo = getSafeReturnToPath(req.body.returnTo, '/dashboard');
+
   try {
     const itemId = req.params.id;
 
-    await Item.findByIdAndDelete(itemId);
-
-    // Remove from all categories
-    await Category.updateMany(
-      { 'items.item': itemId },
+    const result = await Category.updateOne(
+      { user: req.user._id, isDefault: true, 'items.item': itemId },
       { $pull: { items: { item: itemId } } }
     );
 
-    res.redirect('/dashboard');
+    if (result.modifiedCount === 0) {
+      req.flash('error_msg', 'That item is not in your Saved items.');
+      return res.redirect(returnTo);
+    }
+
+    req.flash('success_msg', 'Removed from Saved items.');
+    return res.redirect(returnTo);
   } catch (err) {
-    logger.error('Error deleting item:', err);
-    return redirectWithFlashError(req, res, 'Failed to delete that item. Please try again.', '/dashboard');
+    logger.error('Error unsaving item:', err);
+    req.flash('error_msg', 'Failed to remove that item. Please try again.');
+    return res.redirect(returnTo);
   }
 });
 

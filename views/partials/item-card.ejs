@@ -13,6 +13,8 @@
   const _hasPrice = typeof item.price === 'number' && item.price > 0;
   const _isFree = item.price === 0;
   const _host = hostLabel(item.link);
+  const _returnTo = typeof returnTo === 'string' && returnTo.trim() ? returnTo : '/dashboard';
+  const _canUnsave = !categoryId && allowDelete && isOwner;
   const _platformKey = String(item.platform || '').toLowerCase();
   const _platformLogo = _platformKey.includes('offerup')
     ? { src: '/images/marketplaces/offerup.svg', alt: 'OfferUp' }
@@ -98,12 +100,12 @@
               Remove from collection
             </button>
           </form>
-        <% } else if (!categoryId && allowDelete && isOwner) { %>
+        <% } else if (_canUnsave) { %>
           <hr class="kebab-divider">
-          <form method="POST" action="/items/<%= item._id %>?_method=DELETE">
-            <button type="submit" class="kebab-action kebab-action--danger" role="menuitem"
-                    onclick="return confirm('Remove this saved item?')">
-              Delete
+          <form method="POST" action="/items/<%= item._id %>/saved?_method=DELETE">
+            <input type="hidden" name="returnTo" value="<%= _returnTo %>">
+            <button type="submit" class="kebab-action" role="menuitem">
+              Unsave item
             </button>
           </form>
         <% } %>
