@@ -1,20 +1,182 @@
-<main class="landing-container">
-  <section class="landing-content" aria-labelledby="hero-title">
-    <% if (typeof user !== 'undefined' && user) { %>
-      <p class="hero-eyebrow">Welcome back</p>
-      <h1 id="hero-title">Ready to keep building your cart?</h1>
-      <p>Jump into your dashboard to add fresh listings, organize categories, and track everything in one place.</p>
-      <div class="hero-ctas">
-        <a href="/dashboard" class="hero-btn hero-btn-primary">Go to Dashboard</a>
+<% const signedIn = typeof user !== 'undefined' && user; %>
+
+<main id="main" class="landing">
+  <section class="landing-hero" aria-labelledby="hero-title">
+    <div class="landing-hero__inner">
+      <div class="landing-hero__copy">
+        <% if (signedIn) { %>
+          <p class="eyebrow">Welcome back</p>
+          <h1 id="hero-title">Ready to keep building your cart?</h1>
+          <p class="landing-lead">
+            Jump into your dashboard to add fresh listings, organize collections,
+            and see everything you have saved in one place.
+          </p>
+          <div class="landing-ctas">
+            <a href="/dashboard" class="btn btn--primary btn--lg">Go to dashboard</a>
+          </div>
+        <% } else { %>
+          <p class="eyebrow">Marketplace Cart</p>
+          <h1 id="hero-title">Every marketplace find, saved in one cart</h1>
+          <p class="landing-lead">
+            Paste a listing link and Marketplace Cart pulls in the title, price and
+            photos for you. Sort what you find into collections and keep track of
+            what it all adds up to.
+          </p>
+          <div class="landing-ctas">
+            <a href="/auth/register" class="btn btn--primary btn--lg">Create an account</a>
+            <a href="/auth/login" class="btn btn--secondary btn--lg">Login</a>
+          </div>
+        <% } %>
       </div>
-    <% } else { %>
-      <p class="hero-eyebrow">Marketplace Cart</p>
-      <h1 id="hero-title">Sign in to manage your saved marketplace finds</h1>
-      <p>Save and organize listings from OfferUp, eBay, and more. Log in to keep your cart synced and easy to browse.</p>
-      <div class="hero-ctas">
-        <a href="/auth/login" class="hero-btn hero-btn-primary">Login</a>
-        <a href="/auth/register" class="hero-btn hero-btn-secondary">Sign Up</a>
+
+      <%
+        // Decorative product preview, built in markup rather than shipped as a
+        // screenshot so it follows the active theme and accent. Its sample text
+        // is meaningless to a screen reader, hence aria-hidden.
+      %>
+      <div class="hero-mock" aria-hidden="true">
+        <div class="hero-mock__bar">
+          <span class="hero-mock__dot"></span>
+          <span class="hero-mock__field">offerup.com/item/…</span>
+          <span class="hero-mock__action">Save</span>
+        </div>
+        <div class="hero-mock__grid">
+          <div class="hero-mock__tile">
+            <div class="hero-mock__photo hero-mock__photo--a"></div>
+            <div class="hero-mock__line"></div>
+            <div class="hero-mock__meta">
+              <span class="hero-mock__price">$240</span>
+              <span class="hero-mock__tag hero-mock__tag--offerup">OfferUp</span>
+            </div>
+          </div>
+          <div class="hero-mock__tile">
+            <div class="hero-mock__photo hero-mock__photo--b"></div>
+            <div class="hero-mock__line"></div>
+            <div class="hero-mock__meta">
+              <span class="hero-mock__price">$85</span>
+              <span class="hero-mock__tag hero-mock__tag--fb">Facebook</span>
+            </div>
+          </div>
+          <div class="hero-mock__tile">
+            <div class="hero-mock__photo hero-mock__photo--c"></div>
+            <div class="hero-mock__line"></div>
+            <div class="hero-mock__meta">
+              <span class="hero-mock__price">$1,120</span>
+              <span class="hero-mock__tag hero-mock__tag--offerup">OfferUp</span>
+            </div>
+          </div>
+          <div class="hero-mock__tile">
+            <div class="hero-mock__photo hero-mock__photo--d"></div>
+            <div class="hero-mock__line"></div>
+            <div class="hero-mock__meta">
+              <span class="hero-mock__price">$60</span>
+              <span class="hero-mock__tag hero-mock__tag--fb">Facebook</span>
+            </div>
+          </div>
+        </div>
       </div>
-    <% } %>
+    </div>
   </section>
+
+  <% if (!signedIn) { %>
+    <section class="landing-section" aria-labelledby="features-title">
+      <div class="landing-section__inner">
+        <h2 id="features-title" class="landing-section__title">What it does</h2>
+        <ul class="landing-features">
+          <li class="landing-feature">
+            <span class="landing-feature__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+                   stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 13a4 4 0 0 0 5.7.3l3-3a4 4 0 0 0-5.7-5.7L11.6 6"/>
+                <path d="M14 11a4 4 0 0 0-5.7-.3l-3 3a4 4 0 0 0 5.7 5.7L12.4 18"/>
+              </svg>
+            </span>
+            <h3>Save from a link</h3>
+            <p>
+              Drop in a listing URL and the title, price, photos and marketplace
+              come along with it. No copying details by hand.
+            </p>
+          </li>
+          <li class="landing-feature">
+            <span class="landing-feature__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+                   stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              </svg>
+            </span>
+            <h3>Group into collections</h3>
+            <p>
+              Sort saved items into collections — a room you are furnishing, a
+              project, a gift list — and move things between them any time.
+            </p>
+          </li>
+          <li class="landing-feature">
+            <span class="landing-feature__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+                   stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19V10"/><path d="M10 19V5"/><path d="M16 19v-6"/><path d="M22 19H2"/>
+              </svg>
+            </span>
+            <h3>See the totals</h3>
+            <p>
+              Your dashboard keeps a running count and value of what you have
+              saved, broken down by the marketplace it came from.
+            </p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="landing-section landing-section--sunken" aria-labelledby="steps-title">
+      <div class="landing-section__inner">
+        <h2 id="steps-title" class="landing-section__title">How it works</h2>
+        <ol class="landing-steps">
+          <li class="landing-step">
+            <span class="landing-step__num" aria-hidden="true">1</span>
+            <h3>Paste a listing URL</h3>
+            <p>Copy the link from the marketplace app or site and paste it in.</p>
+          </li>
+          <li class="landing-step">
+            <span class="landing-step__num" aria-hidden="true">2</span>
+            <h3>It gets saved for you</h3>
+            <p>Photo, price and marketplace are pulled from the page automatically.</p>
+          </li>
+          <li class="landing-step">
+            <span class="landing-step__num" aria-hidden="true">3</span>
+            <h3>Organize and compare</h3>
+            <p>File it into a collection and watch the totals update as you go.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <%
+      // Kept honest against utils/scrapers/index.js — only the marketplaces
+      // with a scraper behind them are listed.
+    %>
+    <section class="landing-section landing-supported" aria-labelledby="supported-title">
+      <div class="landing-section__inner">
+        <h2 id="supported-title" class="landing-supported__title">Works with</h2>
+        <ul class="landing-supported__list">
+          <li><span class="landing-supported__dot landing-supported__dot--offerup" aria-hidden="true"></span>OfferUp</li>
+          <li><span class="landing-supported__dot landing-supported__dot--fb" aria-hidden="true"></span>Facebook Marketplace</li>
+        </ul>
+        <p class="landing-supported__note">More marketplaces are on the way.</p>
+      </div>
+    </section>
+
+    <section class="landing-cta" aria-labelledby="cta-title">
+      <div class="landing-cta__inner">
+        <h2 id="cta-title">Start your cart</h2>
+        <p>It takes one link to see how it works.</p>
+        <a href="/auth/register" class="btn btn--primary btn--lg">Create an account</a>
+      </div>
+    </section>
+  <% } %>
 </main>
+
+<%
+  // Included here rather than in the layout: the auth pages are full-height
+  // split screens, and a footer bolted under them would only add scroll.
+%>
+<%- include('partials/footer') %>

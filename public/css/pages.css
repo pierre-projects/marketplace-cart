@@ -2,103 +2,341 @@
    Pages — dashboard, listings, categories, auth, error, landing
    ========================================================================== */
 
-.landing-container {
-  min-height: 100dvh;
-  display: flex;
+/* ==========================================================================
+   Landing
+
+   The logged-out marketing page. It uses the same tokens and the same .btn
+   scale as the app, so a theme or accent change carries through it without
+   this file knowing any colours of its own.
+   ========================================================================== */
+
+.landing-hero {
+  padding-block: clamp(2.5rem, 6vw, 4.5rem) clamp(3rem, 7vw, 5rem);
+  background: radial-gradient(ellipse 60% 70% at 15% 0%, var(--accent-wash), transparent 70%);
+}
+
+.landing-hero__inner {
+  width: min(1100px, calc(100% - 2.5rem));
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   align-items: center;
-  padding: clamp(2.5rem, 6vw, 5rem) clamp(1rem, 4vw, 3rem) 4rem;
-  background: radial-gradient(circle at 12% 12%, var(--accent-wash), transparent 34%),
-      linear-gradient(180deg, var(--hero-scrim-top) 0%, var(--hero-scrim-mid) 58%, var(--hero-scrim-bottom) 100%),
-      url('/images/markeplacecart.png') center/cover no-repeat;
+  gap: clamp(2rem, 5vw, 4rem);
 }
 
-.landing-content {
-  width: min(720px, 100%);
+.landing-hero__copy h1 {
+  margin: var(--sp-2) 0 0;
+  font-size: clamp(2.25rem, 5vw, 3.5rem);
+  line-height: 1.08;
 }
 
-.hero-eyebrow {
-  margin: 0 0 0.65rem;
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--muted);
-}
-
-.landing-content h1 {
-  margin: 0;
-  font-size: clamp(2rem, 4.8vw, 3.35rem);
-  line-height: 1.1;
-  text-wrap: balance;
-}
-
-.landing-content p {
-  margin: 1.15rem 0 0;
-  max-width: 62ch;
+.landing-lead {
+  margin: var(--sp-4) 0 0;
+  max-width: 52ch;
   color: var(--text-secondary);
-  font-size: 1.1rem;
-  line-height: 1.65;
+  font-size: var(--fs-price);
+  line-height: 1.6;
 }
 
-.hero-ctas {
+.landing-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-top: var(--sp-6);
+}
+
+/* --- Hero product preview -------------------------------------------------
+   Decorative. Every piece is a block of surface colour rather than an image,
+   which is why it survives a theme switch that a screenshot would not. */
+
+.hero-mock {
+  background: var(--surface-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.hero-mock__bar {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 0.85rem;
-  margin-top: 2rem;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-sunken);
 }
 
-.hero-btn {
+.hero-mock__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-full);
+  background: var(--accent);
+  flex: none;
+}
+
+.hero-mock__field {
+  flex: 1;
+  min-width: 0;
+  padding: var(--sp-1) var(--sp-2);
+  background: var(--surface-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-faint);
+  font-size: var(--fs-label);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hero-mock__action {
+  flex: none;
+  padding: var(--sp-1) var(--sp-2);
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--text-on-brand);
+  font-size: var(--fs-label);
+  font-weight: 600;
+}
+
+.hero-mock__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+}
+
+.hero-mock__tile {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-2);
+  background: var(--surface-page);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.hero-mock__photo {
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-sm);
+  background: var(--surface-hover);
+}
+
+/* Four faint tints so the tiles do not read as one grey slab. */
+.hero-mock__photo--a { background: color-mix(in srgb, var(--accent) 16%, var(--surface-hover)); }
+.hero-mock__photo--b { background: color-mix(in srgb, var(--p-fb-chart) 20%, var(--surface-hover)); }
+.hero-mock__photo--c { background: color-mix(in srgb, var(--p-offerup-chart) 20%, var(--surface-hover)); }
+.hero-mock__photo--d { background: var(--surface-hover); }
+
+.hero-mock__line {
+  height: 6px;
+  width: 78%;
+  border-radius: var(--r-full);
+  background: var(--border-strong);
+}
+
+.hero-mock__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.hero-mock__price {
+  color: var(--accent);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.hero-mock__tag {
+  padding: 2px var(--sp-2);
+  border-radius: var(--r-full);
+  font-size: var(--fs-label);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.hero-mock__tag--offerup { background: var(--p-offerup-bg); color: var(--p-offerup-fg); }
+.hero-mock__tag--fb      { background: var(--p-fb-bg);      color: var(--p-fb-fg); }
+
+/* --- Marketing sections --------------------------------------------------- */
+
+.landing-section {
+  padding-block: clamp(2.5rem, 6vw, 4.5rem);
+}
+
+.landing-section--sunken {
+  background: var(--surface-sunken);
+  border-block: 1px solid var(--border);
+}
+
+.landing-section__inner {
+  width: min(1100px, calc(100% - 2.5rem));
+  margin-inline: auto;
+}
+
+.landing-section__title {
+  margin: 0 0 var(--sp-5);
+  font-size: var(--fs-h2);
+}
+
+.landing-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--sp-4);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.landing-feature {
+  padding: var(--sp-5);
+  background: var(--surface-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.landing-feature__icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 150px;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  padding: 0.75rem 1.25rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  line-height: 1;
-  text-decoration: none;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  width: 40px;
+  height: 40px;
+  margin-bottom: var(--sp-3);
+  border-radius: var(--radius-md);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-edge);
+  color: var(--accent);
 }
 
-.hero-btn:hover {
-  text-decoration: none;
-  transform: translateY(-1px);
-}
+.landing-feature h3 { margin: 0 0 var(--sp-2); }
 
-.hero-btn:focus-visible {
-  outline: 2px solid var(--text);
-  outline-offset: 2px;
-}
-
-.hero-btn-primary {
-  background: var(--accent);
-  color: var(--text);
-  border-color: var(--accent);
-}
-
-.hero-btn-primary:hover {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
-  color: var(--text);
-}
-
-.hero-btn-secondary {
-  background: transparent;
+.landing-feature p {
+  margin: 0;
   color: var(--text-secondary);
-  border-color: var(--border-strong);
+  line-height: 1.6;
 }
 
-.hero-btn-secondary:hover {
-  background: var(--surface-hover);
-  color: var(--text);
-  border-color: var(--border-muted);
+.landing-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: var(--sp-5);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: step;
 }
 
+/* Clears the 32px number badge, which is absolutely positioned at the top. */
+.landing-step {
+  position: relative;
+  padding-top: 44px;
+}
+
+/* The hairline that ties the three steps together, drawn from the number
+   outward. It only appears once the steps actually sit in a row. */
+.landing-step::before {
+  content: '';
+  position: absolute;
+  top: 16px;
+  left: 40px;
+  right: 0;
+  height: 1px;
+  background: var(--border);
+}
+
+.landing-step:last-child::before { display: none; }
+
+.landing-step__num {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-full);
+  background: var(--surface-card);
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+}
+
+.landing-step h3 { margin: 0 0 var(--sp-2); font-size: var(--fs-lead); }
+
+.landing-step p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.landing-supported__title {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--fs-label);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.landing-supported__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3) var(--sp-5);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: var(--fs-price);
+  font-weight: 600;
+}
+
+.landing-supported__list li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.landing-supported__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--r-full);
+}
+
+.landing-supported__dot--offerup { background: var(--p-offerup-chart); }
+.landing-supported__dot--fb      { background: var(--p-fb-chart); }
+
+.landing-supported__note {
+  margin: var(--sp-3) 0 0;
+  color: var(--text-muted);
+  font-size: var(--fs-meta);
+}
+
+.landing-cta {
+  padding-block: clamp(3rem, 7vw, 5rem);
+  background: var(--surface-sunken);
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.landing-cta__inner {
+  width: min(560px, calc(100% - 2.5rem));
+  margin-inline: auto;
+}
+
+.landing-cta__inner h2 { margin: 0; font-size: var(--fs-h2); }
+
+.landing-cta__inner p {
+  margin: var(--sp-2) 0 var(--sp-5);
+  color: var(--text-secondary);
+}
+
+/* flex: 1 rather than 100dvh — the navbar sits above this, so a full viewport
+   height here always overflowed by the height of the bar. */
 .error-page {
-  min-height: 100dvh;
+  flex: 1;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -145,36 +383,48 @@
   flex-wrap: wrap;
 }
 
+/* The hero stacks before the two columns get too narrow to read, and the mock
+   moves below the copy rather than shrinking into illegibility. */
+@media (max-width: 900px) {
+  .landing-hero__inner {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hero-mock {
+    max-width: 520px;
+    width: 100%;
+  }
+}
+
+/* Once the steps stack, the connecting hairline is joining nothing. */
+@media (max-width: 720px) {
+  .landing-step::before { display: none; }
+}
+
 @media (max-width: 640px) {
-  .landing-container {
-    min-height: 100dvh;
-    align-items: flex-start;
-    padding: 2.5rem 1rem 2rem;
+  .landing-hero__inner,
+  .landing-section__inner {
+    width: min(1100px, calc(100% - 1.5rem));
   }
 
-  .landing-content h1 {
-    font-size: clamp(1.75rem, 8vw, 2.5rem);
+  .landing-lead {
+    font-size: var(--fs-lead);
   }
 
-  .landing-content p {
-    margin-top: 1rem;
-    font-size: 1rem;
-    line-height: 1.6;
-  }
-
-  .hero-ctas {
+  .landing-ctas {
     flex-direction: column;
     align-items: stretch;
-    gap: 0.7rem;
-    margin-top: 1.5rem;
   }
 
-  .hero-btn {
+  .landing-ctas .btn {
     width: 100%;
   }
 
+  .hero-mock__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
   .error-page {
-    min-height: 100dvh;
     padding: 1.5rem 1rem 2rem;
   }
 
@@ -211,62 +461,125 @@
   }
 }
 
-.form-page {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 70dvh;
-  background: var(--surface-page);
+/* ==========================================================================
+   Auth — login and register
+
+   Split screen: the form on one side, a quiet brand panel on the other. The
+   panel is decoration, so it is the half that disappears on narrow screens.
+   ========================================================================== */
+
+/* Fills whatever .page-shell has left after the navbar — no hardcoded bar
+   height to keep in sync. */
+.auth {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
 }
 
-.form-box {
-  background: var(--surface-inset);
-  padding: 2rem 2.5rem;
-  border-radius: 12px;
-  box-shadow: 0 0 10px var(--overlay-strong);
-  width: 100%;
-  max-width: 400px;
+.auth__form-pane {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(2rem, 5vw, 4rem) clamp(1.25rem, 4vw, 3rem);
+}
+
+.auth__form {
+  width: min(420px, 100%);
+}
+
+/* Wordmark only, like .nav-brand directly above it and .sidebar__brand on the
+   signed-in pages. Kept at body size rather than --fs-lead so it stays a quiet
+   way back to the home page instead of competing with the page's own h1. */
+.auth__brand {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: var(--sp-5);
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: -0.012em;
+}
+
+.auth__brand:hover { text-decoration: none; }
+
+/* Deliberately not accent-coloured: on this page the one thing worth painting
+   with the brand colour is the button you are meant to press. */
+.auth__title {
+  margin: 0;
+  font-size: var(--fs-h1);
   color: var(--text-primary);
 }
 
-.form-box h1 {
-  font-size: 2rem;
-  margin-bottom: 1.5rem;
-  color: var(--accent);
+.auth__sub {
+  margin: var(--sp-2) 0 var(--sp-5);
+  color: var(--text-secondary);
 }
 
-.form-box form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+.auth__fields {
+  display: grid;
+  gap: var(--sp-4);
 }
 
-.form-box input {
-  background-color: var(--surface-raised);
-  border: 1px solid var(--border-strong);
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  color: var(--text);
-}
-
-.form-box input:focus {
-  border-color: var(--accent);
-  outline: none;
-}
-
-.form-box button {
-  margin-top: 1rem;
-}
+.auth__submit { margin-top: var(--sp-2); }
 
 .form-footer {
-  margin-top: 1rem;
+  margin-top: var(--sp-5);
   text-align: center;
-  font-size: 0.9rem;
+  font-size: var(--fs-meta);
+  color: var(--text-secondary);
 }
 
-.form-footer a {
+.auth__brand-pane {
+  display: flex;
+  align-items: center;
+  padding: clamp(2rem, 5vw, 4rem);
+  background: radial-gradient(ellipse 70% 60% at 70% 20%, var(--accent-wash), transparent 70%),
+      var(--surface-sunken);
+  border-left: 1px solid var(--border);
+}
+
+.auth__pitch {
+  width: min(420px, 100%);
+}
+
+.auth__pitch h2 {
+  margin: 0 0 var(--sp-4);
+  font-size: var(--fs-h2);
+}
+
+.auth__points {
+  display: grid;
+  gap: var(--sp-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  color: var(--text-secondary);
+}
+
+.auth__points li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--sp-3);
+  line-height: 1.55;
+}
+
+.auth__check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-top: 2px;
+  border-radius: var(--r-full);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-edge);
   color: var(--accent);
-  text-decoration: none;
+}
+
+@media (max-width: 900px) {
+  .auth { grid-template-columns: minmax(0, 1fr); }
+  .auth__brand-pane { display: none; }
 }
 
 .page-header {

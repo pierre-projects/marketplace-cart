@@ -98,12 +98,6 @@
   --danger-wash:     rgb(220 38 38 / 0.10);
   --success-wash:    rgb(22 163 74 / 0.12);
 
-  /* Scrim over the landing hero photo. Light theme needs to lighten the
-     image, not darken it, or the headline is unreadable. */
-  --hero-scrim-top:    rgb(250 250 249 / 0.92);
-  --hero-scrim-mid:    rgb(250 250 249 / 0.86);
-  --hero-scrim-bottom: rgb(250 250 249 / 0.96);
-
   /* ── Type ───────────────────────────────────────────────────────────── */
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI Variable',
                'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -229,89 +223,16 @@
   --danger-wash:    rgb(248 113 113 / 0.14);
   --success-wash:   rgb(74 222 128 / 0.14);
 
-  --hero-scrim-top:    rgb(8 8 10 / 0.90);
-  --hero-scrim-mid:    rgb(12 12 15 / 0.86);
-  --hero-scrim-bottom: rgb(18 18 22 / 0.96);
-
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
   --shadow-md: 0 4px 12px rgb(0 0 0 / 0.5);
   --shadow-lg: 0 16px 40px rgb(0 0 0 / 0.6);
 }
 
-/* System preference, unless the user explicitly picked light. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']):not([data-theme='dark']) {
-    --surface-page:   #0b0b0f;
-    --surface-card:   #16161c;
-    --surface-sunken: #1e1e26;
-    --surface-raised: #1e1e26;
-    --surface-inset:  #101016;
-    --surface-input:  #16161c;
-    --surface-hover:  #26262f;
-    --surface-nav:    rgb(11 11 15 / 0.85);
-
-    --text-primary:   #e9e9ec;
-    --text:           #e9e9ec;
-    --text-secondary: #a1a1aa;
-    --text-muted:     #8b8b96;
-    --muted:          #8b8b96;
-    --text-faint:     #6c6c78;
-    --text-on-brand:  #16161c;
-    --on-accent:      #16161c;
-
-    --border:         #26262f;
-    --border-strong:  #33333f;
-    --border-hover:   #44444f;
-    --border-muted:   #33333f;
-    --card-border:    #26262f;
-
-    --accent:         #e8578f;
-    --accent-hover:   #f4a9c9;
-    --accent-deep:    color-mix(in srgb, var(--accent) 70%, #fff);
-    --accent-tint:    color-mix(in srgb, var(--accent) 30%, var(--surface-card));
-    --accent-soft:    color-mix(in srgb, var(--accent) 12%, var(--surface-card));
-
-    --danger:         #f87171;
-    --danger-strong:  #f87171;
-    --danger-text:    #fecaca;
-    --danger-bg:      #2a1416;
-    --danger-border:  #5b2f34;
-    --success:        #4ade80;
-    --success-text:   #bbf7d0;
-    --success-bg:     #0f2e1d;
-    --success-border: #2e5f46;
-
-    --ok-bg:   #0f2e1d;  --ok-fg:   #86efac;
-    --warn-bg: #2e2410;  --warn-fg: #fcd34d;
-    --stop-bg: #2a1416;  --stop-fg: #fecaca;
-    --idle-bg: #1e1e26;  --idle-fg: #a1a1aa;
-
-    --p-offerup-bg: #0d2c1d;  --p-offerup-fg: #86efac;
-    --p-fb-bg:      #12203a;  --p-fb-fg:      #bfdbfe;
-    --p-neutral-bg: #1e1e26;  --p-neutral-fg: #a1a1aa;
-    --p-offerup-chart: #34d399;
-    --p-fb-chart:      #60a5fa;
-    --p-neutral-chart: #a1a1aa;
-
-    --overlay-hover:  rgb(255 255 255 / 0.06);
-    --overlay-press:  rgb(255 255 255 / 0.10);
-    --overlay-strong: rgb(255 255 255 / 0.16);
-    --scrim:          rgb(0 0 0 / 0.7);
-    --glass:          rgb(22 22 28 / 0.92);
-    --accent-wash:    color-mix(in srgb, var(--accent) 14%, transparent);
-    --accent-edge:    color-mix(in srgb, var(--accent) 38%, transparent);
-    --danger-wash:    rgb(248 113 113 / 0.14);
-    --success-wash:   rgb(74 222 128 / 0.14);
-
-    --hero-scrim-top:    rgb(8 8 10 / 0.90);
-    --hero-scrim-mid:    rgb(12 12 15 / 0.86);
-    --hero-scrim-bottom: rgb(18 18 22 / 0.96);
-
-    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
-    --shadow-md: 0 4px 12px rgb(0 0 0 / 0.5);
-    --shadow-lg: 0 16px 40px rgb(0 0 0 / 0.6);
-  }
-}
+/* There is deliberately no @media (prefers-color-scheme: dark) copy of the
+   block above. The inline script in the layout <head> resolves the system
+   preference and stamps data-theme on <html> before the first paint, so the
+   attribute selector is always the one that matters. Keeping a media-query
+   twin meant maintaining seventy lines of palette in two places. */
 
 /* ==========================================================================
    Accent presets
@@ -354,19 +275,6 @@
 :root[data-theme='dark'] [data-accent='violet']  { --accent: #c4b5fd; --accent-hover: #ddd6fe; }
 :root[data-theme='dark'][data-accent='amber'],
 :root[data-theme='dark'] [data-accent='amber']   { --accent: #fbbf24; --accent-hover: #fcd34d; }
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light'])[data-accent='default'],
-  :root:not([data-theme='light']) [data-accent='default'] { --accent: #e8578f; --accent-hover: #f4a9c9; }
-  :root:not([data-theme='light'])[data-accent='blue'],
-  :root:not([data-theme='light']) [data-accent='blue']    { --accent: #7aa5ff; --accent-hover: #a8c4ff; }
-  :root:not([data-theme='light'])[data-accent='teal'],
-  :root:not([data-theme='light']) [data-accent='teal']    { --accent: #5eead4; --accent-hover: #99f6e4; }
-  :root:not([data-theme='light'])[data-accent='violet'],
-  :root:not([data-theme='light']) [data-accent='violet']  { --accent: #c4b5fd; --accent-hover: #ddd6fe; }
-  :root:not([data-theme='light'])[data-accent='amber'],
-  :root:not([data-theme='light']) [data-accent='amber']   { --accent: #fbbf24; --accent-hover: #fcd34d; }
-}
 
 /* Text sitting ON the accent. Dark-theme accents are light, so they need dark
    text; the light-theme accents need white. */

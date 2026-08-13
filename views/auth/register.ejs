@@ -1,37 +1,75 @@
-<main class="form-page">
-  <div class="form-box">
-    <h1>Register</h1>
+<% const safeFormData = (typeof formData !== 'undefined' && formData) ? formData : {}; %>
 
-    <% const safeFormData = (typeof formData !== 'undefined' && formData) ? formData : {}; %>
+<main id="main" class="auth">
+  <div class="auth__form-pane">
+    <div class="auth__form">
+      <a href="/" class="auth__brand">Marketplace Cart</a>
 
-    <%- include('../partials/flash-alert', {
-      flashVariant: 'form',
-      extraErrors: typeof errorMessage !== 'undefined' ? errorMessage : null
-    }) %>
+      <h1 class="auth__title">Create your account</h1>
+      <p class="auth__sub">Start saving listings in one place.</p>
 
-    <form action="/auth/register" method="POST">
-      <input
-        type="text"
-        name="username"
-        placeholder="Username"
-        value="<%= safeFormData.username || '' %>"
-        autocomplete="username"
-        required
-      >
-      <input
-        type="email"
-        name="email"
-        placeholder="Email"
-        value="<%= safeFormData.email || '' %>"
-        autocomplete="email"
-        required
-      >
-      <input type="password" name="password" placeholder="Password" required>
-      <button type="submit">Register</button>
-    </form>
+      <%- include('../partials/flash-alert', {
+        flashVariant: 'form',
+        extraErrors: typeof errorMessage !== 'undefined' ? errorMessage : null
+      }) %>
 
-    <p class="form-footer">
-      Already have an account? <a href="/auth/login">Login</a>
-    </p>
+      <form action="/auth/register" method="POST" data-auth-form>
+        <div class="auth__fields">
+          <div class="field">
+            <label class="field__label" for="register-username">Username</label>
+            <input
+              class="field__control"
+              type="text"
+              id="register-username"
+              name="username"
+              placeholder="How you'll show up in shared collections"
+              value="<%= safeFormData.username || '' %>"
+              autocomplete="username"
+              required
+            >
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="register-email">Email</label>
+            <input
+              class="field__control"
+              type="email"
+              id="register-email"
+              name="email"
+              placeholder="you@example.com"
+              value="<%= safeFormData.email || '' %>"
+              autocomplete="email"
+              required
+            >
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="register-password">Password</label>
+            <div class="field__control-wrap">
+              <input
+                class="field__control"
+                type="password"
+                id="register-password"
+                name="password"
+                autocomplete="new-password"
+                required
+                data-password-input
+              >
+              <button type="button" class="field__affix-btn" data-password-toggle aria-pressed="false" aria-controls="register-password">Show</button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn--primary btn--lg btn--block auth__submit">Register</button>
+        </div>
+      </form>
+
+      <p class="form-footer">
+        Already have an account? <a href="/auth/login">Login</a>
+      </p>
+    </div>
   </div>
+
+  <%- include('../partials/auth-brand', { pitchHeading: 'One cart for everything you are hunting for.' }) %>
 </main>
+
+<script src="/js/auth-form.js" defer></script>

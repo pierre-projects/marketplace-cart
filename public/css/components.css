@@ -2,34 +2,9 @@
    Components — navbar, buttons, cards, badges, modals, dropdowns, toasts
    ========================================================================== */
 
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  background: var(--accent);
-  color: var(--text);
-  border: 1px solid transparent;
-  border-radius: 999px;
-  padding: 0.65rem 1.1rem;
-  font-weight: 600;
-  font-size: 0.95rem;
-  line-height: 1.1;
-  text-decoration: none;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-}
-
-.btn:hover {
-  background: var(--accent-hover);
-  color: var(--text);
-  text-decoration: none;
-  transform: translateY(-1px);
-}
-
-.btn:focus-visible {
-  outline: 2px solid var(--text);
-  outline-offset: 2px;
-}
+/* Buttons live in one place only — see the .btn block further down this file.
+   Two earlier definitions used to sit here and around the modal rules, each
+   with its own radius, padding and text colour; whichever loaded last won. */
 
 .flash-stack {
   display: grid;
@@ -64,60 +39,51 @@
   color: var(--success-text);
 }
 
+/* Logged-out shell: navbar, page, and (on the landing page) footer. Lets a
+   full-height page claim the leftover space with flex: 1. */
+.page-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
 .navbar {
   position: sticky;
   top: 0;
   z-index: 1200;
-  border-bottom: 1px solid var(--overlay-strong);
+  flex: none;
   background: var(--surface-nav);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  font-family: 'Helvetica Neue', sans-serif;
-  color: var(--text);
 }
 
 .nav-container {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 1.2rem;
+  gap: var(--sp-4);
   max-width: 1240px;
   margin: 0 auto;
-  padding: 0 1.5rem;
-  min-height: 74px;
+  padding: 0 var(--sp-5);
+  /* 64px is what .auth in pages.css subtracts from 100dvh. The old 74px made
+     every auth page ten pixels taller than the viewport. */
+  min-height: 64px;
 }
 
+/* Same treatment as .sidebar__brand, which is the brand every signed-in page
+   already shows. */
 .nav-brand {
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
-  color: var(--text-primary);
+  color: var(--accent);
   text-decoration: none;
-  font-weight: 650;
-  letter-spacing: 0.01em;
-}
-
-.nav-brand:hover {
-  color: var(--text);
-  text-decoration: none;
-}
-
-.nav-brand-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--accent-tint);
-  background: var(--accent-wash);
-  border: 1px solid var(--accent-edge);
-}
-
-.nav-brand-text {
-  font-size: 0.96rem;
+  font-size: var(--fs-lead);
+  font-weight: 600;
+  letter-spacing: -0.012em;
   line-height: 1;
 }
+
+.nav-brand:hover { text-decoration: none; }
 
 .nav-center {
   display: flex;
@@ -142,8 +108,8 @@
   border-radius: 999px;
   color: var(--text-secondary);
   text-decoration: none;
-  font-weight: 560;
-  font-size: 0.98rem;
+  font-weight: 400;
+  font-size: var(--fs-body);
   transition: background-color 0.2s, color 0.2s;
 }
 
@@ -155,7 +121,7 @@
 
 .nav-link.active {
   color: var(--text);
-  font-weight: 620;
+  font-weight: 600;
   background: var(--accent-edge);
   border: 1px solid var(--accent-edge);
 }
@@ -176,42 +142,44 @@
 .nav-auth {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: var(--sp-2);
 }
 
-.nav-auth-link {
-  text-decoration: none;
-  border-radius: 999px;
-  min-height: 36px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9rem;
-  font-weight: 600;
-  padding: 0.35rem 0.9rem;
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
-}
-
-.nav-auth-link--primary {
-  color: var(--text-primary);
-  background: var(--surface-sunken);
-  border: 1px solid var(--border-strong);
-}
-
-.nav-auth-link--primary:hover {
-  background: var(--surface-hover);
-  color: var(--text);
-}
-
-.nav-auth-link--secondary {
-  color: var(--text-primary);
+/* Theme control for signed-out pages: one button, three states. The segmented
+   System|Light|Dark control it replaces is still what the account dropdown and
+   the settings page use, where there is room for it. */
+.theme-cycle {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-inline-end: var(--sp-1);
+  padding: 0;
   background: transparent;
-  border: 1px solid var(--overlay-strong);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out),
+              color var(--dur-fast) var(--ease-out);
 }
 
-.nav-auth-link--secondary:hover {
-  background: var(--overlay-hover);
+.theme-cycle:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
 }
+
+/* All three glyphs ship in the markup; the current choice picks one. Stacking
+   them in one cell keeps the button from resizing as the icon changes. */
+.theme-cycle__icon { grid-area: 1 / 1; display: none; }
+
+.theme-cycle[data-theme-choice='system'] .theme-cycle__icon--system,
+.theme-cycle[data-theme-choice='light'] .theme-cycle__icon--light,
+.theme-cycle[data-theme-choice='dark'] .theme-cycle__icon--dark { display: block; }
+
+/* The signed-out pair used to be two identical grey pills, which said nothing
+   about which one a first-time visitor should press. They are .btn variants
+   now, so Sign Up carries the accent and Login stays quiet. */
 
 .account-menu {
   position: relative;
@@ -941,47 +909,7 @@ button:hover {
   flex: 1;
 }
 
-.btn-primary {
-  background: var(--accent);
-  color: var(--text);
-  border: none;
-  padding: 0.6rem 1.5rem;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.95rem;
-  min-height: 44px;
-}
-
-.btn-primary:hover {
-  background: var(--accent-hover);
-}
-
-.btn-primary:disabled,
-.btn-secondary:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background: var(--surface-input);
-  color: var(--text);
-  border: none;
-  padding: 0.6rem 1.5rem;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  font-weight: 600;
-  min-height: 44px;
-}
-
-.btn-secondary:hover {
-  background: var(--surface-hover);
-}
-
-.btn-primary:focus-visible,
-.btn-secondary:focus-visible,
-.btn-ghost:focus-visible,
-.btn-danger-ghost:focus-visible,
+/* Bare <button>s that never get a .btn class still need a ring. */
 button:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -1850,7 +1778,154 @@ button:focus-visible {
 
 .btn--ghost:hover { background: var(--surface-hover); color: var(--text-primary); }
 
+/* A .btn with no variant is not an error — it just reads as the quiet one. */
+.btn:not([class*='btn--']):not(.btn-primary):not(.btn-secondary) {
+  background: var(--surface-card);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.btn:not([class*='btn--']):not(.btn-primary):not(.btn-secondary):hover {
+  background: var(--surface-hover);
+}
+
+.btn:disabled,
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .btn--sm { height: 30px; padding-inline: var(--sp-3); font-size: var(--fs-meta); }
+
+/* Marketing and auth CTAs — the one action a logged-out page exists for. */
+.btn--lg {
+  height: 46px;
+  padding-inline: var(--sp-5);
+  font-size: var(--fs-lead);
+}
+
+.btn--block { width: 100%; }
+
+/* Form field.
+   A label, a control, and room for a hint or an error underneath. The auth
+   pages used to rely on placeholders alone, which vanish the moment you type
+   and are invisible to assistive tech. */
+.field {
+  display: grid;
+  gap: var(--sp-1);
+}
+
+.field__label {
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* Selector is .field-qualified on purpose: base.css styles input[type=email]
+   and friends at (0,1,1), which outranks a bare class and left the email box
+   350px wide and a different colour from the password box beside it. */
+.field .field__control {
+  width: 100%;
+  max-width: 100%;
+  height: 44px;
+  margin: 0;
+  padding-inline: var(--sp-3);
+  background: var(--surface-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: var(--fs-body);
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+.field .field__control::placeholder { color: var(--text-faint); }
+
+/* No outline:none here — the global :focus-visible ring in base.css is the
+   keyboard indicator, and the border tint is layered on top of it. */
+.field .field__control:focus,
+.field .field__control:focus-visible { border-color: var(--accent); }
+
+.field__hint {
+  margin: 0;
+  font-size: var(--fs-meta);
+  color: var(--text-muted);
+}
+
+.field__error {
+  margin: 0;
+  font-size: var(--fs-meta);
+  color: var(--danger-text);
+}
+
+/* Password reveal and friends: a button parked inside the control. The wrapper
+   hugs the input alone, so a hint underneath does not shift the button. */
+.field__control-wrap {
+  position: relative;
+  display: grid;
+}
+
+.field .field__control-wrap .field__control { padding-inline-end: calc(var(--sp-6) + var(--sp-2)); }
+
+.field__affix-btn {
+  position: absolute;
+  inset-block: 1px;
+  inset-inline-end: 1px;
+  padding-inline: var(--sp-3);
+  display: inline-flex;
+  align-items: center;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.field__affix-btn:hover { color: var(--text-primary); }
+
+/* Site footer — logged-out pages only. */
+.site-footer {
+  border-top: 1px solid var(--border);
+  background: var(--surface-page);
+  padding-block: var(--sp-5);
+}
+
+.site-footer__inner {
+  width: min(1100px, calc(100% - 2.5rem));
+  margin-inline: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3) var(--sp-5);
+}
+
+.site-footer__brand {
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: -0.012em;
+}
+
+.site-footer__tagline {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--fs-meta);
+}
+
+.site-footer__links {
+  display: inline-flex;
+  gap: var(--sp-4);
+  font-size: var(--fs-meta);
+}
+
+.site-footer__links a { color: var(--text-secondary); }
+
+.site-footer__links a:hover { color: var(--text-primary); }
 
 /* Card.
    Photo-first and vertical. The old card was a full-width band with a 90px
@@ -2178,6 +2253,9 @@ dialog.modal .modal-body { background: transparent; }
   color: var(--text-primary);
   box-shadow: var(--shadow-sm);
 }
+
+/* The navbar uses .theme-cycle instead — a 32px button small enough to keep on
+   a phone, which this three-segment control was not. */
 
 /* Page furniture */
 .section-head {
@@ -3162,8 +3240,6 @@ dialog.modal .modal-body { background: transparent; }
   input[type="password"],
   select,
   textarea { max-width: 100%; }
-
-  .form-box { padding: var(--sp-5) var(--sp-4); }
 }
 
 /* The kebab panel sits inside a ~335px card near the right edge; without a

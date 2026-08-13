@@ -1,10 +1,10 @@
-<main class="error-page">
+<main id="main" class="error-page">
   <section class="error-card" role="alert" aria-live="polite" aria-labelledby="error-title">
     <p class="error-code"><%= statusCode %></p>
     <h1 id="error-title"><%= heading %></h1>
     <p class="error-description"><%= message %></p>
     <div class="error-actions">
-      <a href="<%= actionHref %>" class="btn"><%= actionLabel %></a>
+      <a href="<%= actionHref %>" class="btn btn--primary"><%= actionLabel %></a>
     </div>
   </section>
 </main>

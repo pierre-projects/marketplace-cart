@@ -10,14 +10,26 @@
   <%
     // Runs before any stylesheet so the correct theme is stamped on <html>
     // during parse — otherwise a dark-mode user sees a white flash on every
-    // navigation. Deliberately inline and blocking; it is ~100 bytes.
+    // navigation. Deliberately inline and blocking; it is a few hundred bytes.
+    //
+    // This RESOLVES "system" rather than leaving the attribute off, so
+    // tokens.css needs only the [data-theme='dark'] selector and not a
+    // duplicated prefers-color-scheme copy of the whole palette. The cost is
+    // that with JS disabled everyone gets the light palette, which is the
+    // light-first default the design system is built around anyway.
   %>
   <script>
     (function () {
       try {
         var r = document.documentElement;
         var t = localStorage.getItem('theme');
-        if (t === 'light' || t === 'dark') r.dataset.theme = t;
+        if (t !== 'light' && t !== 'dark') {
+          // No explicit choice: follow the OS, but remember that we are only
+          // following it, so the toggle can still show "System" as selected.
+          t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          r.dataset.themeSource = 'system';
+        }
+        r.dataset.theme = t;
         // The accent must be stamped here too, or the previous accent paints
         // for a frame on every navigation.
         var a = localStorage.getItem('accent');
@@ -49,8 +61,16 @@
       </div>
     </div>
   <% } else { %>
-    <%- include('../partials/navbar') %>
-    <%- body %>
+    <%
+      // Flex column so a full-height page can be `flex: 1` instead of
+      // subtracting a hardcoded navbar height from 100dvh — that number was
+      // wrong by 1px on desktop and 6px on mobile, and every change to the bar
+      // silently broke it again.
+    %>
+    <div class="page-shell">
+      <%- include('../partials/navbar') %>
+      <%- body %>
+    </div>
   <% } %>
 
   <!-- Single live region for client-side feedback. -->

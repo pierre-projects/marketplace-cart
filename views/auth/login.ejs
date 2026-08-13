@@ -1,17 +1,55 @@
-<main class="form-page">
-  <div class="form-box">
-    <h1>Login</h1>
+<main id="main" class="auth">
+  <div class="auth__form-pane">
+    <div class="auth__form">
+      <a href="/" class="auth__brand">Marketplace Cart</a>
 
-    <%- include('../partials/flash-alert', { flashVariant: 'form' }) %>
+      <h1 class="auth__title">Welcome back</h1>
+      <p class="auth__sub">Sign in to get to your saved listings.</p>
 
-    <form action="/auth/login" method="POST">
-      <input type="email" name="email" placeholder="Email" required>
-      <input type="password" name="password" placeholder="Password" required>
-      <button type="submit">Login</button>
-    </form>
+      <%- include('../partials/flash-alert', { flashVariant: 'form' }) %>
 
-    <p class="form-footer">
-      Don’t have an account? <a href="/auth/register">Register</a>
-    </p>
+      <form action="/auth/login" method="POST" data-auth-form>
+        <div class="auth__fields">
+          <div class="field">
+            <label class="field__label" for="login-email">Email</label>
+            <input
+              class="field__control"
+              type="email"
+              id="login-email"
+              name="email"
+              placeholder="you@example.com"
+              autocomplete="email"
+              required
+            >
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="login-password">Password</label>
+            <div class="field__control-wrap">
+              <input
+                class="field__control"
+                type="password"
+                id="login-password"
+                name="password"
+                autocomplete="current-password"
+                required
+                data-password-input
+              >
+              <button type="button" class="field__affix-btn" data-password-toggle aria-pressed="false" aria-controls="login-password">Show</button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn--primary btn--lg btn--block auth__submit">Login</button>
+        </div>
+      </form>
+
+      <p class="form-footer">
+        Don’t have an account? <a href="/auth/register">Register</a>
+      </p>
+    </div>
   </div>
+
+  <%- include('../partials/auth-brand', { pitchHeading: 'Every marketplace find, saved in one cart.' }) %>
 </main>
+
+<script src="/js/auth-form.js" defer></script>

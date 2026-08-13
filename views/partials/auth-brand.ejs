@@ -1,0 +1,41 @@
+<%
+  // The decorative half of the split-screen auth pages. Hidden below 900px,
+  // so nothing here may be the only place something is said.
+  const heading = typeof pitchHeading !== 'undefined' && pitchHeading
+    ? pitchHeading
+    : 'Every marketplace find, saved in one cart.';
+%>
+<aside class="auth__brand-pane" aria-hidden="true">
+  <div class="auth__pitch">
+    <h2><%= heading %></h2>
+    <ul class="auth__points">
+      <li>
+        <span class="auth__check">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12.5 10 17.5 19 7"/>
+          </svg>
+        </span>
+        <span>Paste a listing link and the details come with it.</span>
+      </li>
+      <li>
+        <span class="auth__check">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12.5 10 17.5 19 7"/>
+          </svg>
+        </span>
+        <span>Group what you save into collections.</span>
+      </li>
+      <li>
+        <span class="auth__check">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12.5 10 17.5 19 7"/>
+          </svg>
+        </span>
+        <span>See what it all adds up to, by marketplace.</span>
+      </li>
+    </ul>
+  </div>
+</aside>

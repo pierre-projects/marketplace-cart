@@ -1,15 +1,12 @@
 <nav class="navbar" role="navigation" aria-label="Primary">
   <div class="nav-container">
-    <a href="/" class="nav-brand" aria-label="Marketplace Cart Home">
-      <span class="nav-brand-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="16" height="16">
-          <path d="M3 5h2l1.3 8.1a2 2 0 0 0 2 1.7h8.6a2 2 0 0 0 2-1.6L20 8H7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="10" cy="19" r="1.5" fill="currentColor"/>
-          <circle cx="17" cy="19" r="1.5" fill="currentColor"/>
-        </svg>
-      </span>
-      <span class="nav-brand-text">Marketplace Cart</span>
-    </a>
+    <%
+      // Wordmark only, matching .sidebar__brand on every signed-in page. The
+      // boxed glyph that used to sit here was an accent-tint icon on an
+      // accent-wash box on an accent-tinted bar — three tints of one hue, so
+      // the cart never resolved into a shape.
+    %>
+    <a href="/" class="nav-brand" aria-label="Marketplace Cart Home">Marketplace Cart</a>
 
     <% if (typeof user !== 'undefined' && user) { %>
       <%
@@ -70,11 +67,39 @@
         </div>
       <% } else { %>
         <div class="nav-auth">
-          <a href="/auth/login" class="nav-auth-link nav-auth-link--primary">Login</a>
-          <a href="/auth/register" class="nav-auth-link nav-auth-link--secondary">Sign Up</a>
+          <%
+            // Signed-out visitors have no account dropdown, so the theme lives
+            // here. One button cycling system → light → dark rather than a
+            // three-segment control, which ate ~190px of a five-item bar.
+            //
+            // aria-pressed would be wrong: this is not an on/off toggle. The
+            // accessible name carries current state AND next action, and JS
+            // rewrites it on every change.
+          %>
+          <button
+            type="button"
+            class="theme-cycle"
+            data-theme-cycle
+            data-theme-choice="system"
+            aria-label="Theme: system. Switch to light."
+            title="Theme: system"
+          >
+            <svg class="theme-cycle__icon theme-cycle__icon--system" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="8"/>
+              <path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor" stroke="none"/>
+            </svg>
+            <svg class="theme-cycle__icon theme-cycle__icon--light" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="4.2"/>
+              <path d="M12 2.6v2.2M12 19.2v2.2M4.2 12H2M22 12h-2.2M6.5 6.5 4.9 4.9M19.1 19.1l-1.6-1.6M17.5 6.5l1.6-1.6M4.9 19.1l1.6-1.6"/>
+            </svg>
+            <svg class="theme-cycle__icon theme-cycle__icon--dark" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 13.4A8.2 8.2 0 0 1 10.6 4a8.4 8.4 0 1 0 9.4 9.4z"/>
+            </svg>
+          </button>
+          <a href="/auth/login" class="btn btn--ghost btn--sm">Login</a>
+          <a href="/auth/register" class="btn btn--primary btn--sm">Sign Up</a>
         </div>
       <% } %>
     </div>
   </div>
 </nav>
-<script src="/js/navbar.js" defer></script>
