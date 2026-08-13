@@ -4,12 +4,10 @@
   const _rows = _bd && Array.isArray(_bd.platforms) ? _bd.platforms : [];
   const _stats = typeof stats !== 'undefined' && stats ? stats : {};
   const _totalItems = Number(_stats.totalItems) || 0;
-  const _availableItems = Number(_stats.availableCount) || 0;
-  const _goneItems = Math.max(0, _totalItems - _availableItems);
 
-  const _caveats = [];
-  if ((_stats.freeCount || 0)) _caveats.push(plural(_stats.freeCount, 'free item'));
-  if ((_stats.unpricedCount || 0)) _caveats.push(plural(_stats.unpricedCount, 'item') + ' with no price');
+  const _summaryBits = [plural(_totalItems, 'item')];
+  if ((_stats.freeCount || 0)) _summaryBits.push(plural(_stats.freeCount, 'free item'));
+  if ((_stats.unpricedCount || 0)) _summaryBits.push(plural(_stats.unpricedCount, 'item') + ' with no price');
 
   const _pricedTotal = _rows.reduce((sum, row) => sum + (Number(row.subtotal) || 0), 0);
   const _itemBasisTotal = _rows.reduce((sum, row) => sum + (Array.isArray(row.items) ? row.items.length : 0), 0);
@@ -57,87 +55,72 @@
          data-stats-panel
          data-default-value="<%= _defaultCenterValue %>"
          data-default-label="<%= _defaultCenterLabel %>">
-  <div class="stats-panel__head">
-    <div class="stats-panel__headline">
+  <div class="stats-panel__layout">
+    <div class="stats-panel__summary">
       <h2 class="stats-panel__label" id="stats-panel-label"><%= _label %></h2>
       <p class="stats-panel__figure"><%= money((_stats.totalValue || 0)) %></p>
-      <% if (_caveats.length) { %>
-        <p class="stats-panel__sub stats-panel__caveat"><%= _caveats.join(' · ') %></p>
-      <% } %>
+      <p class="stats-panel__meta"><%= _summaryBits.join(' · ') %></p>
     </div>
 
-    <dl class="stats-panel__metrics" aria-label="Listing status">
-      <div class="stats-panel__metric">
-        <dt>Items</dt>
-        <dd><%= _totalItems %></dd>
-      </div>
-      <div class="stats-panel__metric stats-panel__metric--live">
-        <dt><span class="stats-panel__status-dot" aria-hidden="true"></span>Still live</dt>
-        <dd><%= _availableItems %></dd>
-      </div>
-      <div class="stats-panel__metric stats-panel__metric--muted">
-        <dt>Gone</dt>
-        <dd><%= _goneItems %></dd>
-      </div>
-    </dl>
-  </div>
+    <% if (_segments.length) { %>
+      <div class="stats-panel__breakdown" aria-labelledby="stats-panel-distribution-label">
+        <div class="stats-panel__breakdown-head">
+          <h3 class="stats-panel__distribution-title" id="stats-panel-distribution-label">
+            <%= _usesValue ? 'Value by marketplace' : 'Items by marketplace' %>
+          </h3>
+          <p class="stats-panel__distribution-sub">
+            <%= _usesValue ? 'Share of priced total' : 'All saved items are free or unpriced' %>
+          </p>
+        </div>
 
-  <% if (_segments.length) { %>
-    <div class="stats-panel__distribution" aria-labelledby="stats-panel-distribution-label">
-      <div class="stats-panel__chart-block">
-        <h3 class="stats-panel__distribution-title" id="stats-panel-distribution-label">
-          <%= _usesValue ? 'Value by marketplace' : 'Items by marketplace' %>
-        </h3>
-        <p class="stats-panel__distribution-sub">
-          <%= _usesValue ? 'Share of priced total' : 'All saved items are free or unpriced' %>
-        </p>
+        <div class="stats-panel__breakdown-body">
+          <div class="stats-panel__donut" aria-hidden="true">
+            <svg viewBox="0 0 42 42" focusable="false">
+              <circle class="stats-panel__donut-track" cx="21" cy="21" r="15.9155" pathLength="100"></circle>
+              <% _segments.forEach((segment, index) => { %>
+                <circle class="stats-panel__donut-segment stats-panel__donut-segment--<%= segment.meta.kind %>"
+                        cx="21" cy="21" r="15.9155" pathLength="100"
+                        stroke-dasharray="<%= segment.percent %> <%= Math.max(0, 100 - segment.percent) %>"
+                        stroke-dashoffset="<%= -segment.offset %>"
+                        style="--segment-delay: <%= index * 70 %>ms"
+                        data-chart-segment="<%= index %>"></circle>
+              <% }) %>
+            </svg>
+            <span class="stats-panel__donut-center">
+              <strong data-chart-center-value><%= _defaultCenterValue %></strong>
+              <span data-chart-center-label><%= _defaultCenterLabel %></span>
+            </span>
+          </div>
 
-        <div class="stats-panel__donut" aria-hidden="true">
-          <svg viewBox="0 0 42 42" focusable="false">
-            <circle class="stats-panel__donut-track" cx="21" cy="21" r="15.9155" pathLength="100"></circle>
+          <ul class="stats-panel__legend" aria-label="Marketplace breakdown">
             <% _segments.forEach((segment, index) => { %>
-              <circle class="stats-panel__donut-segment stats-panel__donut-segment--<%= segment.meta.kind %>"
-                      cx="21" cy="21" r="15.9155" pathLength="100"
-                      stroke-dasharray="<%= segment.percent %> <%= Math.max(0, 100 - segment.percent) %>"
-                      stroke-dashoffset="<%= -segment.offset %>"
-                      style="--segment-delay: <%= index * 70 %>ms"
-                      data-chart-segment="<%= index %>"></circle>
+              <li>
+                <button type="button"
+                        class="stats-panel__legend-button stats-panel__legend-button--<%= segment.meta.kind %>"
+                        data-chart-control="<%= index %>"
+                        data-chart-percent="<%= segment.percent %>%"
+                        data-chart-platform="<%= segment.meta.alt %>"
+                        aria-pressed="false"
+                        aria-label="<%= segment.meta.alt %>: <%= segment.percent %> percent, <%= plural(segment.items.length, 'item') %>, <%= money(segment.row.subtotal) %>">
+                  <span class="stats-panel__marketplace-mark" aria-hidden="true">
+                    <% if (segment.meta.logo) { %>
+                      <img src="<%= segment.meta.logo %>" alt="">
+                    <% } else { %>
+                      <span><%= segment.meta.alt.charAt(0).toUpperCase() %></span>
+                    <% } %>
+                  </span>
+                  <span class="stats-panel__legend-copy">
+                    <span class="stats-panel__legend-name" title="<%= segment.meta.alt %>"><%= segment.meta.alt %></span>
+                    <span class="stats-panel__legend-count"><%= plural(segment.items.length, 'item') %></span>
+                  </span>
+                  <span class="stats-panel__legend-percent tnum"><%= segment.percent %>%</span>
+                  <span class="stats-panel__amount tnum"><%= money(segment.row.subtotal) %></span>
+                </button>
+              </li>
             <% }) %>
-          </svg>
-          <span class="stats-panel__donut-center">
-            <strong data-chart-center-value><%= _defaultCenterValue %></strong>
-            <span data-chart-center-label><%= _defaultCenterLabel %></span>
-          </span>
+          </ul>
         </div>
       </div>
-
-      <ul class="stats-panel__legend" aria-label="Marketplace breakdown">
-        <% _segments.forEach((segment, index) => { %>
-          <li>
-            <button type="button"
-                    class="stats-panel__legend-button stats-panel__legend-button--<%= segment.meta.kind %>"
-                    data-chart-control="<%= index %>"
-                    data-chart-percent="<%= segment.percent %>%"
-                    data-chart-platform="<%= segment.meta.alt %>"
-                    aria-pressed="false"
-                    aria-label="<%= segment.meta.alt %>: <%= segment.percent %> percent, <%= plural(segment.items.length, 'item') %>, <%= money(segment.row.subtotal) %>">
-              <span class="stats-panel__marketplace-mark" aria-hidden="true">
-                <% if (segment.meta.logo) { %>
-                  <img src="<%= segment.meta.logo %>" alt="">
-                <% } else { %>
-                  <span><%= segment.meta.alt.charAt(0).toUpperCase() %></span>
-                <% } %>
-              </span>
-              <span class="stats-panel__legend-copy">
-                <span class="stats-panel__legend-name" title="<%= segment.meta.alt %>"><%= segment.meta.alt %></span>
-                <span class="stats-panel__legend-count"><%= plural(segment.items.length, 'item') %></span>
-              </span>
-              <span class="stats-panel__legend-percent tnum"><%= segment.percent %>%</span>
-              <span class="stats-panel__amount tnum"><%= money(segment.row.subtotal) %></span>
-            </button>
-          </li>
-        <% }) %>
-      </ul>
-    </div>
-  <% } %>
+    <% } %>
+  </div>
 </section>
