@@ -10,49 +10,54 @@
 
   <% const userCategories = categories.filter(c => !c.isDefault); %>
 
-  <% if (userCategories.length === 0) { %>
-    <%- include('../partials/empty-state', {
-      headline: 'No collections yet',
-      body: 'Collections are just groups of saved items — one per room, project, or shopping trip.'
-    }) %>
-  <% } %>
+  <section class="collections-section" aria-labelledby="yourCollectionsHeading">
+    <div class="collections-section__head">
+      <h2 class="collections-section__title" id="yourCollectionsHeading">Your collections</h2>
+    </div>
 
-  <%
-    // The create form lives in the grid as its own tile rather than as a bare
-    // input in the header, so creating a collection looks like the thing it
-    // produces. Rendered in both states, so it is never more than a click away.
-  %>
-  <div class="category-grid">
-    <% userCategories.forEach(category => { %>
-      <%- include('../partials/category-card', {
-        category,
-        isShared: false,
-        showManageButton: true
-      }) %>
-    <% }) %>
-
-    <form class="collection-card create-card" action="/categories/create" method="POST">
-      <span class="create-card-plus" aria-hidden="true">+</span>
-      <label class="create-card-label" for="newCollectionName">New collection</label>
-      <div class="create-card-form">
-        <input type="text" id="newCollectionName" name="name"
-               placeholder="Name it" required maxlength="60">
-        <button type="submit" class="btn btn--primary btn--sm">Create</button>
+    <% if (userCategories.length === 0) { %>
+      <div class="collections-first-use">
+        <%- include('../partials/collection-create', {
+          returnTo: '/categories',
+          inputId: 'newCollectionName',
+          open: true,
+          label: 'Create your first collection',
+          description: 'Group saved items for a room, project, or shopping list.'
+        }) %>
       </div>
-    </form>
-  </div>
+    <% } else { %>
+      <div class="category-grid">
+        <% userCategories.forEach(category => { %>
+          <%- include('../partials/category-card', {
+            category,
+            isShared: false,
+            showManageButton: true
+          }) %>
+        <% }) %>
+
+        <%- include('../partials/collection-create', {
+          returnTo: '/categories',
+          inputId: 'newCollectionName'
+        }) %>
+      </div>
+    <% } %>
+  </section>
 
   <% if (sharedCategories && sharedCategories.length > 0) { %>
-    <h2 class="section-title">Shared with me</h2>
-    <div class="category-grid">
-      <% sharedCategories.forEach(category => { %>
-        <%- include('../partials/category-card', {
-          category,
-          isShared: true,
-          showManageButton: false
-        }) %>
-      <% }) %>
-    </div>
+    <section class="collections-section" aria-labelledby="sharedCollectionsHeading">
+      <div class="collections-section__head">
+        <h2 class="collections-section__title" id="sharedCollectionsHeading">Shared with me</h2>
+      </div>
+      <div class="category-grid">
+        <% sharedCategories.forEach(category => { %>
+          <%- include('../partials/category-card', {
+            category,
+            isShared: true,
+            showManageButton: false
+          }) %>
+        <% }) %>
+      </div>
+    </section>
   <% } %>
 </main>
 
@@ -108,4 +113,5 @@
   </div>
 </dialog>
 
+<script src="/js/collection-create.js"></script>
 <script src="/js/categories.js"></script>

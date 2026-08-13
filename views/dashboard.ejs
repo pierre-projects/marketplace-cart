@@ -64,29 +64,20 @@
       <% if (userCollections.length) { %><a href="/categories">View all →</a><% } %>
     </div>
 
-    <% if (!userCollections.length) { %>
-      <%- include('partials/empty-state', {
-        headline: 'Group what you are hunting for',
-        body: 'Collections keep separate hunts apart — apartment, bike build, gifts — each with its own total.',
-        actionLabel: 'New collection',
-        actionHref: '/categories'
-      }) %>
-    <% } else { %>
-      <div class="category-grid">
-        <% userCollections.slice(0, 5).forEach(category => { %>
-          <%- include('partials/category-card', {
-            category,
-            isShared: false,
-            showManageButton: false
-          }) %>
-        <% }) %>
+    <div class="category-grid">
+      <% userCollections.slice(0, 5).forEach(category => { %>
+        <%- include('partials/category-card', {
+          category,
+          isShared: false,
+          showManageButton: false
+        }) %>
+      <% }) %>
 
-        <a class="collection-card create-card" href="/categories">
-          <span class="create-card-plus" aria-hidden="true">+</span>
-          <span class="create-card-label">New collection</span>
-        </a>
-      </div>
-    <% } %>
+      <%- include('partials/collection-create', {
+        returnTo: '/dashboard',
+        inputId: 'dashboardCollectionName'
+      }) %>
+    </div>
   </section>
 
   <% if (sharedCategories && sharedCategories.length > 0) { %>
@@ -111,5 +102,6 @@
 
 <script src="/js/toast.js"></script>
 <script src="/js/stats-panel.js"></script>
+<script src="/js/collection-create.js"></script>
 <script src="/js/dashboard.js"></script>
 <script src="/js/assign-categories.js"></script>

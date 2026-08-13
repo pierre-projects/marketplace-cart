@@ -45,9 +45,15 @@ router.get('/', ensureAuthenticated, async (req, res) => {
 
 // POST /categories/create
 router.post('/create', ensureAuthenticated, async (req, res) => {
+  const back = getSafeReturnToPath(req.body.returnTo, '/categories');
+  const redirectWithCreateError = (message) => {
+    req.flash('error_msg', message);
+    return res.redirect(back);
+  };
+
   try {
     const name = req.body.name?.trim();
-    if (!name) return redirectWithFlashError(req, res, 'Collection name is required.', '/categories');
+    if (!name) return redirectWithCreateError('Collection name is required.');
 
     await Category.create({
       name,
@@ -56,13 +62,13 @@ router.post('/create', ensureAuthenticated, async (req, res) => {
       usersAdded: []
     });
 
-    return res.redirect('/categories');
+    return res.redirect(back);
   } catch (err) {
     if (err.code === 11000) {
-      return redirectWithFlashError(req, res, `You already have a collection called "${req.body.name?.trim()}".`, '/categories');
+      return redirectWithCreateError(`You already have a collection called "${req.body.name?.trim()}".`);
     }
     console.error('Error creating category:', err);
-    return redirectWithFlashError(req, res, 'Could not create collection right now.', '/categories');
+    return redirectWithCreateError('Could not create collection right now.');
   }
 });
 
