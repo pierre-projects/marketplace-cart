@@ -6,7 +6,7 @@
   // helpers as the collection page — a card cannot disagree with the page it
   // links to. The fallback keeps the partial renderable on its own.
   const _card = (locals.cardStats && locals.cardStats[String(category._id)]) || null;
-  const _stats = _card ? _card.stats : { totalItems: 0, totalValue: 0, availableCount: 0 };
+  const _stats = _card ? _card.stats : { totalItems: 0, totalValue: 0 };
   const _platforms = _card && _card.breakdown ? _card.breakdown.platforms : [];
 
   const categoryItems = Array.isArray(category.items) ? category.items : [];
@@ -50,12 +50,7 @@
 
     <p class="collection-card__value"><%= money(_stats.totalValue) %></p>
 
-    <p class="collection-card__meta">
-      <%= plural(_stats.totalItems, 'item') %>
-      <% if (_stats.totalItems > 0) { %>
-        · <%= _stats.availableCount %> still live
-      <% } %>
-    </p>
+    <p class="collection-card__meta"><%= plural(_stats.totalItems, 'item') %></p>
 
     <% if (_platforms.length) { %>
       <div class="collection-card__platforms">

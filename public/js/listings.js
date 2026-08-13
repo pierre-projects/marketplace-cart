@@ -18,7 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('searchInput');
   const searchClear = document.getElementById('searchClear');
   const sortSelect = document.getElementById('sortSelect');
-  const segments = Array.from(document.querySelectorAll('.segmented__opt'));
   const filtersToggle = document.getElementById('filtersToggle');
   const filtersPanel = document.getElementById('filtersPanel');
   const filtersCount = document.getElementById('filtersCount');
@@ -32,14 +31,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const noResults = document.getElementById('noResults');
   const resultCount = document.getElementById('resultCount');
 
-  const state = { q: '', status: 'all', conditions: [], platforms: [], sort: 'newest' };
+  const state = { q: '', conditions: [], platforms: [], sort: 'newest' };
 
   // ---- URL <-> state ------------------------------------------------------
 
   function readUrl() {
     const p = new URLSearchParams(location.search);
     state.q = p.get('q') || '';
-    state.status = ['all', 'available', 'sold'].includes(p.get('status')) ? p.get('status') : 'all';
     state.conditions = (p.get('condition') || '').split(',').filter(Boolean);
     state.platforms = (p.get('platform') || '').split(',').filter(Boolean);
     const sort = p.get('sort');
@@ -49,7 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function writeUrl(push) {
     const p = new URLSearchParams();
     if (state.q) p.set('q', state.q);
-    if (state.status !== 'all') p.set('status', state.status);
     if (state.conditions.length) p.set('condition', state.conditions.join(','));
     if (state.platforms.length) p.set('platform', state.platforms.join(','));
     if (state.sort !== 'newest') p.set('sort', state.sort);
@@ -69,12 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
     searchClear.hidden = !state.q;
     sortSelect.value = state.sort;
 
-    segments.forEach(b => {
-      const on = b.dataset.status === state.status;
-      b.classList.toggle('is-active', on);
-      b.setAttribute('aria-pressed', on ? 'true' : 'false');
-    });
-
     conditionBoxes.forEach(b => { b.checked = state.conditions.includes(b.value); });
     platformBoxes.forEach(b => { b.checked = state.platforms.includes(b.value); });
 
@@ -88,9 +79,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderPills() {
     const pills = [];
     if (state.q) pills.push({ kind: 'q', value: state.q, label: 'Search: ' + state.q });
-    if (state.status !== 'all') {
-      pills.push({ kind: 'status', value: state.status, label: state.status === 'available' ? 'Still live' : 'Gone' });
-    }
     state.conditions.forEach(c => pills.push({ kind: 'condition', value: c, label: 'Condition: ' + c }));
     state.platforms.forEach(p => pills.push({ kind: 'platform', value: p, label: 'Marketplace: ' + p }));
 
@@ -125,14 +113,10 @@ document.addEventListener('DOMContentLoaded', () => {
         (d.title || '').includes(q) ||
         (d.description || '').includes(q);
 
-      let matchesStatus = true;
-      if (state.status === 'available') matchesStatus = d.available === 'true';
-      else if (state.status === 'sold') matchesStatus = d.available === 'false';
-
       const matchesCondition = !state.conditions.length || state.conditions.includes(d.condition || '');
       const matchesPlatform = !state.platforms.length || state.platforms.includes(d.platform || '');
 
-      card.classList.toggle('is-hidden', !(matchesSearch && matchesStatus && matchesCondition && matchesPlatform));
+      card.classList.toggle('is-hidden', !(matchesSearch && matchesCondition && matchesPlatform));
     });
 
     const visible = cards.filter(c => !c.classList.contains('is-hidden'));
@@ -192,8 +176,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   sortSelect.addEventListener('change', () => { state.sort = sortSelect.value; update(true); });
 
-  segments.forEach(b => b.addEventListener('click', () => { state.status = b.dataset.status; update(true); }));
-
   function readBoxes() {
     state.conditions = conditionBoxes.filter(b => b.checked).map(b => b.value);
     state.platforms = platformBoxes.filter(b => b.checked).map(b => b.value);
@@ -224,7 +206,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function reset() {
     state.q = '';
-    state.status = 'all';
     state.conditions = [];
     state.platforms = [];
     update(true);
@@ -236,7 +217,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!pill) return;
     const { kind, value } = pill.dataset;
     if (kind === 'q') state.q = '';
-    else if (kind === 'status') state.status = 'all';
     else if (kind === 'condition') state.conditions = state.conditions.filter(c => c !== value);
     else if (kind === 'platform') state.platforms = state.platforms.filter(p => p !== value);
     update(true);

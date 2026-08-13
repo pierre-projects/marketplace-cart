@@ -477,16 +477,6 @@
   color: var(--muted);
 }
 
-.badge-available {
-  background: var(--success-wash);
-  color: var(--success);
-}
-
-.badge-unavailable {
-  background: var(--danger-wash);
-  color: var(--danger);
-}
-
 .badge-row {
   display: flex;
   gap: 0.5rem;
@@ -1912,9 +1902,6 @@ button:focus-visible {
   display: block;
 }
 
-/* Listing health lives on the photo; buyer status lives in the body. */
-.card__media.is-gone img { filter: grayscale(1); opacity: 0.5; }
-
 .card__noimg {
   display: grid;
   place-items: center;
@@ -1955,11 +1942,6 @@ button:focus-visible {
   border-radius: 5px;
 }
 
-.card__media.is-gone .marketplace-logo__image {
-  filter: none;
-  opacity: 1;
-}
-
 .card__menu {
   position: absolute;
   top: var(--sp-2);
@@ -1995,7 +1977,7 @@ button:focus-visible {
 .card__row {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: var(--sp-2);
 }
 
@@ -2055,28 +2037,6 @@ button:focus-visible {
   margin-top: var(--sp-1);
   width: 100%;
 }
-
-/* Status: dot plus label, not a filled pill.
-   One pill per card across a grid of twenty is a lot of visual weight for a
-   binary. A dot carries the same information for a fraction of it. */
-.status {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: var(--fs-meta);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.status__dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: currentColor;
-  flex: none;
-}
-
-.status--live { color: var(--ok-dot); }
-.status--gone { color: var(--text-muted); }
 
 /* Badge */
 .badge {
@@ -3055,7 +3015,7 @@ dialog.modal .modal-body { background: transparent; }
 .link-button:hover { color: var(--text-primary); }
 
 /* ==========================================================================
-   Card — tighter proportions, gone treatment
+   Card — tighter proportions
    ========================================================================== */
 
 .card__body {
@@ -3064,10 +3024,6 @@ dialog.modal .modal-body { background: transparent; }
 }
 
 .card__row { align-items: center; margin-top: 2px; }
-
-/* Strikethrough beats desaturation alone for signalling a dead listing. */
-.card--gone .card__title a { text-decoration: line-through; color: var(--text-muted); }
-.card--gone .card__price { color: var(--text-muted); }
 
 .card__out {
   position: relative;
@@ -3185,7 +3141,7 @@ dialog.modal .modal-body { background: transparent; }
 }
 
 @media (max-width: 640px) {
-  /* Toolbar stacks: search on its own row, then the controls, then status. */
+  /* Toolbar stacks with search on its own row above the controls. */
   .toolbar { gap: var(--sp-2); }
   .toolbar__search { flex: 1 1 100%; min-width: 0; }
   .toolbar__filters { flex: 1 1 auto; }

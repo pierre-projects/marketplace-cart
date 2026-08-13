@@ -20,16 +20,15 @@
       ? { src: '/images/marketplaces/facebook.svg', alt: 'Facebook Marketplace' }
       : null;
 %>
-<li class="card<%= item.available ? '' : ' card--gone' %>"
+<li class="card"
     data-title="<%= (item.title || '').toLowerCase() %>"
     data-description="<%= (item.description || '').toLowerCase() %>"
     data-price="<%= item.price || 0 %>"
     data-condition="<%= (item.condition || '').toLowerCase() %>"
     data-platform="<%= (item.platform || '').toLowerCase() %>"
-    data-added-at="<%= item.addedAt ? new Date(item.addedAt).getTime() : 0 %>"
-    data-available="<%= item.available ? 'true' : 'false' %>">
+    data-added-at="<%= item.addedAt ? new Date(item.addedAt).getTime() : 0 %>">
 
-  <div class="card__media<%= item.available ? '' : ' is-gone' %>">
+  <div class="card__media">
     <% if (item.imageLinks && item.imageLinks[0]) { %>
       <img src="<%= item.imageLinks[0] %>"
            alt="<%= item.title || 'Saved item' %>"
@@ -129,9 +128,6 @@
       <% } else { %>
         <span class="card__price card__price--unknown">Price unavailable</span>
       <% } %>
-      <span class="status <%= item.available ? 'status--live' : 'status--gone' %>">
-        <span class="status__dot" aria-hidden="true"></span><%= item.available ? 'Still live' : 'Gone' %>
-      </span>
     </div>
 
     <%
