@@ -5,7 +5,9 @@
 %>
 <footer class="site-footer">
   <div class="site-footer__inner">
-    <div class="site-footer__brand">Marketplace Cart</div>
+    <div class="site-footer__brand brand-logo">
+      <img class="brand-logo__image" src="/images/marketplacecart-transparent.png" alt="Marketplace Cart">
+    </div>
 
     <p class="site-footer__tagline">Save listings from OfferUp and Facebook Marketplace in one place.</p>
 
@@ -14,7 +16,7 @@
         <a href="/dashboard">Dashboard</a>
         <a href="/listings">Saved items</a>
       <% } else { %>
-        <a href="/auth/login">Login</a>
+        <a href="/auth/login">Sign in</a>
         <a href="/auth/register">Sign up</a>
       <% } %>
     </nav>

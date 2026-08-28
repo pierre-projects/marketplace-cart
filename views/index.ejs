@@ -15,7 +15,7 @@
             <a href="/dashboard" class="btn btn--primary btn--lg">Go to dashboard</a>
           </div>
         <% } else { %>
-          <p class="eyebrow">Marketplace Cart</p>
+          <p class="eyebrow">Save from OfferUp + Facebook</p>
           <h1 id="hero-title">Every marketplace find, saved in one cart</h1>
           <p class="landing-lead">
             Paste a listing link and Marketplace Cart pulls in the title, price and
@@ -24,7 +24,7 @@
           </p>
           <div class="landing-ctas">
             <a href="/auth/register" class="btn btn--primary btn--lg">Create an account</a>
-            <a href="/auth/login" class="btn btn--secondary btn--lg">Login</a>
+            <a href="#how-it-works" class="btn btn--secondary btn--lg">See how it works</a>
           </div>
         <% } %>
       </div>
@@ -37,7 +37,7 @@
       <div class="hero-mock" aria-hidden="true">
         <div class="hero-mock__bar">
           <span class="hero-mock__dot"></span>
-          <span class="hero-mock__field">offerup.com/item/…</span>
+          <span class="hero-mock__field">Paste a listing link…</span>
           <span class="hero-mock__action">Save</span>
         </div>
         <div class="hero-mock__grid">
@@ -79,7 +79,7 @@
   </section>
 
   <% if (!signedIn) { %>
-    <section class="landing-section" aria-labelledby="features-title">
+    <section id="how-it-works" class="landing-section" aria-labelledby="features-title" tabindex="-1">
       <div class="landing-section__inner">
         <h2 id="features-title" class="landing-section__title">What it does</h2>
         <ul class="landing-features">

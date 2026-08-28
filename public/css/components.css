@@ -70,17 +70,33 @@
   min-height: 64px;
 }
 
-/* Same treatment as .sidebar__brand, which is the brand every signed-in page
-   already shows. */
+/* The transparent wordmark keeps one clean brand anchor per screen. These
+   frames crop its small alpha margin without adding a button-like panel. */
+.brand-logo {
+  flex: none;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.brand-logo__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Lift the deep-purple lower word above accessible contrast on dark surfaces
+   while keeping the transparent, unboxed mark and its pink brand character. */
+:root[data-theme='dark'] .brand-logo__image { filter: brightness(2.2); }
+
 .nav-brand {
   display: inline-flex;
   align-items: center;
-  color: var(--accent);
+  width: 150px;
+  height: 49px;
   text-decoration: none;
-  font-size: var(--fs-lead);
-  font-weight: 600;
-  letter-spacing: -0.012em;
-  line-height: 1;
 }
 
 .nav-brand:hover { text-decoration: none; }
@@ -130,7 +146,7 @@
 .nav-brand:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
 }
 
 .nav-right {
@@ -303,6 +319,8 @@
 
   .nav-brand {
     grid-area: brand;
+    width: 108px;
+    height: 36px;
   }
 
   .nav-center {
@@ -359,6 +377,11 @@
   .badge-row {
     flex-wrap: wrap;
   }
+}
+
+@media (max-width: 400px) {
+  /* Keep the complete signed-out action group beside the brand at 320px. */
+  .nav-brand { width: 88px; height: 29px; }
 }
 
 .item-list {
@@ -1906,9 +1929,8 @@ button:focus-visible {
 }
 
 .site-footer__brand {
-  color: var(--accent);
-  font-weight: 600;
-  letter-spacing: -0.012em;
+  width: 140px;
+  height: 46px;
 }
 
 .site-footer__tagline {
@@ -2785,10 +2807,8 @@ dialog.modal .modal-body { background: transparent; }
 
 .sidebar__brand {
   display: block;
-  font-size: var(--fs-lead);
-  font-weight: 600;
-  letter-spacing: -0.012em;
-  color: var(--accent);
+  width: 100%;
+  height: 71px;
   text-decoration: none;
 }
 
@@ -3137,6 +3157,7 @@ dialog.modal .modal-body { background: transparent; }
   }
 
   .sidebar__head { padding-inline: 0; min-width: 0; }
+  .sidebar__brand { width: 140px; height: 46px; }
   .sidebar__nav { display: none; }
 
   .sidebar__foot {
@@ -3200,6 +3221,8 @@ dialog.modal .modal-body { background: transparent; }
 }
 
 @media (max-width: 640px) {
+  .sidebar__brand { width: 108px; height: 36px; }
+
   /* Toolbar stacks with search on its own row above the controls. */
   .toolbar { gap: var(--sp-2); }
   .toolbar__search { flex: 1 1 100%; min-width: 0; }

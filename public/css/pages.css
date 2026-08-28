@@ -11,7 +11,7 @@
    ========================================================================== */
 
 .landing-hero {
-  padding-block: clamp(2.5rem, 6vw, 4.5rem) clamp(3rem, 7vw, 5rem);
+  padding-block: clamp(2.25rem, 5vw, 4rem) clamp(2.5rem, 5.5vw, 4rem);
   background: radial-gradient(ellipse 60% 70% at 15% 0%, var(--accent-wash), transparent 70%);
 }
 
@@ -54,7 +54,7 @@
   background: var(--surface-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-md);
   overflow: hidden;
 }
 
@@ -121,10 +121,11 @@
   background: var(--surface-hover);
 }
 
-/* Four faint tints so the tiles do not read as one grey slab. */
-.hero-mock__photo--a { background: color-mix(in srgb, var(--accent) 16%, var(--surface-hover)); }
-.hero-mock__photo--b { background: color-mix(in srgb, var(--p-fb-chart) 20%, var(--surface-hover)); }
-.hero-mock__photo--c { background: color-mix(in srgb, var(--p-offerup-chart) 20%, var(--surface-hover)); }
+/* Tonal pinks keep the decorative preview inside the site's brand system;
+   the real product still uses marketplace colours where identity matters. */
+.hero-mock__photo--a { background: color-mix(in srgb, var(--accent) 10%, var(--surface-hover)); }
+.hero-mock__photo--b { background: color-mix(in srgb, var(--accent) 18%, var(--surface-hover)); }
+.hero-mock__photo--c { background: color-mix(in srgb, var(--accent) 26%, var(--surface-hover)); }
 .hero-mock__photo--d { background: var(--surface-hover); }
 
 .hero-mock__line {
@@ -156,14 +157,23 @@
   white-space: nowrap;
 }
 
-.hero-mock__tag--offerup { background: var(--p-offerup-bg); color: var(--p-offerup-fg); }
-.hero-mock__tag--fb      { background: var(--p-fb-bg);      color: var(--p-fb-fg); }
+.hero-mock__tag--offerup {
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface-card));
+  color: var(--accent-deep);
+}
+
+.hero-mock__tag--fb {
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface-card));
+  color: var(--accent-deep);
+}
 
 /* --- Marketing sections --------------------------------------------------- */
 
 .landing-section {
   padding-block: clamp(2.5rem, 6vw, 4.5rem);
 }
+
+#how-it-works { scroll-margin-top: 80px; }
 
 .landing-section--sunken {
   background: var(--surface-sunken);
@@ -480,27 +490,13 @@
 .auth__form-pane {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: clamp(2rem, 5vw, 4rem) clamp(1.25rem, 4vw, 3rem);
+  justify-content: flex-end;
+  padding: clamp(2rem, 5vw, 4rem) clamp(3rem, 6vw, 6rem);
 }
 
 .auth__form {
   width: min(420px, 100%);
 }
-
-/* Wordmark only, like .nav-brand directly above it and .sidebar__brand on the
-   signed-in pages. Kept at body size rather than --fs-lead so it stays a quiet
-   way back to the home page instead of competing with the page's own h1. */
-.auth__brand {
-  display: inline-flex;
-  align-items: center;
-  margin-bottom: var(--sp-5);
-  color: var(--accent);
-  font-weight: 600;
-  letter-spacing: -0.012em;
-}
-
-.auth__brand:hover { text-decoration: none; }
 
 /* Deliberately not accent-coloured: on this page the one thing worth painting
    with the brand colour is the button you are meant to press. */
@@ -532,7 +528,8 @@
 .auth__brand-pane {
   display: flex;
   align-items: center;
-  padding: clamp(2rem, 5vw, 4rem);
+  justify-content: flex-start;
+  padding: clamp(2rem, 5vw, 4rem) clamp(3rem, 6vw, 6rem);
   background: radial-gradient(ellipse 70% 60% at 70% 20%, var(--accent-wash), transparent 70%),
       var(--surface-sunken);
   border-left: 1px solid var(--border);
@@ -579,6 +576,7 @@
 
 @media (max-width: 900px) {
   .auth { grid-template-columns: minmax(0, 1fr); }
+  .auth__form-pane { justify-content: center; }
   .auth__brand-pane { display: none; }
 }
 

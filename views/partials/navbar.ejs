@@ -1,12 +1,9 @@
 <nav class="navbar" role="navigation" aria-label="Primary">
   <div class="nav-container">
-    <%
-      // Wordmark only, matching .sidebar__brand on every signed-in page. The
-      // boxed glyph that used to sit here was an accent-tint icon on an
-      // accent-wash box on an accent-tinted bar — three tints of one hue, so
-      // the cart never resolved into a shape.
-    %>
-    <a href="/" class="nav-brand" aria-label="Marketplace Cart Home">Marketplace Cart</a>
+    <% const _page = typeof currentPage !== 'undefined' ? currentPage : ''; %>
+    <a href="/" class="nav-brand brand-logo" aria-label="Marketplace Cart Home">
+      <img class="brand-logo__image" src="/images/marketplacecart-transparent.png" alt="">
+    </a>
 
     <% if (typeof user !== 'undefined' && user) { %>
       <%
@@ -15,7 +12,6 @@
         // whole attribute dynamically renders it as visible text, and the raw
         // tag is reserved for includes. "false" is a valid aria-current value
         // meaning "not the current page".
-        const _page = typeof currentPage !== 'undefined' ? currentPage : '';
         const _nav = [
           { href: '/dashboard',  key: 'dashboard',  label: 'Dashboard' },
           { href: '/listings',   key: 'listings',   label: 'Saved items' },
@@ -96,8 +92,12 @@
               <path d="M20 13.4A8.2 8.2 0 0 1 10.6 4a8.4 8.4 0 1 0 9.4 9.4z"/>
             </svg>
           </button>
-          <a href="/auth/login" class="btn btn--ghost btn--sm">Login</a>
-          <a href="/auth/register" class="btn btn--primary btn--sm">Sign Up</a>
+          <% if (_page !== 'login') { %>
+            <a href="/auth/login" class="btn btn--ghost btn--sm">Sign in</a>
+          <% } %>
+          <% if (_page !== 'register') { %>
+            <a href="/auth/register" class="btn btn--primary btn--sm">Sign Up</a>
+          <% } %>
         </div>
       <% } %>
     </div>
