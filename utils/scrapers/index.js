@@ -2,6 +2,11 @@ const logger = require('../logger');
 const { ScrapeError, CODES } = require('./errors');
 const offerupScraper = require('./offerup');
 const facebookScraper = require('./facebook');
+const craigslistScraper = require('./craigslist');
+const ebayScraper = require('./ebay');
+const poshmarkScraper = require('./poshmark');
+const mercariScraper = require('./mercari');
+const depopScraper = require('./depop');
 
 // Single source of truth for which marketplaces are scraped and what they are
 // called. A URL matches on its parsed hostname (exactly, or a subdomain of it)
@@ -11,6 +16,13 @@ const facebookScraper = require('./facebook');
 const scrapers = [
   { hosts: ['offerup.com'], path: /^\/item\//, platform: 'OfferUp', scraper: offerupScraper },
   { hosts: ['facebook.com'], path: /^\/marketplace\//, platform: 'Facebook Marketplace', scraper: facebookScraper },
+  // Postings only, in both URL shapes: the regional /<area>/<cat>/d/<slug>/<id>.html
+  // and the newer www.craigslist.org/view/d/<slug>/<token>. Search pages don't match.
+  { hosts: ['craigslist.org'], path: /^\/view\/d\/[^/]+\/[^/]+\/?$|\/\d+\.html$/, platform: 'Craigslist', scraper: craigslistScraper },
+  { hosts: ['ebay.com', 'ebay.ca', 'ebay.co.uk'], path: /^\/itm\//, platform: 'eBay', scraper: ebayScraper },
+  { hosts: ['poshmark.com', 'poshmark.ca'], path: /^\/listing\//, platform: 'Poshmark', scraper: poshmarkScraper },
+  { hosts: ['mercari.com'], path: /^\/(us\/)?item\//, platform: 'Mercari', scraper: mercariScraper },
+  { hosts: ['depop.com'], path: /^\/products\//, platform: 'Depop', scraper: depopScraper },
   // Future scrapers: add the entry here and detectPlatform picks it up too.
 ];
 
@@ -20,7 +32,7 @@ const KNOWN_SITES = [
   [['ebay.com', 'ebay.ca', 'ebay.co.uk'], 'eBay'],
   [['craigslist.org'], 'Craigslist'],
   [['mercari.com'], 'Mercari'],
-  [['poshmark.com'], 'Poshmark'],
+  [['poshmark.com', 'poshmark.ca'], 'Poshmark'],
   [['depop.com'], 'Depop'],
   [['etsy.com'], 'Etsy'],
   [['amazon.com', 'amazon.ca', 'amazon.co.uk'], 'Amazon'],

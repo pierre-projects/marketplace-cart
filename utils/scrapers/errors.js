@@ -33,7 +33,7 @@ const USER_MESSAGES = {
   [CODES.NOT_FOUND]: 'That listing could not be found. It may have been removed.',
   [CODES.BLOCKED]: 'The marketplace blocked this request. Try again in a few minutes.',
   [CODES.PARSE_FAILED]: 'We reached the listing but could not read its details.',
-  [CODES.BROWSER_UNAVAILABLE]: 'The scraper could not start its browser. Facebook listings need Chrome installed.',
+  [CODES.BROWSER_UNAVAILABLE]: 'The scraper could not start its browser. Facebook, Mercari and Depop listings need Chrome installed.',
 };
 
 class ScrapeError extends Error {
