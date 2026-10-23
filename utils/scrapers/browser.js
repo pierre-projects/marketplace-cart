@@ -1,7 +1,7 @@
 const fs = require('fs');
 const puppeteer = require('puppeteer');
-const logger = require('./logger');
-const { ScrapeError, CODES } = require('./scrapers/errors');
+const logger = require('../logger');
+const { ScrapeError, CODES } = require('./errors');
 
 // Chromium is heavy; bound how many browser contexts can be live at once.
 const MAX_CONCURRENT_CONTEXTS = 2;

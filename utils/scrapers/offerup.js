@@ -1,11 +1,10 @@
-const axios = require('axios');
 const cheerio = require('cheerio');
 const logger = require('../logger');
 const { ScrapeError, CODES, asScrapeError, classifyAxiosError } = require('./errors');
+const { safeGet } = require('../safeFetch');
 
 // An unbounded axios.get can hang the worker indefinitely on a stalled socket.
 const REQUEST_TIMEOUT_MS = 15000;
-const MAX_REDIRECTS = 5;
 
 // ========== EXTRACTION HELPERS ==========
 
@@ -262,13 +261,9 @@ function extractLocation($) {
 async function scrape(url) {
   let html;
   try {
-    ({ data: html } = await axios.get(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      },
-      timeout: REQUEST_TIMEOUT_MS,
-      maxRedirects: MAX_REDIRECTS,
-    }));
+    // safeGet, not axios.get: the registry only admits offerup.com URLs, but a
+    // redirect from there is still checked against private addresses.
+    ({ data: html } = await safeGet(url, { timeout: REQUEST_TIMEOUT_MS }));
   } catch (err) {
     // Network/HTTP failures are classified separately from parse failures so
     // the queue knows which are worth retrying.
