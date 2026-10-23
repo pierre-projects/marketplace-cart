@@ -14,9 +14,7 @@
 %>
 <aside class="sidebar">
   <div class="sidebar__head">
-    <a class="sidebar__brand brand-logo" href="/dashboard" aria-label="Marketplace Cart Dashboard">
-      <img class="brand-logo__image" src="/images/marketplacecart-transparent.png" alt="">
-    </a>
+    <%- include('brand', { href: '/dashboard', label: 'Marketplace Cart dashboard' }) %>
   </div>
 
   <nav class="sidebar__nav" aria-label="Primary">

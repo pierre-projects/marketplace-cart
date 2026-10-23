@@ -1,9 +1,7 @@
 <nav class="navbar" role="navigation" aria-label="Primary">
   <div class="nav-container">
     <% const _page = typeof currentPage !== 'undefined' ? currentPage : ''; %>
-    <a href="/" class="nav-brand brand-logo" aria-label="Marketplace Cart Home">
-      <img class="brand-logo__image" src="/images/marketplacecart-transparent.png" alt="">
-    </a>
+    <%- include('brand', { href: '/', label: 'Marketplace Cart home' }) %>
 
     <% if (typeof user !== 'undefined' && user) { %>
       <%
@@ -99,7 +97,7 @@
             <a href="/auth/login" class="btn btn--ghost btn--sm">Sign in</a>
           <% } %>
           <% if (_page !== 'register') { %>
-            <a href="/auth/register" class="btn btn--primary btn--sm">Sign Up</a>
+            <a href="/auth/register" class="btn btn--primary btn--sm">Sign up</a>
           <% } %>
         </div>
       <% } %>

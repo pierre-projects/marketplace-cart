@@ -5,11 +5,9 @@
 %>
 <footer class="site-footer">
   <div class="site-footer__inner">
-    <div class="site-footer__brand brand-logo">
-      <img class="brand-logo__image" src="/images/marketplacecart-transparent.png" alt="Marketplace Cart">
-    </div>
+    <%- include('brand', { href: '/', label: 'Marketplace Cart home' }) %>
 
-    <p class="site-footer__tagline">Save listings from OfferUp and Facebook Marketplace in one place.</p>
+    <p class="site-footer__tagline">Save listings from OfferUp, Facebook Marketplace and any other site in one place.</p>
 
     <nav class="site-footer__links" aria-label="Footer">
       <% if (signedIn) { %>

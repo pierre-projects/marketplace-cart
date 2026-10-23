@@ -15,12 +15,12 @@
             <a href="/dashboard" class="btn btn--primary btn--lg">Go to dashboard</a>
           </div>
         <% } else { %>
-          <p class="eyebrow">Save from OfferUp + Facebook</p>
+          <p class="eyebrow">For secondhand shoppers</p>
           <h1 id="hero-title">Every marketplace find, saved in one cart</h1>
           <p class="landing-lead">
             Paste a listing link and Marketplace Cart pulls in the title, price and
-            photos for you. Sort what you find into collections and keep track of
-            what it all adds up to.
+            photos. Sort what you find into collections and see what it all adds
+            up to, across every marketplace you shop.
           </p>
           <div class="landing-ctas">
             <a href="/auth/register" class="btn btn--primary btn--lg">Create an account</a>
@@ -62,7 +62,7 @@
             <div class="hero-mock__line"></div>
             <div class="hero-mock__meta">
               <span class="hero-mock__price">$1,120</span>
-              <span class="hero-mock__tag hero-mock__tag--offerup">OfferUp</span>
+              <span class="hero-mock__tag hero-mock__tag--other">eBay</span>
             </div>
           </div>
           <div class="hero-mock__tile">
@@ -81,7 +81,7 @@
   <% if (!signedIn) { %>
     <section id="how-it-works" class="landing-section" aria-labelledby="features-title" tabindex="-1">
       <div class="landing-section__inner">
-        <h2 id="features-title" class="landing-section__title">What it does</h2>
+        <h2 id="features-title" class="landing-section__title">One place for everything you are thinking of buying</h2>
         <ul class="landing-features">
           <li class="landing-feature">
             <span class="landing-feature__icon" aria-hidden="true">
@@ -94,7 +94,7 @@
             <h3>Save from a link</h3>
             <p>
               Drop in a listing URL and the title, price, photos and marketplace
-              come along with it. No copying details by hand.
+              come along with it. Sites we cannot read get a quick form instead.
             </p>
           </li>
           <li class="landing-feature">
@@ -160,16 +160,18 @@
         <ul class="landing-supported__list">
           <li><span class="landing-supported__dot landing-supported__dot--offerup" aria-hidden="true"></span>OfferUp</li>
           <li><span class="landing-supported__dot landing-supported__dot--fb" aria-hidden="true"></span>Facebook Marketplace</li>
+          <li><span class="landing-supported__dot" aria-hidden="true"></span>Any other site, by hand</li>
         </ul>
-        <p class="landing-supported__note">More marketplaces are on the way.</p>
       </div>
     </section>
 
     <section class="landing-cta" aria-labelledby="cta-title">
       <div class="landing-cta__inner">
-        <h2 id="cta-title">Start your cart</h2>
-        <p>It takes one link to see how it works.</p>
-        <a href="/auth/register" class="btn btn--primary btn--lg">Create an account</a>
+        <div>
+          <h2 id="cta-title">Start your cart</h2>
+          <p>It takes one link to see how it works.</p>
+          <a href="/auth/register" class="btn btn--primary btn--lg">Create an account</a>
+        </div>
       </div>
     </section>
   <% } %>

@@ -73,12 +73,15 @@
 
   <!-- Items -->
   <% if (category.items.length === 0) { %>
-    <div class="empty-state">
-      <p>Nothing in this collection yet.</p>
-      <% if (canEdit) { %>
-        <p class="muted">Add one using the Add listing button above.</p>
-      <% } %>
-    </div>
+    <%- include('../partials/empty-state', canEdit ? {
+      headline: 'Nothing in this collection yet',
+      body: 'Save a listing from any site and it lands here and in Saved items.',
+      actionLabel: 'Save an item',
+      actionId: 'openAddModalEmpty'
+    } : {
+      headline: 'Nothing in this collection yet',
+      body: 'Items the owner adds will show up here.'
+    }) %>
   <% } else { %>
     <%- include('../partials/item-list', {
       items: locals.items || category.items,

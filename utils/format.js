@@ -54,7 +54,7 @@ function platformClass(platform) {
   const key = String(platform || '').toLowerCase();
   if (key.includes('offerup')) return 'badge--offerup';
   if (key.includes('facebook')) return 'badge--fb';
-  return 'badge--neutral';
+  return 'badge--market';
 }
 
 /** Hostname of a listing URL, for the outbound link label. */
