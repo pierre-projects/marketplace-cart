@@ -1,12 +1,54 @@
 # MarketplaceCart
 
 Save listings from secondhand marketplaces into collections, see what the pile actually costs, and
-share it. Paste a link from OfferUp, Facebook Marketplace, Craigslist, Poshmark, Mercari or Depop; the app scrapes the title, price, photos,
-condition, location and availability in the background and files it away.
+share it. Paste a link from OfferUp, Facebook Marketplace, Craigslist, Poshmark, Mercari or Depop;
+the app scrapes the title, price, photos, condition, location and availability in the background
+and files it away. Links from anywhere else (eBay included) go through a prefilled manual form.
 
 > **A note on wording.** Collections live at `/collections`; old `/categories/...` links redirect
 > there with a 308. The Mongoose model is still `Category` (and its MongoDB collection
 > `categories`) — renaming stored data would buy nothing a user can see.
+
+## Showcase
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="public/images/landing/app-dashboard-dark.webp">
+  <img src="public/images/landing/app-dashboard-light.webp" alt="Dashboard: cart total, value by marketplace, and recently saved listings" width="100%">
+</picture>
+
+**Dashboard.** The cart total, where the money is going per marketplace, and what you saved last.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="public/images/landing/app-saved-dark.webp">
+  <img src="public/images/landing/app-saved-light.webp" alt="Saved items: searchable, filterable grid of listings from several marketplaces" width="100%">
+</picture>
+
+**Saved items.** Every listing in one grid, with search, filters, sorting and the marketplace on each
+card.
+
+<table>
+  <tr>
+    <td width="38%" valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="public/images/landing/app-manual-dark.webp">
+        <img src="public/images/landing/app-manual-light.webp" alt="Save an item: the manual form prefilled from a pasted link" width="100%">
+      </picture>
+      <p><b>Any other site.</b> Paste a link and the form is filled from the page's own metadata;
+      check it and save.</p>
+    </td>
+    <td width="62%" valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="public/images/landing/app-breakdown-dark.webp">
+        <img src="public/images/landing/app-breakdown-light.webp" alt="Collection total with a donut breakdown by marketplace" width="100%">
+      </picture>
+      <p><b>Per-collection totals.</b> Each collection keeps its own total and marketplace split.</p>
+    </td>
+  </tr>
+</table>
+
+Screenshots follow your GitHub theme (light or dark). They are real captures of the app; see
+[`public/images/landing/CREDITS.md`](public/images/landing/CREDITS.md) for how they were taken and
+where the listing photos come from.
 
 ## Features
 
@@ -25,7 +67,8 @@ condition, location and availability in the background and files it away.
 - **Search, filter and sort** — across title and description, by status, condition and marketplace,
   with the state mirrored into the URL so a filtered view is linkable.
 - **Sharing** — share a collection as a viewer (read-only) or editor (can add), or make it public.
-- **Appearance** — light by default, dark on request, five accent colours. Stored per device.
+- **Appearance** — follows your system's light or dark mode until you pick one, plus five accent
+  colours. Stored per device.
 - **Honest data** — an unreadable price says "Price unavailable" rather than pretending the item is
   free; an unrecognised condition is stored as nothing rather than as junk text.
 
@@ -44,8 +87,8 @@ condition, location and availability in the background and files it away.
 
 - **Node.js ≥ 20.11** — `node --watch` is used by `npm run dev` and is only stable from 20.11.
 - **MongoDB**, local or Atlas.
-- **A Chrome**, only if you want Facebook Marketplace, Mercari or Depop listings. See [Chrome](#chrome) below —
-  usually there is nothing to do.
+- **A Chrome**, only if you want Facebook Marketplace, Mercari or Depop listings. See
+  [Chrome](#chrome) below — usually there is nothing to do.
 
 ### Install
 
@@ -60,8 +103,13 @@ Copy `.env.example` to `.env` in the project root (`config/env.js` validates it 
 ```
 PORT=5000
 MONGO_URI=mongodb://127.0.0.1:27017/marketplacecart
-SESSION_SECRET=change_this_to_something_random
+SESSION_SECRET=change_this_to_something_random   # 32+ random characters in production
+NODE_ENV=development                             # production turns on secure cookies
+# TRUST_PROXY=1                                  # behind Render, Fly, nginx…
+# PUPPETEER_EXECUTABLE_PATH=                     # only if Chrome can't be found
 ```
+
+Only `MONGO_URI` and `SESSION_SECRET` are required.
 
 ### Run
 
@@ -71,6 +119,9 @@ npm start       # plain node
 npm test        # unit tests (node --test, no database needed)
 ```
 
+CI (`.github/workflows/ci.yml`) runs `npm test` on Node 20 for every pull request and every push to
+`main`.
+
 Then open http://localhost:5000.
 
 `node --watch` only reloads modules the process actually loads, so editing a view or a stylesheet
@@ -78,8 +129,8 @@ does **not** restart the server — save the file and refresh the browser.
 
 ### Chrome
 
-Only the Facebook, Mercari and Depop scrapers need a browser. It is resolved in this order, and the first one that
-exists on disk wins:
+Only the Facebook, Mercari and Depop scrapers need a browser. It is resolved in this order, and the
+first one that exists on disk wins:
 
 1. `PUPPETEER_EXECUTABLE_PATH`, if you set it
 2. Puppeteer's own downloaded Chrome (`npx puppeteer browsers install chrome`)
@@ -265,11 +316,13 @@ MarketplaceCart/
 │   ├── js/app.js                 # every page: theme, account menu, form behaviours
 │   ├── js/pages/                 # one ES module per page
 │   ├── js/lib/                   # api, dialog, disclosure, toast, item cards, add-listing…
-│   └── images/marketplaces/      # OfferUp and Facebook marks
+│   ├── images/marketplaces/      # OfferUp and Facebook marks
+│   └── images/landing/           # app screenshots (light/dark) and listing photos, see CREDITS.md
 ├── scripts/
 │   ├── migrate.js                # data repair, dry-run by default
 │   └── scrape-once.js            # node scripts/scrape-once.js <url>
 ├── test/                         # node --test
+├── .github/workflows/ci.yml      # npm test on pull requests and pushes to main
 ├── server.js                     # boots after Mongo connects; starts queue + maintenance
 └── package.json
 ```
@@ -365,10 +418,12 @@ All routes except the landing page, auth, and public collections require a sessi
    `ScrapeError` on failure:
 
    ```js
-   const { ScrapeError, CODES, classifyAxiosError } = require('./errors');
+   const { ScrapeError, CODES } = require('./errors');
+   const { fetchHtml } = require('./structured');
 
    async function scrape(url) {
-     // ...
+     const html = await fetchHtml(url, 'NewSite');   // safeFetch + classified errors
+     // ...extract...
      if (!title) throw new ScrapeError(CODES.PARSE_FAILED);
      return { title, price, description, condition, location, imageLinks, available };
    }
@@ -376,10 +431,14 @@ All routes except the landing page, auth, and public collections require a sessi
    module.exports = { scrape };
    ```
 
+   `utils/scrapers/structured.js` has JSON-LD / OpenGraph readers for the extraction, and
+   `renderPage` in `browser.js` covers sites that only render in a browser.
+
    Return `price: null` when there is no readable price — do not substitute `0`, which means free.
 
 2. Register `{ hosts, path, platform, scraper }` in `utils/scrapers/index.js`. `detectPlatform`
-   reads the same entry. Fetch with `utils/safeFetch.js`, not axios directly.
+   reads the same entry. Never fetch with axios directly; `fetchHtml` and `safeFetch` refuse private
+   addresses.
 
 Condition normalisation, the item model, the queue, and the whole frontend work unchanged.
 
