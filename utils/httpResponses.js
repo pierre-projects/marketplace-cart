@@ -1,3 +1,27 @@
+/**
+ * An error a service throws when the request itself is at fault — not found,
+ * not allowed, invalid. Routes turn it into a flash or a JSON body with its
+ * message; anything else is a 500 and its message stays in the log.
+ */
+class HttpError extends Error {
+  constructor(status, message) {
+    super(message);
+    this.name = 'HttpError';
+    this.status = status;
+  }
+}
+
+/** Did the caller ask for JSON (fetch with Accept, or an XHR)? */
+function wantsJson(req) {
+  return Boolean(req.xhr || req.get('accept')?.includes('application/json'));
+}
+
+/**
+ * Express 4 does not catch a rejected async handler: the request just hangs
+ * and the rejection goes unhandled. Wrapping forwards it to the error handler.
+ */
+const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+
 function getSafeRedirectPath(req, fallback = '/') {
   const referrer = req.get('referer');
   if (!referrer) return fallback;
@@ -78,6 +102,9 @@ function renderHtmlError(req, res, statusCode, message, options = {}) {
 }
 
 module.exports = {
+  HttpError,
+  wantsJson,
+  asyncHandler,
   getSafeRedirectPath,
   getSafeReturnToPath,
   redirectWithFlashError,

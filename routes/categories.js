@@ -1,341 +1,205 @@
 const express = require('express');
 const router = express.Router();
 const { ensureAuthenticated } = require('../middleware/authMiddleware');
-const Category = require('../models/Category');
+const {
+  validateObjectId,
+  validateCategory,
+  validateShare,
+  validateMemberRole,
+  validateMemberId,
+  validateItemId,
+} = require('../middleware/validation');
+const collections = require('../services/categoryService');
+const { findSavableItem } = require('../services/itemService');
 const {
   computeItemStats,
   buildItemCategoryIndex,
   computePlatformBreakdown,
   sortEntriesByNewest,
   buildCardStats
-} = require('../services/categoryService');
-const User = require('../models/User');
-const { redirectWithFlashError, renderHtmlError, getSafeReturnToPath } = require('../utils/httpResponses');
+} = require('../services/categoryStats');
+const {
+  HttpError,
+  asyncHandler,
+  wantsJson,
+  redirectWithFlashError,
+  renderHtmlError,
+  getSafeReturnToPath
+} = require('../utils/httpResponses');
+const logger = require('../utils/logger');
 
-// GET /categories
-router.get('/', ensureAuthenticated, async (req, res) => {
+const pageOf = (req) => `/categories/${req.params.id}`;
+
+/**
+ * Wrap a form-posting handler: an HttpError from the service becomes a flash
+ * on `fallback(req)`, anything else is logged and flashed generically.
+ */
+function formAction(fallback, failureMessage, handler) {
+  return asyncHandler(async (req, res) => {
     try {
-      const myCategories = await Category.find({ user: req.user._id })
-        .populate('items.item')
-        .populate('items.addedBy');
-
-      const sharedCategories = await Category.find({
-        'usersAdded.user': req.user._id
-      })
-        .populate('items.item')
-        .populate('items.addedBy')
-        .populate('usersAdded.user');
-
-      return res.render('categories/index', {
-        title: 'Collections',
-        currentPage: 'categories',
-        categories: myCategories,
-        sharedCategories,
-        // Cards used to count items in EJS. Computing here means a card and the
-        // collection page it links to cannot report different numbers.
-        cardStats: buildCardStats([...myCategories, ...sharedCategories]),
-        user: req.user
-      });
+      await handler(req, res);
     } catch (err) {
-      console.error('Error loading categories index:', err);
-      return renderHtmlError(req, res, 500, 'Could not load collections right now.');
+      if (!(err instanceof HttpError)) logger.error(`${failureMessage}:`, err);
+      const message = err instanceof HttpError ? err.message : failureMessage;
+      return redirectWithFlashError(req, res, message, fallback(req));
     }
   });
-  
+}
+
+// GET /categories
+router.get('/', ensureAuthenticated, asyncHandler(async (req, res) => {
+  const { mine, shared } = await collections.loadCollectionsFor(req.user._id);
+
+  return res.render('categories/index', {
+    title: 'Collections',
+    currentPage: 'categories',
+    categories: mine,
+    sharedCategories: shared,
+    // Cards used to count items in EJS. Computing here means a card and the
+    // collection page it links to cannot report different numbers.
+    cardStats: buildCardStats([...mine, ...shared]),
+    user: req.user
+  });
+}));
 
 // POST /categories/create
-router.post('/create', ensureAuthenticated, async (req, res) => {
-  const back = getSafeReturnToPath(req.body.returnTo, '/categories');
-  const redirectWithCreateError = (message) => {
-    req.flash('error_msg', message);
-    return res.redirect(back);
-  };
-
-  try {
-    const name = req.body.name?.trim();
-    if (!name) return redirectWithCreateError('Collection name is required.');
-
-    await Category.create({
-      name,
-      user: req.user._id,
-      items: [],
-      usersAdded: []
-    });
-
-    return res.redirect(back);
-  } catch (err) {
-    if (err.code === 11000) {
-      return redirectWithCreateError(`You already have a collection called "${req.body.name?.trim()}".`);
-    }
-    console.error('Error creating category:', err);
-    return redirectWithCreateError('Could not create collection right now.');
+router.post('/create', ensureAuthenticated, validateCategory, formAction(
+  (req) => getSafeReturnToPath(req.body.returnTo, '/categories'),
+  'Could not create collection right now.',
+  async (req, res) => {
+    await collections.createCategory(req.user._id, req.body.name);
+    return res.redirect(getSafeReturnToPath(req.body.returnTo, '/categories'));
   }
-});
+));
 
-// GET /categories/:id (view one category)
-router.get('/:id', async (req, res) => {
+// GET /categories/:id (view one category; public collections need no account)
+router.get('/:id', validateObjectId(), asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  let view;
   try {
-    const category = await Category.findById(req.params.id)
-      .populate('items.item')
-      .populate('items.addedBy')
-      .populate('usersAdded.user');
-
-    if (!category) {
-      return renderHtmlError(req, res, 404, 'Collection not found.', {
-        actionHref: '/categories',
-        actionLabel: 'Back to collections'
-      });
-    }
-
-    const isOwner = req.user && category.user.equals(req.user._id);
-    const isEditor = req.user && category.usersAdded.some(
-      entry => entry.user.equals(req.user._id) && entry.role === 'editor'
-    );
-    const isViewer = req.user && category.usersAdded.some(
-      entry => entry.user.equals(req.user._id) && entry.role === 'viewer'
-    );
-    const isPublic = category.isPublic;
-
-    if (!isOwner && !isEditor && !isViewer && !isPublic) {
-      return renderHtmlError(req, res, 403, 'You do not have permission to view this collection.', {
-        actionHref: '/categories',
-        actionLabel: 'Back to collections'
-      });
-    }
-
-    const categories = req.user
-      ? await Category.find({ user: req.user._id }).populate('items.item')
-      : [];
-
-    return res.render('categories/show', {
-      title: category.name,
-      currentPage: 'categories',
-      category,
-      categories,
-      // Newest first, like every other item grid. Passed separately rather than
-      // reassigning category.items, which would mark the document modified.
-      items: sortEntriesByNewest(category.items),
-      // Computed here rather than in the template, which used to recompute the
-      // same three numbers in EJS with its own price-coercion branch.
-      stats: computeItemStats(category.items),
-      breakdown: computePlatformBreakdown(category.items),
-      itemCategoryIndex: buildItemCategoryIndex(categories),
-      user: req.user,
-      canEdit: isOwner || isEditor,
-      isOwner
-    });
+    view = await collections.loadCategoryForViewer(req.params.id, userId);
   } catch (err) {
-    console.error('Error loading category:', err);
-    return renderHtmlError(req, res, 500, 'Could not load this collection right now.', {
+    if (!(err instanceof HttpError)) throw err;
+    return renderHtmlError(req, res, err.status, err.message, {
       actionHref: '/categories',
       actionLabel: 'Back to collections'
     });
   }
-});
+
+  const { category } = view;
+  const { mine: categories } = userId
+    ? await collections.loadCollectionsFor(userId)
+    : { mine: [] };
+
+  return res.render('categories/show', {
+    title: category.name,
+    currentPage: 'categories',
+    category,
+    categories,
+    // Newest first, like every other item grid. Passed separately rather than
+    // reassigning category.items, which would mark the document modified.
+    items: sortEntriesByNewest(category.items),
+    stats: computeItemStats(category.items),
+    breakdown: computePlatformBreakdown(category.items),
+    itemCategoryIndex: buildItemCategoryIndex(categories),
+    user: req.user,
+    canEdit: view.canEdit,
+    isOwner: view.isOwner
+  });
+}));
 
 // POST /categories/:id/edit
-router.post('/:id/edit', ensureAuthenticated, async (req, res) => {
+router.post('/:id/edit', ensureAuthenticated, validateObjectId(), validateCategory, formAction(
   // Renaming from a collection page used to bounce you to /categories. The
   // caller says where it came from; getSafeReturnToPath refuses anything that
   // could leave this origin.
-  const back = getSafeReturnToPath(req.body.returnTo, '/categories');
-
-  try {
-    const newName = req.body.name?.trim();
-    if (!newName) return redirectWithFlashError(req, res, 'Collection name is required.', back);
-
-    // Scoped to the owner: a viewer or editor posting this directly matches no
-    // document and changes nothing.
-    const updated = await Category.findOneAndUpdate(
-      { _id: req.params.id, user: req.user._id },
-      { name: newName },
-      { new: true, runValidators: true }
-    );
-    if (!updated) {
-      return redirectWithFlashError(req, res, 'Not authorized to rename this collection.', back);
-    }
-
-    return res.redirect(back);
-  } catch (err) {
-    if (err.code === 11000) {
-      return redirectWithFlashError(req, res, `You already have a collection called "${req.body.name?.trim()}".`, back);
-    }
-    console.error('Error renaming category:', err);
-    return redirectWithFlashError(req, res, 'Could not rename collection right now.', back);
+  (req) => getSafeReturnToPath(req.body.returnTo, '/categories'),
+  'Could not rename collection right now.',
+  async (req, res) => {
+    await collections.renameCategory(req.params.id, req.user._id, req.body.name);
+    return res.redirect(getSafeReturnToPath(req.body.returnTo, '/categories'));
   }
-});
+));
 
 // DELETE /categories/:id
-router.delete('/:id', ensureAuthenticated, async (req, res) => {
-  try {
-    await Category.findOneAndDelete({ _id: req.params.id, user: req.user._id });
+router.delete('/:id', ensureAuthenticated, validateObjectId(), formAction(
+  () => '/categories',
+  'Could not delete collection right now.',
+  async (req, res) => {
+    await collections.deleteCategory(req.params.id, req.user._id);
     return res.redirect('/categories');
-  } catch (err) {
-    console.error('Error deleting category:', err);
-    return redirectWithFlashError(req, res, 'Could not delete collection right now.', '/categories');
   }
-});
+));
 
 // POST /categories/:id/share
-router.post('/:id/share', ensureAuthenticated, async (req, res) => {
-  try {
-    const { email, access } = req.body;
-    const category = await Category.findById(req.params.id);
-    if (!category || !category.user.equals(req.user._id)) {
-      return redirectWithFlashError(req, res, 'Not authorized to share this collection.', `/categories/${req.params.id}`);
-    }
-
-    const userToAdd = await User.findOne({ email });
-    if (!userToAdd) return redirectWithFlashError(req, res, 'User not found.', `/categories/${req.params.id}`);
-
-    const alreadyExists = category.usersAdded.some(
-      entry => entry.user.equals(userToAdd._id)
-    );
-
-    if (!alreadyExists) {
-      category.usersAdded.push({ user: userToAdd._id, role: access });
-      await category.save();
-    }
-
-    return res.redirect('/categories/' + category._id);
-  } catch (err) {
-    console.error('Error sharing category:', err);
-    return redirectWithFlashError(req, res, 'Could not share category right now.', `/categories/${req.params.id}`);
+router.post('/:id/share', ensureAuthenticated, validateObjectId(), validateShare, formAction(
+  pageOf,
+  'Could not share collection right now.',
+  async (req, res) => {
+    await collections.shareCategory(req.params.id, req.user._id, req.body.email, req.body.access);
+    req.flash('success_msg', 'Collection shared.');
+    return res.redirect(pageOf(req));
   }
-});
+));
 
-// POST /categories/:id/visibility
-router.post('/:id/visibility', ensureAuthenticated, async (req, res) => {
-  const wantsJson = req.get('accept')?.includes('application/json');
-
+// POST /categories/:id/visibility — JSON for the toggle, redirect without JS
+router.post('/:id/visibility', ensureAuthenticated, validateObjectId(), asyncHandler(async (req, res) => {
+  const json = wantsJson(req);
   try {
-    const category = await Category.findOne({ _id: req.params.id, user: req.user._id });
-    if (!category) {
-      if (wantsJson) return res.status(404).json({ error: 'Collection not found.' });
-      return redirectWithFlashError(req, res, 'Collection not found.', '/categories');
-    }
-
-    category.isPublic = req.body.isPublic === 'true';
-    await category.save();
-
-    if (wantsJson) return res.json({ success: true, isPublic: category.isPublic });
-    res.redirect('/categories/' + category._id);
+    const category = await collections.setVisibility(req.params.id, req.user._id, req.body.isPublic === 'true' || req.body.isPublic === true);
+    if (json) return res.json({ success: true, isPublic: category.isPublic });
+    return res.redirect(pageOf(req));
   } catch (err) {
-    console.error('Error updating visibility:', err);
-    if (wantsJson) return res.status(500).json({ error: 'Server error while updating category visibility.' });
-    return redirectWithFlashError(req, res, 'Server error while updating category visibility.', `/categories/${req.params.id}`);
+    const status = err instanceof HttpError ? err.status : 500;
+    const message = err instanceof HttpError ? err.message : 'Server error while updating collection visibility.';
+    if (status === 500) logger.error('Error updating visibility:', err);
+    if (json) return res.status(status).json({ error: message });
+    return redirectWithFlashError(req, res, message, pageOf(req));
   }
-});
+}));
 
 // POST /categories/:id/remove-item
-router.post('/:id/remove-item', ensureAuthenticated, async (req, res) => {
-  try {
-    const { itemId } = req.body;
-    const category = await Category.findById(req.params.id)
-      .populate('items.item')
-      .populate('items.addedBy');
-
-    const entry = category.items.find(e => e.item._id.toString() === itemId);
-    const isOwner = req.user && category.user.equals(req.user._id);
-    const isEditor = req.user && category.usersAdded.some(
-      entry => entry.user.equals(req.user._id) && entry.role === 'editor'
-    );
-    const isTheirItem = entry && entry.addedBy._id.toString() === req.user._id.toString();
-
-    if (!isOwner && !(isEditor && isTheirItem)) {
-      return redirectWithFlashError(req, res, 'Not authorized to remove this item.', `/categories/${req.params.id}`);
-    }
-
-    await Category.updateOne(
-      { _id: req.params.id },
-      { $pull: { items: { item: itemId } } }
-    );
-
-    res.redirect(`/categories/${req.params.id}`);
-  } catch (err) {
-    console.error('Error removing item from category:', err);
-    return redirectWithFlashError(req, res, 'Server error while removing item.', `/categories/${req.params.id}`);
+router.post('/:id/remove-item', ensureAuthenticated, validateObjectId(), validateItemId, formAction(
+  pageOf,
+  'Server error while removing item.',
+  async (req, res) => {
+    await collections.removeItemFromCategory(req.params.id, req.user._id, req.body.itemId);
+    return res.redirect(pageOf(req));
   }
-});
-router.post('/:id/update-role', ensureAuthenticated, async (req, res) => {
-    try {
-      const { userId, newRole } = req.body;
+));
 
-      const category = await Category.findById(req.params.id);
-      if (!category || !category.user.equals(req.user._id)) {
-        return redirectWithFlashError(req, res, 'Not authorized.', `/categories/${req.params.id}`);
-      }
-
-      const entry = category.usersAdded.find(e => e.user.toString() === userId);
-      if (entry) {
-        entry.role = newRole;
-        await category.save();
-      }
-
-      return res.redirect(`/categories/${category._id}`);
-    } catch (err) {
-      console.error('Error updating shared user role:', err);
-      return redirectWithFlashError(req, res, 'Could not update access right now.', `/categories/${req.params.id}`);
-    }
-  });
-  router.post('/:id/remove-user', ensureAuthenticated, async (req, res) => {
-    try {
-      const { userId } = req.body;
-
-      const category = await Category.findById(req.params.id);
-      if (!category || !category.user.equals(req.user._id)) {
-        return redirectWithFlashError(req, res, 'Not authorized.', `/categories/${req.params.id}`);
-      }
-
-      category.usersAdded = category.usersAdded.filter(e => e.user.toString() !== userId);
-      await category.save();
-
-      return res.redirect(`/categories/${category._id}`);
-    } catch (err) {
-      console.error('Error removing shared user:', err);
-      return redirectWithFlashError(req, res, 'Could not remove user right now.', `/categories/${req.params.id}`);
-    }
-  });
-  
-
-
-// Add item to category. The item is already in the DB — written by the scrape
-// worker during preview — so this route never scrapes and never accepts
-// listing content from the browser.
-const Item = require('../models/Items');
-const { addItemToCategory } = require('../services/categoryService');
-
-router.post('/:id/add-item', ensureAuthenticated, async (req, res) => {
-  const { itemId, link } = req.body;
-  const category = await Category.findById(req.params.id);
-
-  if (!category) return redirectWithFlashError(req, res, 'Collection not found.', '/categories');
-
-  const isOwner = category.user.equals(req.user._id);
-  const isEditor = category.usersAdded.some(
-    e => e.user.equals(req.user._id) && e.role === 'editor'
-  );
-
-  if (!isOwner && !isEditor) {
-    return redirectWithFlashError(req, res, 'You do not have permission to add items.', `/categories/${req.params.id}`);
+// POST /categories/:id/update-role
+router.post('/:id/update-role', ensureAuthenticated, validateObjectId(), validateMemberRole, formAction(
+  pageOf,
+  'Could not update access right now.',
+  async (req, res) => {
+    await collections.updateMemberRole(req.params.id, req.user._id, req.body.userId, req.body.newRole);
+    return res.redirect(pageOf(req));
   }
+));
 
-  try {
-    const item = itemId
-      ? await Item.findById(itemId)
-      : (link ? await Item.findOne({ link }) : null);
-
-    if (!item) {
-      return redirectWithFlashError(req, res, 'That listing is no longer available to add. Please preview it again.', `/categories/${req.params.id}`);
-    }
-
-    await addItemToCategory(category._id, item._id, req.user._id);
-
-    res.redirect(`/categories/${category._id}`);
-  } catch (err) {
-    console.error('Error adding item to shared category:', err);
-    return redirectWithFlashError(req, res, 'Error adding item', `/categories/${req.params.id}`);
+// POST /categories/:id/remove-user
+router.post('/:id/remove-user', ensureAuthenticated, validateObjectId(), validateMemberId, formAction(
+  pageOf,
+  'Could not remove user right now.',
+  async (req, res) => {
+    await collections.removeMember(req.params.id, req.user._id, req.body.userId);
+    return res.redirect(pageOf(req));
   }
-});
+));
+
+// POST /categories/:id/add-item — the item already exists (scraped during
+// preview, or created manually); the form only names it.
+router.post('/:id/add-item', ensureAuthenticated, validateObjectId(), formAction(
+  pageOf,
+  'Error adding item.',
+  async (req, res) => {
+    const item = await findSavableItem(req.user._id, { itemId: req.body.itemId, link: req.body.link });
+    if (!item) throw new HttpError(404, 'That listing is no longer available to add. Please preview it again.');
+
+    await collections.addItemForUser(req.params.id, item._id, req.user._id);
+    return res.redirect(pageOf(req));
+  }
+));
 
 module.exports = router;
