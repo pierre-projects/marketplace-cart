@@ -254,7 +254,7 @@ MarketplaceCart/
 │   ├── auth/  collections/  items/  listings/
 │   ├── dashboard.ejs  settings.ejs  index.ejs  error.ejs
 ├── public/
-│   ├── css/                      # tokens -> base -> components -> pages
+│   ├── css/                      # tokens -> base -> components -> layout -> pages
 │   ├── js/app.js                 # every page: theme, account menu, form behaviours
 │   ├── js/pages/                 # one ES module per page
 │   ├── js/lib/                   # api, dialog, disclosure, toast, item cards, add-listing…
@@ -267,9 +267,40 @@ MarketplaceCart/
 └── package.json
 ```
 
-Stylesheets load in order: `tokens.css` defines the custom properties, everything else consumes
-them. Themes and accents are applied by stamping `data-theme` / `data-accent` on `<html>` before the
-stylesheets load, so there is no flash on navigation.
+## Design system
+
+The look is "refined commerce": neutral white / near-black surfaces with hairline borders, so the
+listing photos carry the colour. The raspberry brand colour is reserved for primary actions, the
+active nav item, focus rings and the few figures that matter.
+
+**Stylesheets, in load order** (each layer may only use the ones before it):
+
+| File | Holds |
+|---|---|
+| `tokens.css` | Primitive ramps (`--gray-*`, `--rasp-*`) and the semantic tokens components use |
+| `base.css` | Reset, document type, focus ring, plain form controls, utilities |
+| `components.css` | Button, field, badge, alert/toast, item card, collection card, stats panel, menus, dialog, toolbar |
+| `layout.css` | Brand lockup, app shell (sidebar + mobile tab bar), page head, marketing navbar, footer |
+| `pages.css` | Rules only one page needs: landing, auth, settings, collection detail, error |
+
+**Rules**
+
+- Components read **semantic** tokens only: `--bg-surface`, `--text-muted`, `--border-subtle`,
+  `--accent`, `--danger-soft` and so on. A raw hex value or a `--gray-*` primitive in a component is
+  a bug: it will be wrong in one of the two themes.
+- Dark mode and the five accent presets (Settings) are token swaps in `tokens.css`. The inline script
+  in the layout `<head>` stamps `data-theme` / `data-accent` on `<html>` before first paint, so
+  there is no flash.
+- **Type:** Instrument Sans (Google Fonts) on a 14px body. Sizes come from `--text-xs` … `--text-4xl`,
+  each paired with an `--lh-*` line height. Money and counts use tabular numerals.
+- **Space:** a 4px grid, `--space-1` (4px) to `--space-20` (80px). Lay out sibling groups with
+  `gap`, not margins.
+- **Surfaces:** resting cards get a 1px `--border-subtle` and `--shadow-xs`; shadows grow only on
+  hover and for floating layers (menus, dialogs, toasts).
+- **Charts:** OfferUp and Facebook keep their brand hues (`--mkt-offerup`, `--mkt-facebook`); every
+  other marketplace takes `--chart-1` … `--chart-8` in order. The brand colour is never a chart colour.
+- **Motion** is short (120–280ms) and never required: a chart or panel must be complete with
+  animations paused, and `prefers-reduced-motion` turns them off.
 
 ## Routes
 

@@ -1,281 +1,286 @@
 /* ==========================================================================
-   Design tokens — the single source of truth for color, space, and type.
+   Marketplace Cart design tokens
 
-   Nothing outside this file may hardcode a color. Components read the ROLE
-   ALIASES (--surface-page, --text-primary, --border, …), never the raw ramp,
-   which is what makes the light/dark switch a single override block at the
-   bottom of this file rather than a second stylesheet.
+   Two layers:
+   1. Primitives: raw ramps (--gray-*, --rasp-*, ...). Never used by a
+      component directly.
+   2. Semantic tokens: what a value is FOR (--bg-surface, --text-muted,
+      --border-subtle, --accent, ...). Components read only these, so the dark
+      theme and the accent presets are a token swap, never a component edit.
+
+   Layout concept: a quiet, neutral shell (white and near-black with hairline
+   borders) where the listing photos carry the colour. The raspberry brand
+   colour is reserved for actions, the active nav item, focus, and key figures.
    ========================================================================== */
 
 :root {
-  /* ── Neutral ramp — warm, not blue-grey ─────────────────────────────── */
-  --n-0:   #ffffff;
-  --n-25:  #fafaf9;
-  --n-50:  #f4f4f5;
-  --n-100: #e9e9eb;
-  --n-200: #d4d4d8;
-  --n-300: #b8b8c0;
-  --n-400: #a1a1aa;
-  --n-500: #71717a;
-  --n-600: #52525b;
-  --n-700: #3f3f46;
-  --n-900: #18181b;
+  /* ── Primitives: neutrals ─────────────────────────────────────────────
+     A grey with a faint rose bias toward the brand, so the neutrals read as
+     chosen rather than default. */
+  --gray-0:   #ffffff;
+  --gray-25:  #fbfafb;
+  --gray-50:  #f6f5f7;
+  --gray-100: #efedf1;
+  --gray-150: #e7e5ea;
+  --gray-200: #dcd9e0;
+  --gray-300: #c5c1ca;
+  --gray-400: #9e99a5;
+  --gray-500: #78737f;
+  --gray-600: #5c5863;
+  --gray-700: #46424c;
+  --gray-800: #2d2a32;
+  --gray-850: #232027;
+  --gray-900: #1b191f;
+  --gray-925: #16151a;
+  --gray-950: #0f0e12;
 
-  /* ── Brand ──────────────────────────────────────────────────────────── */
-  --brand-50:  #fdf2f7;
-  --brand-100: #fbcfe3;
-  --brand-300: #f4a9c9;
-  --brand-600: #c2185b;
-  --brand-700: #9f1e52;
-  --brand-900: #6e1039;
+  /* ── Primitives: brand (raspberry) ─────────────────────────────────── */
+  --rasp-50:  #fdf2f6;
+  --rasp-100: #fbe4ee;
+  --rasp-200: #f7c9dc;
+  --rasp-300: #f09fc0;
+  --rasp-400: #e66d9c;
+  --rasp-500: #d6457f;
+  --rasp-600: #bd2766;
+  --rasp-700: #9e1d55;
+  --rasp-800: #801b48;
+  --rasp-900: #67193d;
 
-  /* ── Semantic ───────────────────────────────────────────────────────── */
-  --ok-bg:   #dcfce7;  --ok-fg:   #14532d;  --ok-dot:   #16a34a;
-  --warn-bg: #fef3c7;  --warn-fg: #78350f;  --warn-dot: #d97706;
-  --stop-bg: #fee2e2;  --stop-fg: #7f1d1d;  --stop-dot: #dc2626;
-  --idle-bg: #f4f4f5;  --idle-fg: #3f3f46;  --idle-dot: #a1a1aa;
+  /* ── Primitives: status ────────────────────────────────────────────── */
+  --green-50: #ecfdf3;  --green-600: #15803d;  --green-700: #116331;  --green-300: #6ee7a0;
+  --amber-50: #fffbeb;  --amber-600: #b45309;  --amber-700: #92400e;  --amber-300: #fcd34d;
+  --red-50:   #fef2f2;  --red-600:   #dc2626;  --red-700:   #b91c1c;  --red-300:   #fca5a5;
+  --blue-50:  #eff6ff;  --blue-600:  #2563eb;  --blue-700:  #1d4ed8;  --blue-300:  #93c5fd;
 
-  /* ── Platform tints ─────────────────────────────────────────────────── */
-  --p-offerup-bg: #e7f7ee;  --p-offerup-fg: #0b5132;
-  --p-fb-bg:      #e8f0fe;  --p-fb-fg:      #123a75;
-  --p-neutral-bg: #f4f4f5;  --p-neutral-fg: #3f3f46;
-  --p-offerup-chart: #00a87e;
-  --p-fb-chart:      #1877f2;
-  --p-neutral-chart: #71717a;
+  /* ── Semantic: backgrounds ─────────────────────────────────────────── */
+  --bg-canvas:       var(--gray-25);   /* behind everything */
+  --bg-surface:      var(--gray-0);    /* cards, panels, sidebar */
+  --bg-subtle:       var(--gray-50);   /* wells, table stripes, inputs at rest */
+  --bg-muted:        var(--gray-100);  /* placeholders, empty media */
+  --bg-hover:        var(--gray-50);
+  --bg-active:       var(--gray-100);
+  --bg-inverse:      var(--gray-900);
+  --bg-overlay:      rgb(15 14 18 / 0.48);
+  --bg-glass:        rgb(255 255 255 / 0.86);
 
-  /* ── Role aliases — everything else reads only these ────────────────── */
-  --surface-page:    var(--n-25);
-  --surface-card:    var(--n-0);
-  --surface-sunken:  var(--n-50);
-  --surface-raised:  var(--n-0);
-  --surface-inset:   var(--n-50);
-  --surface-input:   var(--n-0);
-  --surface-hover:   var(--n-50);
-  --surface-nav:     rgb(255 255 255 / 0.85);
+  /* ── Semantic: text ────────────────────────────────────────────────── */
+  --text-strong:     var(--gray-950);
+  --text-default:    var(--gray-850);
+  --text-muted:      var(--gray-600);
+  --text-subtle:     var(--gray-500);
+  --text-disabled:   var(--gray-400);
+  --text-inverse:    var(--gray-0);
 
-  --text-primary:    var(--n-900);
-  --text:            var(--n-900);
-  --text-secondary:  var(--n-600);
-  --text-muted:      var(--n-500);
-  --muted:           var(--n-500);
-  --text-faint:      var(--n-400);
-  --text-on-brand:   var(--n-0);
-  --on-accent:       var(--n-0);
+  /* ── Semantic: borders ─────────────────────────────────────────────── */
+  --border-subtle:   var(--gray-150);
+  --border-default:  var(--gray-200);
+  --border-strong:   var(--gray-300);
 
-  --border:          var(--n-100);
-  --border-strong:   var(--n-200);
-  --border-hover:    var(--n-300);
-  --border-muted:    var(--n-200);
-  --card-border:     var(--border);
+  /* ── Semantic: accent (brand) ──────────────────────────────────────── */
+  --accent:          var(--rasp-600);
+  --accent-hover:    var(--rasp-700);
+  --accent-fg:       var(--gray-0);    /* text on an accent fill */
+  --accent-soft:     color-mix(in srgb, var(--accent) 9%, var(--bg-surface));
+  --accent-soft-fg:  color-mix(in srgb, var(--accent) 82%, var(--text-strong));
+  --accent-border:   color-mix(in srgb, var(--accent) 32%, var(--bg-surface));
+  --focus-ring:      color-mix(in srgb, var(--accent) 45%, transparent);
 
-  --accent:          var(--brand-600);
-  --accent-hover:    var(--brand-700);
-  /* Derived from --accent so an accent preset only declares two values and
-     cannot leave the previous accent behind on borders and tints. */
-  --accent-deep:     color-mix(in srgb, var(--accent) 70%, #000);
-  --accent-tint:     color-mix(in srgb, var(--accent) 25%, var(--surface-card));
-  --accent-soft:     color-mix(in srgb, var(--accent) 8%, var(--surface-card));
+  /* ── Semantic: status ──────────────────────────────────────────────── */
+  --success:         var(--green-600);
+  --success-soft:    var(--green-50);
+  --success-fg:      var(--green-700);
+  --warning:         var(--amber-600);
+  --warning-soft:    var(--amber-50);
+  --warning-fg:      var(--amber-700);
+  --danger:          var(--red-600);
+  --danger-hover:    var(--red-700);
+  --danger-soft:     var(--red-50);
+  --danger-fg:       var(--red-700);
+  --info-soft:       var(--blue-50);
+  --info-fg:         var(--blue-700);
 
-  --danger:          var(--stop-dot);
-  --danger-strong:   var(--stop-dot);
-  --danger-text:     var(--stop-fg);
-  --danger-bg:       var(--stop-bg);
-  --danger-border:   #fca5a5;
-  --success:         var(--ok-dot);
-  --success-text:    var(--ok-fg);
-  --success-bg:      var(--ok-bg);
-  --success-border:  #86efac;
+  /* ── Data visualisation ────────────────────────────────────────────────
+     Marketplaces with a known identity keep their brand hue; everything else
+     takes the categorical ramp in order. The brand raspberry is deliberately
+     absent so a chart never looks like a button. */
+  --mkt-offerup:   #00a37a;
+  --mkt-facebook:  #1877f2;
+  --chart-1: #6366f1;
+  --chart-2: #d97706;
+  --chart-3: #0891b2;
+  --chart-4: #9333ea;
+  --chart-5: #65a30d;
+  --chart-6: #ea580c;
+  --chart-7: #0f766e;
+  --chart-8: #64748b;
+  --chart-track: var(--gray-100);
 
-  /* Translucent layers. These were 39 hardcoded rgba() literals that each
-     assumed a dark canvas — a white 8% hover is invisible on a light page. */
-  --overlay-hover:   rgb(24 24 27 / 0.04);
-  --overlay-press:   rgb(24 24 27 / 0.08);
-  --overlay-strong:  rgb(24 24 27 / 0.12);
-  --scrim:           rgb(9 9 11 / 0.55);
-  --glass:           rgb(255 255 255 / 0.92);
-  --accent-wash:     color-mix(in srgb, var(--accent) 10%, transparent);
-  --accent-edge:     color-mix(in srgb, var(--accent) 30%, transparent);
-  --danger-wash:     rgb(220 38 38 / 0.10);
-  --success-wash:    rgb(22 163 74 / 0.12);
-
-  /* ── Type ───────────────────────────────────────────────────────────── */
-  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI Variable',
+  /* ── Typography ────────────────────────────────────────────────────── */
+  --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI Variable Text',
                'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, 'SFMono-Regular', 'Cascadia Mono', Consolas, monospace;
 
-  --fs-label: 0.6875rem;
-  --fs-meta:  0.8125rem;
-  --fs-body:  0.875rem;
-  --fs-lead:  1rem;
-  --fs-price: 1.125rem;
-  --fs-h3:    1.25rem;
-  --fs-h2:    1.5rem;
-  --fs-h1:    2rem;
-  --fs-stat:  1.75rem;
-  --fs-hero:  3rem;
+  /* Size / line-height pairs. Body copy is 14px, the density of a working app. */
+  --text-xs:   0.75rem;    --lh-xs:   1rem;       /* 12 / 16  captions, badges */
+  --text-sm:   0.8125rem;  --lh-sm:   1.25rem;    /* 13 / 20  meta, labels */
+  --text-base: 0.875rem;   --lh-base: 1.375rem;   /* 14 / 22  body */
+  --text-md:   1rem;       --lh-md:   1.5rem;     /* 16 / 24  lead, card titles */
+  --text-lg:   1.125rem;   --lh-lg:   1.625rem;   /* 18 / 26  section titles */
+  --text-xl:   1.5rem;     --lh-xl:   2rem;       /* 24 / 32  page titles */
+  --text-2xl:  2rem;       --lh-2xl:  2.5rem;     /* 32 / 40  key figures */
+  --text-3xl:  2.75rem;    --lh-3xl:  3.125rem;   /* 44 / 50  marketing headings */
+  --text-4xl:  3.5rem;     --lh-4xl:  3.75rem;    /* 56 / 60  landing hero */
 
-  /* ── Space — 4px base ───────────────────────────────────────────────── */
-  --sp-1: 4px;   --sp-2: 8px;   --sp-3: 12px;  --sp-4: 16px;
-  --sp-5: 24px;  --sp-6: 32px;  --sp-7: 48px;  --sp-8: 64px;
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
 
-  /* ── Radius ─────────────────────────────────────────────────────────── */
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --r-sm: var(--radius-sm);
-  --r-md: var(--radius-md);
-  --r-lg: var(--radius-lg);
-  --r-full: 999px;
+  --tracking-tight:  -0.02em;
+  --tracking-tighter:-0.035em;
+  --tracking-caps:    0.06em;
 
-  /* ── Elevation — resting cards get none ─────────────────────────────── */
-  --shadow-sm: 0 1px 2px rgb(24 24 27 / 0.05);
-  --shadow-md: 0 4px 12px rgb(24 24 27 / 0.08);
-  --shadow-lg: 0 16px 40px rgb(24 24 27 / 0.16);
+  /* ── Space (4px grid) ──────────────────────────────────────────────── */
+  --space-0-5: 2px;
+  --space-1:   4px;
+  --space-1-5: 6px;
+  --space-2:   8px;
+  --space-3:   12px;
+  --space-4:   16px;
+  --space-5:   20px;
+  --space-6:   24px;
+  --space-8:   32px;
+  --space-10:  40px;
+  --space-12:  48px;
+  --space-16:  64px;
+  --space-20:  80px;
 
-  /* ── Motion ─────────────────────────────────────────────────────────── */
+  /* ── Radius ────────────────────────────────────────────────────────── */
+  --radius-xs:   4px;
+  --radius-sm:   6px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-full: 999px;
+
+  /* ── Elevation. Resting cards use a border, not a shadow. ──────────── */
+  --shadow-xs: 0 1px 2px rgb(27 25 31 / 0.05);
+  --shadow-sm: 0 1px 3px rgb(27 25 31 / 0.08), 0 1px 2px rgb(27 25 31 / 0.04);
+  --shadow-md: 0 6px 16px -4px rgb(27 25 31 / 0.10), 0 2px 4px rgb(27 25 31 / 0.04);
+  --shadow-lg: 0 18px 40px -10px rgb(27 25 31 / 0.22), 0 4px 10px rgb(27 25 31 / 0.06);
+
+  /* ── Motion ────────────────────────────────────────────────────────── */
   --dur-fast: 120ms;
-  --dur-base: 200ms;
-  --dur-slow: 320ms;
+  --dur-base: 180ms;
+  --dur-slow: 280ms;
   --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* ── Layering ───────────────────────────────────────────────────────── */
-  --z-nav: 100;
+  /* ── Layout ────────────────────────────────────────────────────────── */
+  --sidebar-width: 240px;
+  --content-max:   1180px;
+  --control-sm:    32px;
+  --control-md:    38px;
+  --control-lg:    46px;
+
+  /* ── Layering ──────────────────────────────────────────────────────── */
+  --z-sticky:   50;
+  --z-nav:      100;
   --z-dropdown: 200;
-  --z-overlay: 300;
-  --z-modal: 310;
-  --z-toast: 400;
+  --z-modal:    300;
+  --z-toast:    400;
 
-  /* ── Focus ──────────────────────────────────────────────────────────── */
-  --focus-ring: 2px solid var(--accent);
-  --focus-ring-offset: 2px;
+  color-scheme: light;
 }
 
 /* ==========================================================================
-   Dark theme
+   Dark theme. Only semantic tokens change.
 
-   Only role aliases are reassigned. The ramp above is untouched, so a
-   component never needs to know which theme is active.
-
-   Applies when the user has explicitly chosen dark, or when the system
-   prefers dark and they have not explicitly chosen light.
+   The inline script in the layout <head> resolves "system" to light or dark
+   and stamps data-theme before first paint, so this attribute block is the
+   only one needed.
    ========================================================================== */
-
 :root[data-theme='dark'] {
-  --surface-page:   #0b0b0f;
-  --surface-card:   #16161c;
-  --surface-sunken: #1e1e26;
-  --surface-raised: #1e1e26;
-  --surface-inset:  #101016;
-  --surface-input:  #16161c;
-  --surface-hover:  #26262f;
-  --surface-nav:    rgb(11 11 15 / 0.85);
+  --bg-canvas:       var(--gray-950);
+  --bg-surface:      var(--gray-925);
+  --bg-subtle:       #1a191e;
+  --bg-muted:        var(--gray-850);
+  --bg-hover:        #1f1e24;
+  --bg-active:       #26242b;
+  --bg-inverse:      var(--gray-50);
+  --bg-overlay:      rgb(0 0 0 / 0.62);
+  --bg-glass:        rgb(22 21 26 / 0.86);
 
-  --text-primary:   #e9e9ec;
-  --text:           #e9e9ec;
-  --text-secondary: #a1a1aa;
-  --text-muted:     #8b8b96;
-  --muted:          #8b8b96;
-  --text-faint:     #6c6c78;
-  --text-on-brand:  #16161c;
-  --on-accent:      #16161c;
+  --text-strong:     #f4f3f6;
+  --text-default:    #e3e1e7;
+  --text-muted:      #aaa6b1;
+  --text-subtle:     #8b8792;
+  --text-disabled:   #5f5b66;
+  --text-inverse:    var(--gray-950);
 
-  --border:         #26262f;
-  --border-strong:  #33333f;
-  --border-hover:   #44444f;
-  --border-muted:   #33333f;
-  --card-border:    var(--border);
+  --border-subtle:   #24222a;
+  --border-default:  #2e2c35;
+  --border-strong:   #3d3a44;
 
-  /* #c2185b fails contrast on near-black; dark needs a lighter brand. */
-  --accent:         #e8578f;
-  --accent-hover:   #f4a9c9;
-  --accent-deep:    color-mix(in srgb, var(--accent) 70%, #fff);
-  --accent-tint:    color-mix(in srgb, var(--accent) 30%, var(--surface-card));
-  --accent-soft:    color-mix(in srgb, var(--accent) 12%, var(--surface-card));
+  /* The light-theme raspberry is too dark on near-black; step up the ramp. */
+  --accent:          var(--rasp-400);
+  --accent-hover:    var(--rasp-300);
+  --accent-fg:       #1f0a14;
+  --accent-soft:     color-mix(in srgb, var(--accent) 14%, var(--bg-surface));
+  --accent-soft-fg:  color-mix(in srgb, var(--accent) 70%, var(--text-strong));
+  --accent-border:   color-mix(in srgb, var(--accent) 38%, var(--bg-surface));
+  --focus-ring:      color-mix(in srgb, var(--accent) 55%, transparent);
 
-  --danger:         #f87171;
-  --danger-strong:  #f87171;
-  --danger-text:    #fecaca;
-  --danger-bg:      #2a1416;
-  --danger-border:  #5b2f34;
-  --success:        #4ade80;
-  --success-text:   #bbf7d0;
-  --success-bg:     #0f2e1d;
-  --success-border: #2e5f46;
+  --success:         #34d27b;
+  --success-soft:    #10261a;
+  --success-fg:      var(--green-300);
+  --warning:         #f5b23d;
+  --warning-soft:    #2a2010;
+  --warning-fg:      var(--amber-300);
+  --danger:          #f87171;
+  --danger-hover:    var(--red-300);
+  --danger-soft:     #2b1416;
+  --danger-fg:       var(--red-300);
+  --info-soft:       #111d33;
+  --info-fg:         var(--blue-300);
 
-  --ok-bg:   #0f2e1d;  --ok-fg:   #86efac;
-  --warn-bg: #2e2410;  --warn-fg: #fcd34d;
-  --stop-bg: #2a1416;  --stop-fg: #fecaca;
-  --idle-bg: #1e1e26;  --idle-fg: #a1a1aa;
+  --mkt-offerup:   #2fd3a5;
+  --mkt-facebook:  #5b9bff;
+  --chart-1: #8b8ef8;
+  --chart-2: #f2a93b;
+  --chart-3: #38c2e0;
+  --chart-4: #c084fc;
+  --chart-5: #9bd34a;
+  --chart-6: #fb8a4c;
+  --chart-7: #2dd4bf;
+  --chart-8: #94a3b8;
+  --chart-track: var(--gray-850);
 
-  --p-offerup-bg: #0d2c1d;  --p-offerup-fg: #86efac;
-  --p-fb-bg:      #12203a;  --p-fb-fg:      #bfdbfe;
-  --p-neutral-bg: #1e1e26;  --p-neutral-fg: #a1a1aa;
-  --p-offerup-chart: #34d399;
-  --p-fb-chart:      #60a5fa;
-  --p-neutral-chart: #a1a1aa;
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.45);
+  --shadow-md: 0 8px 20px -6px rgb(0 0 0 / 0.6);
+  --shadow-lg: 0 22px 48px -12px rgb(0 0 0 / 0.75);
 
-  --overlay-hover:  rgb(255 255 255 / 0.06);
-  --overlay-press:  rgb(255 255 255 / 0.10);
-  --overlay-strong: rgb(255 255 255 / 0.16);
-  --scrim:          rgb(0 0 0 / 0.7);
-  --glass:          rgb(22 22 28 / 0.92);
-  --accent-wash:    color-mix(in srgb, var(--accent) 14%, transparent);
-  --accent-edge:    color-mix(in srgb, var(--accent) 38%, transparent);
-  --danger-wash:    rgb(248 113 113 / 0.14);
-  --success-wash:   rgb(74 222 128 / 0.14);
-
-  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
-  --shadow-md: 0 4px 12px rgb(0 0 0 / 0.5);
-  --shadow-lg: 0 16px 40px rgb(0 0 0 / 0.6);
+  color-scheme: dark;
 }
 
-/* There is deliberately no @media (prefers-color-scheme: dark) copy of the
-   block above. The inline script in the layout <head> resolves the system
-   preference and stamps data-theme on <html> before the first paint, so the
-   attribute selector is always the one that matters. Keeping a media-query
-   twin meant maintaining seventy lines of palette in two places. */
-
 /* ==========================================================================
-   Accent presets
+   Accent presets (Settings → Accent colour)
 
-   Selected with data-accent on <html>, exactly like data-theme.
-
-   The selectors are attribute-based rather than anchored to :root, so ANY
-   element carrying data-accent gets that accent locally. That is what lets a
-   settings swatch preview its own colour through the very token the app uses
-   — anchoring these to :root made every swatch render the current global
-   accent instead of the one it represents.
-
-   Each preset declares only --accent and --accent-hover; every derived accent
-   token is computed from them with color-mix, so a preset cannot leave stale
-   colour from the previous accent behind.
-
-   Two values per theme is not redundancy: dark surfaces need a lighter, less
-   saturated accent to stay readable. The default pink is the proof — #c2185b
-   measures about 3.0:1 on #16161c and is unusable there.
-
-   Every value clears 4.5:1 against its own surface (#ffffff light, #16161c
-   dark); the harness recomputes this rather than trusting the comment.
+   Attribute-scoped, not anchored to :root, so a swatch carrying
+   data-accent previews its own colour through the same token the app uses.
+   Each preset sets --accent and --accent-hover per theme; every derived
+   accent token recomputes from them. Every value clears 4.5:1 against its
+   surface.
    ========================================================================== */
+[data-accent='default'] { --accent: var(--rasp-600); --accent-hover: var(--rasp-700); }
+[data-accent='blue']    { --accent: #2557d6;         --accent-hover: #1d46b0; }
+[data-accent='teal']    { --accent: #0f766e;         --accent-hover: #115e59; }
+[data-accent='violet']  { --accent: #6d3fd6;         --accent-hover: #5a2fb8; }
+[data-accent='amber']   { --accent: #b45309;         --accent-hover: #92400e; }
 
-[data-accent='default'] { --accent: #c2185b; --accent-hover: #9f1e52; }
-[data-accent='blue']    { --accent: #1d4ed8; --accent-hover: #1e40af; }
-[data-accent='teal']    { --accent: #0f766e; --accent-hover: #115e59; }
-[data-accent='violet']  { --accent: #6d28d9; --accent-hover: #5b21b6; }
-[data-accent='amber']   { --accent: #b45309; --accent-hover: #92400e; }
-
-/* Dark. The descendant form covers swatches inside a dark page; the compound
-   form covers <html> itself carrying the accent. */
-:root[data-theme='dark'][data-accent='default'],
-:root[data-theme='dark'] [data-accent='default'] { --accent: #e8578f; --accent-hover: #f4a9c9; }
-:root[data-theme='dark'][data-accent='blue'],
-:root[data-theme='dark'] [data-accent='blue']    { --accent: #7aa5ff; --accent-hover: #a8c4ff; }
-:root[data-theme='dark'][data-accent='teal'],
-:root[data-theme='dark'] [data-accent='teal']    { --accent: #5eead4; --accent-hover: #99f6e4; }
-:root[data-theme='dark'][data-accent='violet'],
-:root[data-theme='dark'] [data-accent='violet']  { --accent: #c4b5fd; --accent-hover: #ddd6fe; }
-:root[data-theme='dark'][data-accent='amber'],
-:root[data-theme='dark'] [data-accent='amber']   { --accent: #fbbf24; --accent-hover: #fcd34d; }
-
-/* Text sitting ON the accent. Dark-theme accents are light, so they need dark
-   text; the light-theme accents need white. */
-:root[data-theme='dark'] { --text-on-brand: #16161c; --on-accent: #16161c; }
+:root[data-theme='dark'][data-accent='default'], :root[data-theme='dark'] [data-accent='default'] { --accent: var(--rasp-400); --accent-hover: var(--rasp-300); }
+:root[data-theme='dark'][data-accent='blue'],    :root[data-theme='dark'] [data-accent='blue']    { --accent: #7ea6ff; --accent-hover: #a9c3ff; }
+:root[data-theme='dark'][data-accent='teal'],    :root[data-theme='dark'] [data-accent='teal']    { --accent: #4fd8c4; --accent-hover: #8debdc; }
+:root[data-theme='dark'][data-accent='violet'],  :root[data-theme='dark'] [data-accent='violet']  { --accent: #b9a3fb; --accent-hover: #d4c6fd; }
+:root[data-theme='dark'][data-accent='amber'],   :root[data-theme='dark'] [data-accent='amber']   { --accent: #f6b94a; --accent-hover: #fad283; }
