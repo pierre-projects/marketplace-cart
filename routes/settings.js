@@ -8,7 +8,7 @@ const { ensureAuthenticated } = require('../middleware/authMiddleware');
  * tokens.css, and the swatch preview reads the same token the app does.
  */
 const ACCENTS = [
-  { key: 'default', label: 'Pink' },
+  { key: 'default', label: 'Raspberry' },
   { key: 'blue', label: 'Blue' },
   { key: 'teal', label: 'Teal' },
   { key: 'violet', label: 'Violet' },

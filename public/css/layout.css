@@ -1,0 +1,291 @@
+/* ==========================================================================
+   Layout: the app shell (signed in), the marketing shell (signed out), and
+   the page scaffolding every view shares.
+   ========================================================================== */
+
+/* ── Brand lockup ──────────────────────────────────────────────────── */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2-5, 10px);
+  color: var(--text-strong);
+  text-decoration: none;
+}
+.brand:hover { color: var(--text-strong); text-decoration: none; }
+.brand__mark {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  background: var(--accent);
+  border-radius: 9px;
+  color: var(--accent-fg);
+  box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.12), var(--shadow-xs);
+}
+.brand__mark svg { width: 18px; height: 18px; }
+.brand__name {
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+  white-space: nowrap;
+}
+.brand__name span { color: var(--text-subtle); font-weight: var(--weight-semibold); }
+
+/* ── App shell (signed in) ─────────────────────────────────────────── */
+.app-shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  min-height: 100dvh;
+}
+.app-shell__content { min-width: 0; }
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  padding: var(--space-4) var(--space-3);
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-subtle);
+}
+.sidebar__head { padding: var(--space-1) var(--space-2) var(--space-6); }
+
+.sidebar__nav ul { display: grid; gap: var(--space-0-5); }
+.sidebar__link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.sidebar__link:hover { background: var(--bg-hover); color: var(--text-strong); text-decoration: none; }
+.sidebar__link.is-active { background: var(--accent-soft); color: var(--accent-soft-fg); font-weight: var(--weight-semibold); }
+.sidebar__link.is-active .sidebar__icon { color: var(--accent); }
+.sidebar__icon { display: inline-grid; color: var(--text-subtle); }
+.sidebar__link:hover .sidebar__icon { color: var(--text-strong); }
+
+.sidebar__foot { margin-top: auto; padding-top: var(--space-3); border-top: 1px solid var(--border-subtle); }
+.sidebar__account {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-md);
+  color: var(--text-default);
+  text-decoration: none;
+}
+.sidebar__account:hover, .sidebar__account[aria-current='page'] { background: var(--bg-hover); color: var(--text-strong); text-decoration: none; }
+.sidebar__account .account-avatar { width: 28px; height: 28px; font-size: var(--text-sm); }
+.sidebar__account .account-name { flex: 1; min-width: 0; overflow: hidden; font-weight: var(--weight-medium); white-space: nowrap; text-overflow: ellipsis; }
+.sidebar__gear { color: var(--text-subtle); }
+
+/* Mobile tab bar, shown instead of the rail below 860px. */
+.tabbar { display: none; }
+
+@media (max-width: 860px) {
+  .app-shell { grid-template-columns: 1fr; }
+  .sidebar {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-nav);
+    flex-direction: row;
+    align-items: center;
+    height: auto;
+    padding: var(--space-2) max(var(--space-4), env(safe-area-inset-right, 0px)) var(--space-2) max(var(--space-4), env(safe-area-inset-left, 0px));
+    background: var(--bg-glass);
+    border-right: 0;
+    border-bottom: 1px solid var(--border-subtle);
+    backdrop-filter: blur(12px);
+  }
+  .sidebar__head { padding: 0; }
+  .sidebar__nav { display: none; }
+  .sidebar__foot { margin: 0 0 0 auto; padding: 0; border: 0; }
+  .sidebar__account .account-name, .sidebar__gear { display: none; }
+
+  .tabbar {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: var(--z-nav);
+    display: block;
+    padding: var(--space-1) max(var(--space-2), env(safe-area-inset-right, 0px)) max(var(--space-1), env(safe-area-inset-bottom, 0px)) max(var(--space-2), env(safe-area-inset-left, 0px));
+    background: var(--bg-glass);
+    border-top: 1px solid var(--border-subtle);
+    backdrop-filter: blur(12px);
+  }
+  .tabbar ul { display: grid; grid-template-columns: repeat(3, 1fr); }
+  .tabbar__link {
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    padding: var(--space-1-5) 0;
+    border-radius: var(--radius-md);
+    color: var(--text-subtle);
+    font-size: 11px;
+    font-weight: var(--weight-medium);
+    text-decoration: none;
+  }
+  .tabbar__link:hover { color: var(--text-strong); text-decoration: none; }
+  .tabbar__link.is-active { color: var(--accent); }
+  .app-shell__content { padding-bottom: 72px; }
+}
+
+/* ── Page scaffolding ──────────────────────────────────────────────── */
+.container {
+  width: 100%;
+  max-width: calc(var(--content-max) + 2 * var(--space-10));
+  margin-inline: auto;
+  padding: var(--space-8) max(var(--space-10), env(safe-area-inset-right, 0px)) var(--space-16) max(var(--space-10), env(safe-area-inset-left, 0px));
+}
+.container > * + * { margin-top: var(--space-8); }
+.container > .flash-stack + * { margin-top: 0; }
+@media (max-width: 860px) {
+  .container { padding: var(--space-6) max(var(--space-4), env(safe-area-inset-right, 0px)) var(--space-10) max(var(--space-4), env(safe-area-inset-left, 0px)); }
+  .container > * + * { margin-top: var(--space-6); }
+}
+
+.page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+.page-head h1 { font-size: var(--text-xl); line-height: var(--lh-xl); letter-spacing: var(--tracking-tighter); }
+.page-head__main { display: grid; flex: 1 1 320px; gap: var(--space-1); min-width: 0; }
+.page-head__sub { margin-top: var(--space-1); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.page-head__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  width: fit-content;
+  margin-bottom: var(--space-1);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+.back-link:hover { color: var(--text-strong); text-decoration: none; }
+
+.section-head, .collections-section__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.section-head h2, .collections-section__title { font-size: var(--text-lg); letter-spacing: var(--tracking-tight); }
+.section-head a { font-size: var(--text-sm); font-weight: var(--weight-semibold); }
+
+.dashboard-section, .collections-section { display: grid; gap: var(--space-4); }
+
+/* ── Marketing shell (signed out) ──────────────────────────────────── */
+.page-shell { display: flex; flex-direction: column; min-height: 100dvh; }
+.page-shell > main { flex: 1; }
+
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-nav);
+  background: var(--bg-glass);
+  border-bottom: 1px solid var(--border-subtle);
+  backdrop-filter: blur(12px);
+}
+.nav-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  max-width: calc(var(--content-max) + 2 * var(--space-10));
+  min-height: 64px;
+  margin-inline: auto;
+  padding-inline: max(var(--space-6), env(safe-area-inset-left, 0px)) max(var(--space-6), env(safe-area-inset-right, 0px));
+}
+.nav-center { display: flex; flex: 1; gap: var(--space-1); }
+.nav-center--empty { flex: 1; }
+.nav-link {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-weight: var(--weight-medium);
+}
+.nav-link:hover, .nav-link.active { background: var(--bg-hover); color: var(--text-strong); text-decoration: none; }
+.nav-right { display: flex; align-items: center; gap: var(--space-2); }
+.nav-auth { display: flex; align-items: center; gap: var(--space-2); }
+@media (max-width: 560px) {
+  .nav-container { gap: var(--space-3); padding-inline: max(var(--space-4), env(safe-area-inset-left, 0px)) max(var(--space-4), env(safe-area-inset-right, 0px)); }
+  .nav-container .brand__name { font-size: var(--text-base); }
+  .nav-container .brand__mark { width: 28px; height: 28px; }
+  .nav-auth { gap: var(--space-1); }
+}
+@media (max-width: 400px) {
+  /* The theme follows the system by default; the switch returns at 401px. */
+  .nav-auth .theme-cycle { display: none; }
+}
+
+/* Account menu (navbar, signed in on marketing pages). */
+.account-menu { position: relative; }
+.account-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--control-md);
+  padding: 0 var(--space-2);
+  background: transparent;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-full);
+  color: var(--text-strong);
+  font-weight: var(--weight-medium);
+}
+.account-trigger:hover { background: var(--bg-hover); }
+.account-chevron { color: var(--text-subtle); font-size: 11px; }
+.account-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: var(--z-dropdown);
+  display: grid;
+  gap: var(--space-2);
+  width: 240px;
+  padding: var(--space-3);
+  animation: pop-in var(--dur-base) var(--ease-out);
+}
+.account-dropdown-label { color: var(--text-subtle); font-size: var(--text-xs); }
+.account-dropdown-name { color: var(--text-strong); font-weight: var(--weight-semibold); }
+.account-dropdown .theme-toggle { width: 100%; }
+.account-dropdown .theme-toggle__opt { flex: 1; }
+.account-signout-btn {
+  width: 100%;
+  min-height: 34px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--text-default);
+  font-weight: var(--weight-medium);
+  text-align: left;
+  padding: 0 var(--space-2);
+}
+.account-signout-btn:hover { background: var(--bg-hover); }
+
+/* ── Footer (signed out) ───────────────────────────────────────────── */
+.site-footer { border-top: 1px solid var(--border-subtle); background: var(--bg-surface); }
+.site-footer__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4) var(--space-8);
+  max-width: calc(var(--content-max) + 2 * var(--space-10));
+  margin-inline: auto;
+  padding: var(--space-8) max(var(--space-6), env(safe-area-inset-right, 0px)) var(--space-8) max(var(--space-6), env(safe-area-inset-left, 0px));
+}
+.site-footer__tagline { flex: 1; min-width: 220px; color: var(--text-subtle); font-size: var(--text-sm); }
+.site-footer__links { display: flex; gap: var(--space-5); }
+.site-footer__links a { color: var(--text-muted); font-size: var(--text-sm); font-weight: var(--weight-medium); }
+.site-footer__links a:hover { color: var(--text-strong); text-decoration: none; }

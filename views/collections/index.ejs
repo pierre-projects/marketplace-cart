@@ -18,7 +18,7 @@
     <% if (userCategories.length === 0) { %>
       <div class="collections-first-use">
         <%- include('../partials/collection-create', {
-          returnTo: '/categories',
+          returnTo: '/collections',
           inputId: 'newCollectionName',
           open: true,
           label: 'Create your first collection',
@@ -36,7 +36,7 @@
         <% }) %>
 
         <%- include('../partials/collection-create', {
-          returnTo: '/categories',
+          returnTo: '/collections',
           inputId: 'newCollectionName'
         }) %>
       </div>
@@ -113,4 +113,4 @@
   </div>
 </dialog>
 
-<script type="module" src="/js/pages/categories.js"></script>
+<script type="module" src="/js/pages/collections.js"></script>

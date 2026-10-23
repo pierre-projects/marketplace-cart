@@ -45,7 +45,9 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.cspNonce}'`],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      // Google Fonts serves the Instrument Sans stylesheet and font files.
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
       imgSrc: ["'self'", 'data:', 'https:'],
       connectSrc: ["'self'"],
       formAction: ["'self'"],
@@ -191,6 +193,12 @@ async function startServer() {
       next();
     });
 
+    // Collections used to live at /categories. 308 keeps the method, so old
+    // bookmarks, shared public links and any stale form all still land.
+    // Ahead of the CSRF check: the form is re-sent, token included, to the
+    // new URL, where it is checked.
+    app.use('/categories', (req, res) => res.redirect(308, `/collections${req.url === '/' ? '' : req.url}`));
+
     // Every state-changing request below must carry the session's token.
     app.use(csrfProtection);
 
@@ -199,7 +207,7 @@ async function startServer() {
     app.use('/auth', require('./routes/auth'));       // Signup/Login
     app.use('/items', require('./routes/items'));     // Preview, save, manual listings
     app.use('/listings', require('./routes/listings'));
-    app.use('/categories', require('./routes/categories'));
+    app.use('/collections', require('./routes/collections'));
     app.use('/settings', require('./routes/settings'));
 
     app.use(notFound);

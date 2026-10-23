@@ -8,15 +8,13 @@
   const _nav = [
     { href: '/dashboard',  key: 'dashboard',  label: 'Dashboard' },
     { href: '/listings',   key: 'listings',   label: 'Saved items' },
-    { href: '/categories', key: 'categories', label: 'Collections' },
+    { href: '/collections', key: 'collections', label: 'Collections' },
   ];
   const _username = (user && user.username) ? user.username : 'Account';
 %>
 <aside class="sidebar">
   <div class="sidebar__head">
-    <a class="sidebar__brand brand-logo" href="/dashboard" aria-label="Marketplace Cart Dashboard">
-      <img class="brand-logo__image" src="/images/marketplacecart-transparent.png" alt="">
-    </a>
+    <%- include('brand', { href: '/dashboard', label: 'Marketplace Cart dashboard' }) %>
   </div>
 
   <nav class="sidebar__nav" aria-label="Primary">

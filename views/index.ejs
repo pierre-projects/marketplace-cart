@@ -1,182 +1,243 @@
 <% const signedIn = typeof user !== 'undefined' && user; %>
+<link rel="stylesheet" href="/css/landing.css">
 
-<main id="main" class="landing">
-  <section class="landing-hero" aria-labelledby="hero-title">
-    <div class="landing-hero__inner">
-      <div class="landing-hero__copy">
-        <% if (signedIn) { %>
-          <p class="eyebrow">Welcome back</p>
-          <h1 id="hero-title">Ready to keep building your cart?</h1>
-          <p class="landing-lead">
-            Jump into your dashboard to add fresh listings, organize collections,
-            and see everything you have saved in one place.
-          </p>
-          <div class="landing-ctas">
-            <a href="/dashboard" class="btn btn--primary btn--lg">Go to dashboard</a>
-          </div>
-        <% } else { %>
-          <p class="eyebrow">Save from OfferUp + Facebook</p>
-          <h1 id="hero-title">Every marketplace find, saved in one cart</h1>
-          <p class="landing-lead">
-            Paste a listing link and Marketplace Cart pulls in the title, price and
-            photos for you. Sort what you find into collections and keep track of
-            what it all adds up to.
-          </p>
-          <div class="landing-ctas">
-            <a href="/auth/register" class="btn btn--primary btn--lg">Create an account</a>
-            <a href="#how-it-works" class="btn btn--secondary btn--lg">See how it works</a>
-          </div>
-        <% } %>
+<%
+  // Product shots are real captures of the app (demo account), one per theme.
+  // Both are in the markup; landing.css shows the one matching data-theme.
+  // The hidden variant is always lazy: browsers skip lazy images that are
+  // display:none, so each visitor downloads only their theme's screenshot.
+  const shot = (name, alt, attrs = '') => {
+    const darkAttrs = attrs.replace('fetchpriority="high"', '').replace('loading="lazy"', '') + ' loading="lazy"';
+    return `
+    <img class="shot shot--light" src="/images/landing/app-${name}-light.webp" alt="${alt}" ${attrs}>
+    <img class="shot shot--dark" src="/images/landing/app-${name}-dark.webp" alt="" aria-hidden="true" ${darkAttrs}>`;
+  };
+
+  // Listing photos: Unsplash License, saved under public/images/landing.
+  const mosaic = [
+    { img: 'armchair',      title: 'Danish teak lounge chair', price: '$340', market: 'OfferUp',   kind: 'offerup' },
+    { img: 'credenza',      title: 'Walnut sideboard',         price: '$480', market: 'Facebook',  kind: 'fb' },
+    { img: 'lounge-chairs', title: 'Bouclé accent chairs',     price: '$275', market: 'eBay',      kind: 'other' },
+    { img: 'desk',          title: 'Oak writing desk',         price: '$190', market: 'Craigslist', kind: 'other' },
+    { img: 'dining-set',    title: 'Solid wood dining set',    price: '$420', market: 'OfferUp',   kind: 'offerup' },
+    { img: 'sofa',          title: 'Peach velvet loveseat',    price: 'Free', market: 'Mercari',   kind: 'other' },
+    { img: 'sideboard',     title: 'Low cabinet',              price: '$150', market: 'Facebook',  kind: 'fb' },
+    { img: 'lamp-table',    title: 'Side table and lamp',      price: '$85',  market: 'Etsy',      kind: 'other' },
+  ];
+%>
+
+<main id="main" class="lp">
+
+  <!-- ── Hero ─────────────────────────────────────────────────────── -->
+  <section class="lp-hero" aria-labelledby="hero-title">
+    <div class="lp-hero__glow" aria-hidden="true"></div>
+
+    <div class="lp-wrap lp-hero__copy">
+      <% if (signedIn) { %>
+        <a class="lp-pill" href="/dashboard"><span class="lp-pill__tag">Welcome back</span> Your cart is waiting <span aria-hidden="true">→</span></a>
+        <h1 id="hero-title" class="lp-hero__title">Pick up where <em>you left off</em></h1>
+        <p class="lp-hero__lead">Add fresh listings, sort them into collections and see what everything you are eyeing adds up to.</p>
+        <div class="lp-hero__ctas">
+          <a href="/dashboard" class="btn btn--primary btn--lg">Go to dashboard</a>
+          <a href="/listings" class="btn btn--secondary btn--lg">Saved items</a>
+        </div>
+      <% } else { %>
+        <a class="lp-pill" href="#how"><span class="lp-pill__tag">New</span> Save listings from any site <span aria-hidden="true">→</span></a>
+        <h1 id="hero-title" class="lp-hero__title">Every marketplace find, <em>in one cart</em></h1>
+        <p class="lp-hero__lead">
+          Paste a link from OfferUp, Facebook Marketplace or anywhere else. Marketplace Cart pulls in
+          the photos and price, files it into a collection, and keeps a running total of what it all costs.
+        </p>
+        <div class="lp-hero__ctas">
+          <a href="/auth/register" class="btn btn--primary btn--lg">Start your cart</a>
+          <a href="#how" class="btn btn--secondary btn--lg">See how it works</a>
+        </div>
+        <p class="lp-hero__note">Free to use. No browser extension needed.</p>
+      <% } %>
+    </div>
+
+    <%
+      // The stage: a framed product shot that flattens as the page scrolls,
+      // with three live UI fragments floating over it at different depths.
+    %>
+    <div class="lp-wrap lp-stage" data-hero-stage>
+      <div class="lp-frame" data-tilt>
+        <div class="lp-frame__bar" aria-hidden="true">
+          <span></span><span></span><span></span>
+          <div class="lp-frame__url">marketplacecart.app/dashboard</div>
+        </div>
+        <div class="lp-frame__screen">
+          <%- shot('dashboard', 'The Marketplace Cart dashboard: a $1,940 cart total split across six marketplaces, and the most recently saved listings', 'width="2880" height="1800" fetchpriority="high"') %>
+        </div>
       </div>
 
-      <%
-        // Decorative product preview, built in markup rather than shipped as a
-        // screenshot so it follows the active theme and accent. Its sample text
-        // is meaningless to a screen reader, hence aria-hidden.
-      %>
-      <div class="hero-mock" aria-hidden="true">
-        <div class="hero-mock__bar">
-          <span class="hero-mock__dot"></span>
-          <span class="hero-mock__field">Paste a listing link…</span>
-          <span class="hero-mock__action">Save</span>
+      <div class="lp-float lp-float--card" data-parallax="-0.12" aria-hidden="true">
+        <div class="lp-float__inner">
+          <img src="/images/landing/armchair.jpg" alt="" width="800" height="600">
+          <div class="lp-mini">
+            <span class="lp-mini__market"><i style="--dot: var(--mkt-offerup)"></i>OfferUp</span>
+            <strong>Danish teak lounge chair</strong>
+            <span class="lp-mini__price">$340.00</span>
+          </div>
         </div>
-        <div class="hero-mock__grid">
-          <div class="hero-mock__tile">
-            <div class="hero-mock__photo hero-mock__photo--a"></div>
-            <div class="hero-mock__line"></div>
-            <div class="hero-mock__meta">
-              <span class="hero-mock__price">$240</span>
-              <span class="hero-mock__tag hero-mock__tag--offerup">OfferUp</span>
-            </div>
-          </div>
-          <div class="hero-mock__tile">
-            <div class="hero-mock__photo hero-mock__photo--b"></div>
-            <div class="hero-mock__line"></div>
-            <div class="hero-mock__meta">
-              <span class="hero-mock__price">$85</span>
-              <span class="hero-mock__tag hero-mock__tag--fb">Facebook</span>
-            </div>
-          </div>
-          <div class="hero-mock__tile">
-            <div class="hero-mock__photo hero-mock__photo--c"></div>
-            <div class="hero-mock__line"></div>
-            <div class="hero-mock__meta">
-              <span class="hero-mock__price">$1,120</span>
-              <span class="hero-mock__tag hero-mock__tag--offerup">OfferUp</span>
-            </div>
-          </div>
-          <div class="hero-mock__tile">
-            <div class="hero-mock__photo hero-mock__photo--d"></div>
-            <div class="hero-mock__line"></div>
-            <div class="hero-mock__meta">
-              <span class="hero-mock__price">$60</span>
-              <span class="hero-mock__tag hero-mock__tag--fb">Facebook</span>
-            </div>
-          </div>
+      </div>
+
+      <div class="lp-float lp-float--toast" data-parallax="-0.22" aria-hidden="true">
+        <div class="lp-float__inner">
+          <span class="lp-check">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>
+          </span>
+          <span><strong>Saved</strong> to Living room</span>
+        </div>
+      </div>
+
+      <div class="lp-float lp-float--total" data-parallax="-0.06" aria-hidden="true">
+        <div class="lp-float__inner">
+          <span class="lp-float__label">Cart total</span>
+          <strong class="tnum">$1,940</strong>
+          <span class="lp-bars"><i style="--w: 28%; --c: var(--mkt-offerup)"></i><i style="--w: 32%; --c: var(--mkt-facebook)"></i><i style="--w: 14%; --c: var(--chart-1)"></i><i style="--w: 10%; --c: var(--chart-2)"></i><i style="--w: 16%; --c: var(--chart-3)"></i></span>
         </div>
       </div>
     </div>
   </section>
 
   <% if (!signedIn) { %>
-    <section id="how-it-works" class="landing-section" aria-labelledby="features-title" tabindex="-1">
-      <div class="landing-section__inner">
-        <h2 id="features-title" class="landing-section__title">What it does</h2>
-        <ul class="landing-features">
-          <li class="landing-feature">
-            <span class="landing-feature__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
-                   stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M10 13a4 4 0 0 0 5.7.3l3-3a4 4 0 0 0-5.7-5.7L11.6 6"/>
-                <path d="M14 11a4 4 0 0 0-5.7-.3l-3 3a4 4 0 0 0 5.7 5.7L12.4 18"/>
-              </svg>
-            </span>
-            <h3>Save from a link</h3>
-            <p>
-              Drop in a listing URL and the title, price, photos and marketplace
-              come along with it. No copying details by hand.
-            </p>
-          </li>
-          <li class="landing-feature">
-            <span class="landing-feature__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
-                   stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-              </svg>
-            </span>
-            <h3>Group into collections</h3>
-            <p>
-              Sort saved items into collections — a room you are furnishing, a
-              project, a gift list — and move things between them any time.
-            </p>
-          </li>
-          <li class="landing-feature">
-            <span class="landing-feature__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
-                   stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 19V10"/><path d="M10 19V5"/><path d="M16 19v-6"/><path d="M22 19H2"/>
-              </svg>
-            </span>
-            <h3>See the totals</h3>
-            <p>
-              Your dashboard keeps a running count and value of what you have
-              saved, broken down by the marketplace it came from.
-            </p>
-          </li>
-        </ul>
-      </div>
-    </section>
 
-    <section class="landing-section landing-section--sunken" aria-labelledby="steps-title">
-      <div class="landing-section__inner">
-        <h2 id="steps-title" class="landing-section__title">How it works</h2>
-        <ol class="landing-steps">
-          <li class="landing-step">
-            <span class="landing-step__num" aria-hidden="true">1</span>
-            <h3>Paste a listing URL</h3>
-            <p>Copy the link from the marketplace app or site and paste it in.</p>
+  <!-- ── Works with (marquee) ─────────────────────────────────────── -->
+  <section class="lp-marquee" aria-label="Works with">
+    <p class="lp-marquee__label">Save from the places you already shop</p>
+    <div class="lp-marquee__viewport">
+      <% const markets = ['OfferUp', 'Facebook Marketplace', 'eBay', 'Craigslist', 'Mercari', 'Etsy', 'Poshmark', 'Nextdoor', 'Kijiji', 'Depop']; %>
+      <% for (let copy = 0; copy < 2; copy++) { %>
+        <ul class="lp-marquee__track"<% if (copy) { %> aria-hidden="true"<% } %>>
+          <% markets.forEach((m) => { %><li><%= m %></li><% }) %>
+        </ul>
+      <% } %>
+    </div>
+  </section>
+
+  <!-- ── How it works: sticky story ───────────────────────────────── -->
+  <section id="how" class="lp-section lp-story" aria-labelledby="how-title" tabindex="-1">
+    <div class="lp-wrap">
+      <header class="lp-head" data-reveal>
+        <p class="eyebrow">How it works</p>
+        <h2 id="how-title" class="lp-head__title">From a link in a group chat to a plan for the whole room</h2>
+      </header>
+
+      <div class="lp-story__grid" data-story>
+        <ol class="lp-story__steps">
+          <li class="lp-step is-active" data-story-step="0">
+            <span class="lp-step__num">01</span>
+            <h3>Paste any listing link</h3>
+            <p>OfferUp and Facebook Marketplace listings are read automatically: photos, price, condition and location.</p>
           </li>
-          <li class="landing-step">
-            <span class="landing-step__num" aria-hidden="true">2</span>
-            <h3>It gets saved for you</h3>
-            <p>Photo, price and marketplace are pulled from the page automatically.</p>
+          <li class="lp-step" data-story-step="1">
+            <span class="lp-step__num">02</span>
+            <h3>Anything else, prefilled for you</h3>
+            <p>A link from eBay, Craigslist or a shop page opens a short form, already filled from the page. Check it and save.</p>
           </li>
-          <li class="landing-step">
-            <span class="landing-step__num" aria-hidden="true">3</span>
-            <h3>Organize and compare</h3>
-            <p>File it into a collection and watch the totals update as you go.</p>
+          <li class="lp-step" data-story-step="2">
+            <span class="lp-step__num">03</span>
+            <h3>See where the money goes</h3>
+            <p>Every collection keeps a live total, split by marketplace, so you know what the living room really costs before you commit.</p>
           </li>
         </ol>
-      </div>
-    </section>
 
-    <%
-      // Kept honest against utils/scrapers/index.js — only the marketplaces
-      // with a scraper behind them are listed.
-    %>
-    <section class="landing-section landing-supported" aria-labelledby="supported-title">
-      <div class="landing-section__inner">
-        <h2 id="supported-title" class="landing-supported__title">Works with</h2>
-        <ul class="landing-supported__list">
-          <li><span class="landing-supported__dot landing-supported__dot--offerup" aria-hidden="true"></span>OfferUp</li>
-          <li><span class="landing-supported__dot landing-supported__dot--fb" aria-hidden="true"></span>Facebook Marketplace</li>
-        </ul>
-        <p class="landing-supported__note">More marketplaces are on the way.</p>
+        <div class="lp-story__media" aria-hidden="true">
+          <div class="lp-story__sticky">
+            <figure class="lp-story__shot is-active" data-story-shot="0">
+              <div class="lp-frame lp-frame--plain"><div class="lp-frame__screen"><%- shot('saved', '', 'width="2880" height="1800" loading="lazy"') %></div></div>
+            </figure>
+            <figure class="lp-story__shot lp-story__shot--dialog" data-story-shot="1">
+              <div class="lp-dialog-shot"><%- shot('manual', '', 'width="1120" height="1520" loading="lazy"') %></div>
+            </figure>
+            <figure class="lp-story__shot lp-story__shot--panel" data-story-shot="2">
+              <div class="lp-panel-shot"><%- shot('breakdown', '', 'width="2240" height="716" loading="lazy"') %></div>
+            </figure>
+            <div class="lp-story__progress"><span data-story-progress></span></div>
+          </div>
+        </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section class="landing-cta" aria-labelledby="cta-title">
-      <div class="landing-cta__inner">
-        <h2 id="cta-title">Start your cart</h2>
-        <p>It takes one link to see how it works.</p>
-        <a href="/auth/register" class="btn btn--primary btn--lg">Create an account</a>
+  <!-- ── Mosaic: the real photos ─────────────────────────────────── -->
+  <section class="lp-section lp-mosaic" aria-labelledby="mosaic-title">
+    <div class="lp-wrap">
+      <header class="lp-head lp-head--center" data-reveal>
+        <p class="eyebrow">Collections</p>
+        <h2 id="mosaic-title" class="lp-head__title">Everything you are eyeing, sorted the way you think about it</h2>
+        <p class="lp-head__lead">A room you are furnishing, a project, a gift list. One listing can live in several collections, and every one keeps its own total.</p>
+      </header>
+
+      <ul class="lp-mosaic__grid">
+        <% mosaic.forEach((m, i) => { %>
+          <li class="lp-tile lp-tile--<%= i %>" data-reveal style="--i: <%= i % 4 %>">
+            <div class="lp-tile__media" data-parallax="<%= [0.04, -0.05, 0.06, -0.03][i % 4] %>">
+              <img src="/images/landing/<%= m.img %>.jpg" alt="<%= m.title %>" width="800" height="600" loading="lazy">
+            </div>
+            <div class="lp-tile__meta">
+              <span class="lp-mini__market"><i style="--dot: <%= m.kind === 'offerup' ? 'var(--mkt-offerup)' : m.kind === 'fb' ? 'var(--mkt-facebook)' : 'var(--chart-' + ((i % 3) + 1) + ')' %>"></i><%= m.market %></span>
+              <span class="lp-tile__price<%= m.price === 'Free' ? ' is-free' : '' %>"><%= m.price %></span>
+            </div>
+          </li>
+        <% }) %>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ── Numbers ─────────────────────────────────────────────────── -->
+  <section class="lp-section lp-numbers" aria-labelledby="numbers-title">
+    <div class="lp-wrap lp-numbers__grid">
+      <header class="lp-head" data-reveal>
+        <p class="eyebrow">Totals that stay honest</p>
+        <h2 id="numbers-title" class="lp-head__title">Free is free. Unknown is unknown.</h2>
+        <p class="lp-head__lead">
+          A listing with no readable price is never counted as $0, and a genuinely free one is never
+          lost. The total you see is the total you will pay.
+        </p>
+      </header>
+      <dl class="lp-stats">
+        <div class="lp-stat" data-reveal style="--i: 0">
+          <dt>Marketplaces read automatically</dt>
+          <dd><span data-count-to="2">2</span></dd>
+        </div>
+        <div class="lp-stat" data-reveal style="--i: 1">
+          <dt>Sites you can save from</dt>
+          <dd>Any</dd>
+        </div>
+        <div class="lp-stat" data-reveal style="--i: 2">
+          <dt>Collections an item can be in</dt>
+          <dd><span>No limit</span></dd>
+        </div>
+        <div class="lp-stat" data-reveal style="--i: 3">
+          <dt>Accent colours, light and dark</dt>
+          <dd><span data-count-to="5">5</span></dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ── Closing call to action ──────────────────────────────────── -->
+  <section class="lp-section lp-cta" aria-labelledby="cta-title">
+    <div class="lp-wrap">
+      <div class="lp-cta__card" data-reveal>
+        <div class="lp-cta__photos" aria-hidden="true">
+          <img src="/images/landing/sofa.jpg" alt="" width="800" height="600" loading="lazy" data-parallax="0.08" style="object-position: 50% 85%">
+          <img src="/images/landing/lamp-table.jpg" alt="" width="800" height="600" loading="lazy" data-parallax="-0.06">
+        </div>
+        <div class="lp-cta__copy">
+          <h2 id="cta-title">Start your cart</h2>
+          <p>It takes one link to see how it works.</p>
+          <a href="/auth/register" class="btn btn--primary btn--lg">Create a free account</a>
+        </div>
       </div>
-    </section>
+    </div>
+  </section>
+
   <% } %>
 </main>
 
-<%
-  // Included here rather than in the layout: the auth pages are full-height
-  // split screens, and a footer bolted under them would only add scroll.
-%>
 <%- include('partials/footer') %>
+
+<script type="module" src="/js/pages/landing.js"></script>

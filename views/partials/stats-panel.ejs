@@ -26,6 +26,16 @@
     return { kind: 'neutral', logo: null, alt: String(platform || 'Unknown marketplace') };
   };
 
+  // Known marketplaces keep their brand hue; the rest take the categorical
+  // chart ramp in order, so two "other" sites never share a colour.
+  let _nextChart = 0;
+  const _colorFor = (kind) => {
+    if (kind === 'offerup') return 'var(--mkt-offerup)';
+    if (kind === 'facebook') return 'var(--mkt-facebook)';
+    _nextChart += 1;
+    return `var(--chart-${((_nextChart - 1) % 8) + 1})`;
+  };
+
   const _segments = _rows.map((row, index) => {
     const items = Array.isArray(row.items) ? row.items : [];
     const basis = _usesValue ? (Number(row.subtotal) || 0) : items.length;
@@ -37,12 +47,14 @@
     const offset = _usedPercent;
     _usedPercent = Number((_usedPercent + percent).toFixed(1));
 
+    const meta = _platformMeta(row.platform);
     return {
       row,
       items,
       percent,
       offset,
-      meta: _platformMeta(row.platform)
+      meta,
+      color: _colorFor(meta.kind)
     };
   });
 
@@ -82,7 +94,7 @@
                         cx="21" cy="21" r="15.9155" pathLength="100"
                         stroke-dasharray="<%= segment.percent %> <%= Math.max(0, 100 - segment.percent) %>"
                         stroke-dashoffset="<%= -segment.offset %>"
-                        style="--segment-delay: <%= index * 70 %>ms"
+                        style="--segment-delay: <%= index * 70 %>ms; --seg: <%= segment.color %>"
                         data-chart-segment="<%= index %>"></circle>
               <% }) %>
             </svg>
@@ -94,7 +106,7 @@
 
           <ul class="stats-panel__legend" aria-label="Marketplace breakdown">
             <% _segments.forEach((segment, index) => { %>
-              <li>
+              <li style="--seg: <%= segment.color %>">
                 <button type="button"
                         class="stats-panel__legend-button stats-panel__legend-button--<%= segment.meta.kind %>"
                         data-chart-control="<%= index %>"

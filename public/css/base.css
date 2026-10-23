@@ -1,103 +1,124 @@
 /* ==========================================================================
-   Base — reset, elements, typography, layout primitives, forms
+   Base: reset, document typography, focus, utilities.
+   Reads semantic tokens only (tokens.css).
    ========================================================================== */
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-behavior: smooth;
 }
 
 body {
-  background-color: var(--surface-page);
-  color: var(--text-primary);
-  font-family: var(--font-sans);
-  font-size: var(--fs-body);
-  line-height: 1.6;
   margin: 0;
-  padding: 0;
+  min-height: 100dvh;
+  background: var(--bg-canvas);
+  color: var(--text-default);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--lh-base);
+  font-feature-settings: 'cv11', 'ss01';
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
-/* Two weights only — 400 and 600. Heavier headings are the loudest tell of a
-   page that never had a typographer near it. Negative tracking above 20px. */
+img, svg, video { display: block; max-width: 100%; }
+img { height: auto; }
+
+h1, h2, h3, h4, p, ul, ol, dl, dd, figure, fieldset { margin: 0; }
+ul[class], ol[class], nav ul, nav ol { padding: 0; list-style: none; }
+fieldset { padding: 0; border: 0; min-width: 0; }
+legend { padding: 0; }
+
 h1, h2, h3, h4 {
-  font-weight: 600;
-  margin: 0;
+  color: var(--text-strong);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
   text-wrap: balance;
 }
+h1 { font-size: var(--text-xl);  line-height: var(--lh-xl); }
+h2 { font-size: var(--text-lg);  line-height: var(--lh-lg); }
+h3 { font-size: var(--text-md);  line-height: var(--lh-md); }
+h4 { font-size: var(--text-base); line-height: var(--lh-base); }
 
-h1 { font-size: var(--fs-h1); letter-spacing: -0.022em; line-height: 1.2; }
-h2 { font-size: var(--fs-h2); letter-spacing: -0.018em; line-height: 1.25; }
-h3 { font-size: var(--fs-h3); letter-spacing: -0.012em; line-height: 1.3; }
-h4 { font-size: var(--fs-lead); }
-
-/* Money and counts. Proportional digits make a column of prices jitter. */
-.tnum,
-.card__price,
-.stats-panel__figure,
-.stats-panel__amount {
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: 'tnum' 1;
-}
-
-.eyebrow {
-  font-size: var(--fs-label);
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.muted { color: var(--text-muted); }
-
-/* Prose measure — descriptions previously ran the full viewport width. */
-.prose { max-width: 65ch; }
-
-.container {
-  width: min(1200px, calc(100% - 2.5rem));
-  margin: 0 auto;
-  padding: var(--sp-6) 0 var(--sp-8);
-}
-
-/* Vertical rhythm primitive, replacing ad-hoc margins. */
-.stack > * + * { margin-top: var(--stack-gap, var(--sp-4)); }
-.stack-lg { --stack-gap: var(--sp-6); }
-
-/* The workhorse grid: photo-first cards, auto-fitting to the container. */
-.grid-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: var(--sp-4);
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.page-head {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--sp-4);
-  flex-wrap: wrap;
-  padding-block: var(--sp-2) var(--sp-5);
-}
+p { text-wrap: pretty; }
+strong, b { font-weight: var(--weight-semibold); color: var(--text-strong); }
 
 a {
   color: var(--accent);
   text-decoration: none;
+  text-underline-offset: 3px;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+hr {
+  height: 1px;
+  margin: 0;
+  border: 0;
+  background: var(--border-subtle);
 }
 
-a:hover {
-  text-decoration: underline;
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+
+::selection { background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--text-strong); }
+
+/* One visible keyboard focus treatment everywhere: a soft ring outside the
+   element, so it never shifts layout. */
+:focus { outline: none; }
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
 }
 
-img { max-width: 100%; }
+/* ── Plain form controls ───────────────────────────────────────────────
+   Any input that is not a .field__control still looks like part of the
+   system (toolbar search, inline forms, the settings dialog). */
+input[type='text'], input[type='email'], input[type='password'], input[type='search'],
+input[type='url'], input[type='number'], select, textarea {
+  min-height: var(--control-md);
+  padding: 0 var(--space-3);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+  color: var(--text-strong);
+  font-size: var(--text-base);
+  transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+}
+textarea { padding-block: var(--space-2); line-height: var(--lh-base); }
+select {
+  appearance: none;
+  padding-right: var(--space-8);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 20 20' fill='none' stroke='%2378737f' stroke-width='1.8'%3E%3Cpath d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  cursor: pointer;
+}
+input::placeholder, textarea::placeholder { color: var(--text-subtle); }
+input:hover, select:hover, textarea:hover { border-color: var(--border-strong); }
+input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+input[type='checkbox'], input[type='radio'] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
 
-/* Visible only to screen readers, until focused. */
+/* ── Utilities ─────────────────────────────────────────────────────── */
 .sr-only {
-  position: absolute;
+  position: absolute !important;
   width: 1px; height: 1px;
   padding: 0; margin: -1px;
   overflow: hidden;
@@ -107,87 +128,34 @@ img { max-width: 100%; }
 }
 
 .skip-link {
-  position: absolute;
-  left: var(--sp-3);
-  top: -100%;
+  position: fixed;
+  top: var(--space-3);
+  left: var(--space-3);
   z-index: var(--z-toast);
-  background: var(--surface-card);
-  color: var(--text-primary);
-  border: 1px solid var(--border-strong);
+  padding: var(--space-2) var(--space-4);
+  background: var(--bg-inverse);
+  color: var(--text-inverse);
   border-radius: var(--radius-md);
-  padding: var(--sp-2) var(--sp-4);
-  font-weight: 600;
-  transition: top var(--dur-fast) var(--ease-out);
+  transform: translateY(-200%);
 }
+.skip-link:focus { transform: none; }
 
-.skip-link:focus-visible {
-  top: var(--sp-3);
-  text-decoration: none;
-}
+.tnum { font-variant-numeric: tabular-nums; }
+.muted { color: var(--text-muted); }
+.stack { display: grid; gap: var(--space-4); }
+.is-hidden { display: none !important; }
+[hidden] { display: none !important; }
 
-@supports not ((backdrop-filter: blur(2px))) {
-  .navbar {
-    background: var(--surface-nav);
-  }
-}
-
-@media (max-width: 640px) {
-  .container {
-    width: min(1200px, calc(100% - 1.5rem));
-    padding: 1.5rem 0 2rem;
-  }
-}
-
-input[type="text"],
-  input[type="url"],
-  input[type="email"],
-  select {
-  background-color: var(--surface-inset);
-  color: var(--text);
-  padding: 0.6rem 1rem;
-  margin: 0.5rem 0;
-  width: 100%;
-  max-width: 350px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-  font-size: var(--fs-body);
-  transition: border 0.2s;
-}
-
-input:focus,
-  select:focus {
-  border-color: var(--accent);
-  outline: none;
-}
-
-a:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-@keyframes btn-spin {
-  to { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
-/* ==========================================================================
-   Focus visibility
-
-   Every interactive element previously matched `outline: none` on :focus with
-   only a 1px border-color change as replacement, which left keyboard users with
-   no usable indicator. :focus-visible keeps pointer clicks clean while giving
-   keyboard navigation a real ring.
-   ========================================================================== */
-
-:where(a, button, input, select, textarea, [tabindex]):focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-ring-offset);
-  border-radius: var(--radius-sm);
+.eyebrow {
+  color: var(--accent);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

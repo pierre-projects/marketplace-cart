@@ -66,7 +66,7 @@ function initInlineRename() {
       // Nothing to save — restore the heading without a round trip.
       if (!next || next === original) return revert();
       done = true;
-      postForm(`/categories/${categoryId}/edit`, { name: next, returnTo: window.location.pathname });
+      postForm(`/collections/${categoryId}/edit`, { name: next, returnTo: window.location.pathname });
     };
 
     input.addEventListener('keydown', (e) => {

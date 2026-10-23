@@ -21,7 +21,7 @@ async function saveAssignments(form) {
   btn.disabled = true;
   btn.textContent = 'Saving...';
   try {
-    await api(`/items/${itemId}/assign-categories`, { method: 'POST', json: { categoryIds } });
+    await api(`/items/${itemId}/assign-collections`, { method: 'POST', json: { categoryIds } });
     toast('Collections updated', { type: 'success' });
     const count = form.closest('.category-picker')?.querySelector('.cat-count');
     if (count) count.textContent = String(categoryIds.length);
