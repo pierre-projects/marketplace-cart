@@ -37,6 +37,7 @@
   <% } %>
 
   <form class="collection-create__form" action="/categories/create" method="POST">
+    <%- csrfField %>
     <input type="hidden" name="returnTo" value="<%= collectionCreateReturnTo %>">
     <label for="<%= collectionCreateInputId %>">Collection name</label>
     <input type="text" id="<%= collectionCreateInputId %>" name="name"<% if (collectionCreateDescription) { %>

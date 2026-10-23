@@ -6,6 +6,8 @@
   <title><%= typeof title !== 'undefined' && title ? title : 'Marketplace Cart' %></title>
   <meta name="color-scheme" content="light dark">
   <link rel="icon" type="image/png" href="/favicon.png">
+  <%# Read by public/js/lib/api.js for the X-CSRF-Token header. %>
+  <meta name="csrf-token" content="<%= csrfToken %>">
 
   <%
     // Runs before any stylesheet so the correct theme is stamped on <html>
@@ -18,7 +20,7 @@
     // that with JS disabled everyone gets the light palette, which is the
     // light-first default the design system is built around anyway.
   %>
-  <script>
+  <script nonce="<%= cspNonce %>">
     (function () {
       try {
         var r = document.documentElement;
@@ -76,8 +78,7 @@
   <!-- Single live region for client-side feedback. -->
   <div id="toasts" class="toasts" aria-live="polite" aria-atomic="false"></div>
 
-  <script src="/js/navbar.js" defer></script>
-  <script src="/js/theme-toggle.js" defer></script>
+  <script type="module" src="/js/app.js"></script>
   <%- script %>
 </body>
 </html>

@@ -1,12 +1,9 @@
 <%
   const modalCategories = (typeof categories !== 'undefined' && Array.isArray(categories)) ? categories : [];
   const defaultCategory = modalCategories.find((category) => category.isDefault);
-  const defaultCategoryIdValue = defaultCategory ? defaultCategory._id : '';
   const defaultCategoryName = defaultCategory ? defaultCategory.name : 'All Listings';
-  // Keyed off the count of *assignable* categories, not the total. The old
-  // `length > 1` check rendered no select and no hidden fallback for a user
-  // whose only category was the auto-created default, so the form posted no
-  // category field at all.
+  // Keyed off the count of *assignable* categories, not the total: a user
+  // whose only category is the auto-created default gets no select at all.
   const assignableCategories = modalCategories.filter((category) => !category.isDefault);
   const modalReturnTo = typeof returnTo === 'string' && returnTo.trim() ? returnTo : '/dashboard';
   const modalFormAction = typeof formAction === 'string' && formAction.trim() ? formAction : '/items/add';
@@ -14,6 +11,21 @@
     ? String(lockedCategoryId).trim()
     : '';
   const useLockedCategory = Boolean(typeof lockCategorySelection !== 'undefined' && lockCategorySelection) && rawLockedCategoryId.length > 0;
+  const modalConditions = ['New', 'Like New', 'Good', 'Fair', 'Poor'];
+
+  // Both save forms take the same collection field. The default collection is
+  // resolved on the server; only the optional extra one is posted.
+  const esc = (v) => String(v).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+  const categoryField = (idSuffix) => {
+    if (useLockedCategory) return `<input type="hidden" name="category" value="${esc(rawLockedCategoryId)}">`;
+    if (!assignableCategories.length) return '';
+    const options = assignableCategories
+      .map(c => `<option value="${c._id}">${esc(c.name)}</option>`)
+      .join('');
+    return `<div class="field"><label class="field__label" for="category-${idSuffix}">Add to collection</label>`
+      + `<select class="field__control" name="category" id="category-${idSuffix}">`
+      + `<option value="">None (${esc(defaultCategoryName)} only)</option>${options}</select></div>`;
+  };
 %>
 
 <!-- Add Listing Modal -->
@@ -42,8 +54,11 @@
     <div class="modal-body">
 
       <!-- Step 1: URL Input -->
-      <div id="step1" class="modal-step is-active">
-        <p class="step1-hint">Paste a link from OfferUp or Facebook Marketplace and we will pull in the price and photos.</p>
+      <div id="step1" class="modal-step is-active" data-modal-step="link">
+        <p class="step1-hint">
+          Paste a link from OfferUp or Facebook Marketplace and we will pull in the price and photos.
+          Any other site works too — you check the details before saving.
+        </p>
         <form id="previewForm">
           <label for="link">Listing link</label>
           <input
@@ -52,20 +67,25 @@
             id="link"
             placeholder="https://offerup.com/item/..."
             autocomplete="off"
-            aria-label="Marketplace listing link"
+            aria-label="Listing link"
             required>
-          <button type="submit" class="btn btn--primary" style="width:100%;margin-top:0.75rem;" aria-busy="false">
+          <button type="submit" class="btn btn--primary btn--block modal-submit" aria-busy="false">
             Fetch details
           </button>
         </form>
         <div id="previewError" class="modal-error" role="alert" aria-live="polite">
           <i class="modal-error-icon" aria-hidden="true">&#9888;</i>
           <span id="previewErrorText"></span>
+          <button type="button" class="btn btn--ghost btn--sm" id="manualFromError" hidden>Add it manually</button>
         </div>
+        <p class="modal-alt">
+          No link, or a shop we do not cover?
+          <button type="button" class="link-btn" id="openManual">Enter the details yourself</button>
+        </p>
       </div>
 
-      <!-- Step 2: Preview & Confirm -->
-      <div id="step2" class="modal-step">
+      <!-- Step 2a: Preview & Confirm (scraped) -->
+      <div id="step2" class="modal-step" data-modal-step="preview">
         <div class="preview-card">
           <img id="previewImage" src="" alt="Item preview">
           <div class="preview-info">
@@ -80,28 +100,78 @@
         </div>
 
         <form id="finalAddForm" method="POST" action="<%= modalFormAction %>">
+          <%- csrfField %>
           <!-- The scraped item already exists in the DB; the form only names
                it. Listing content is never round-tripped through the client. -->
           <input type="hidden" name="itemId" id="finalItemId">
           <input type="hidden" name="link" id="finalLink">
-          <input type="hidden" name="defaultCategoryId" value="<%= defaultCategoryIdValue %>">
           <input type="hidden" name="returnTo" value="<%= modalReturnTo %>">
-
-          <% if (useLockedCategory) { %>
-            <input type="hidden" name="category" value="<%= rawLockedCategoryId %>">
-          <% } else if (assignableCategories.length > 0) { %>
-            <label for="category">Add to collection</label>
-            <select name="category" id="category">
-              <option value="">None (<%= defaultCategoryName %> only)</option>
-              <% assignableCategories.forEach(category => { %>
-                <option value="<%= category._id %>"><%= category.name %></option>
-              <% }) %>
-            </select>
-          <% } %>
+          <%- categoryField('preview') %>
 
           <div class="modal-actions">
-            <button type="button" id="backToStep1" class="btn btn--secondary">&#8592; Back</button>
+            <button type="button" class="btn btn--secondary" data-back-to-link>&#8592; Back</button>
             <button type="submit" class="btn btn--primary">Save item</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Step 2b: Manual entry, for any other site or no link at all -->
+      <div id="stepManual" class="modal-step" data-modal-step="manual">
+        <p class="step1-hint" id="manualStatus" aria-live="polite">Fill in what you know. Only the title is required.</p>
+
+        <form id="manualForm" class="manual-form" method="POST" action="/items/manual">
+          <%- csrfField %>
+          <input type="hidden" name="returnTo" value="<%= modalReturnTo %>">
+
+          <div class="field">
+            <label class="field__label" for="manualTitle">Title</label>
+            <input class="field__control" type="text" name="title" id="manualTitle" maxlength="300" required>
+          </div>
+
+          <div class="manual-form__row">
+            <div class="field">
+              <label class="field__label" for="manualPrice">Price</label>
+              <input class="field__control" type="text" inputmode="decimal" name="price" id="manualPrice" placeholder="0 for free, blank if unknown">
+            </div>
+            <div class="field">
+              <label class="field__label" for="manualCondition">Condition</label>
+              <select class="field__control" name="condition" id="manualCondition">
+                <option value="">Not stated</option>
+                <% modalConditions.forEach(c => { %><option value="<%= c %>"><%= c %></option><% }) %>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="manualLink">Link <span class="field__optional">(optional)</span></label>
+            <input class="field__control" type="url" name="link" id="manualLink" placeholder="https://www.ebay.com/itm/...">
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="manualImages">Photo links <span class="field__optional">(one per line)</span></label>
+            <textarea class="field__control" name="imageLinks" id="manualImages" rows="2" placeholder="https://..."></textarea>
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="manualLocation">Location</label>
+            <input class="field__control" type="text" name="location" id="manualLocation" maxlength="200">
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="manualDescription">Description</label>
+            <textarea class="field__control" name="description" id="manualDescription" rows="3" maxlength="5000"></textarea>
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="manualNotes">Your notes</label>
+            <textarea class="field__control" name="notes" id="manualNotes" rows="2" maxlength="2000" placeholder="Seller name, pickup time, measurements…"></textarea>
+          </div>
+
+          <%- categoryField('manual') %>
+
+          <div class="modal-actions">
+            <button type="button" class="btn btn--secondary" data-back-to-link>&#8592; Back</button>
+            <button type="submit" class="btn btn--primary">Save listing</button>
           </div>
         </form>
       </div>

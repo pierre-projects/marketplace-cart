@@ -12,6 +12,7 @@
       }) %>
 
       <form action="/auth/register" method="POST" data-auth-form>
+        <%- csrfField %>
         <div class="auth__fields">
           <div class="field">
             <label class="field__label" for="register-username">Username</label>
@@ -70,4 +71,4 @@
   <%- include('../partials/auth-brand', { pitchHeading: 'One cart for everything you are hunting for.' }) %>
 </main>
 
-<script src="/js/auth-form.js" defer></script>
+<script type="module" src="/js/pages/auth.js"></script>

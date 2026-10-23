@@ -116,6 +116,7 @@
             <h3 id="settingsNameHeading">Name</h3>
           </div>
           <form action="/categories/<%= category._id %>/edit" method="POST" class="collection-settings-form">
+            <%- csrfField %>
             <div class="collection-settings-input-row">
               <label class="sr-only" for="settingsRename">Collection name</label>
               <input type="text" id="settingsRename" name="name" value="<%= category.name %>"
@@ -131,6 +132,7 @@
             <h3 id="settingsVisibilityHeading">Visibility</h3>
           </div>
           <form action="/categories/<%= category._id %>/visibility" method="POST" class="collection-settings-visibility-form">
+            <%- csrfField %>
             <label class="collection-settings-toggle">
               <input type="checkbox" name="isPublic" value="true"
                      aria-describedby="settingsVisibilityHint"
@@ -150,6 +152,7 @@
             <h3 id="settingsShareHeading">Share</h3>
           </div>
           <form action="/categories/<%= category._id %>/share" method="POST" class="share-form">
+            <%- csrfField %>
             <label class="sr-only" for="settingsShareEmail">User email</label>
             <input type="email" id="settingsShareEmail" name="email" placeholder="User email" required>
             <label class="sr-only" for="settingsShareAccess">Access level</label>
@@ -172,17 +175,19 @@
                 <li class="shared-user-row">
                   <span class="shared-user-name"><%= entry.user.username %></span>
                   <form action="/categories/<%= category._id %>/update-role" method="POST" class="role-form">
+                    <%- csrfField %>
                     <input type="hidden" name="userId" value="<%= entry.user._id %>">
-                    <select name="newRole" onchange="this.form.submit()">
+                    <select name="newRole" data-autosubmit>
                       <option value="viewer" <%= entry.role === 'viewer' ? 'selected' : '' %>>Viewer</option>
                       <option value="editor" <%= entry.role === 'editor' ? 'selected' : '' %>>Editor</option>
                     </select>
                   </form>
                   <form action="/categories/<%= category._id %>/remove-user" method="POST">
+                    <%- csrfField %>
                     <input type="hidden" name="userId" value="<%= entry.user._id %>">
                     <button type="submit" class="remove-user-btn"
                             aria-label="Remove access for <%= entry.user.username %>"
-                            onclick="return confirm('Remove access for this user?')">&times;</button>
+                            data-confirm="Remove access for this user?">&times;</button>
                   </form>
                 </li>
               <% }) %>
@@ -200,8 +205,9 @@
               <p class="danger-warning">Items stay in Saved items.</p>
             </div>
             <form action="/categories/<%= category._id %>?_method=DELETE" method="POST">
+              <%- csrfField %>
               <button type="submit" class="btn btn--danger"
-                      onclick="return confirm('Delete this collection? The items stay in Saved items.')">
+                      data-confirm="Delete this collection? The items stay in Saved items.">
                 Delete
               </button>
             </form>
@@ -213,11 +219,4 @@
   </dialog>
 <% } %>
 
-<script src="/js/stats-panel.js"></script>
-<script src="/js/assign-categories.js"></script>
-<% if (canEdit) { %>
-  <script src="/js/dashboard.js"></script>
-<% } %>
-<% if (isOwner) { %>
-  <script src="/js/category-show.js"></script>
-<% } %>
+<script type="module" src="/js/pages/category-show.js"></script>

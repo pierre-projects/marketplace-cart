@@ -61,8 +61,10 @@
       <% } %>
     </dl>
 
-    <a href="/auth/logout" class="btn btn--secondary">Sign out</a>
+    <form method="POST" action="/auth/logout">
+      <%- csrfField %>
+      <button type="submit" class="btn btn--secondary">Sign out</button>
+    </form>
   </section>
 </main>
 
-<script src="/js/theme-toggle.js"></script>
