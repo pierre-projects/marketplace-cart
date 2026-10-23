@@ -223,6 +223,11 @@
   .nav-container { gap: var(--space-3); padding-inline: max(var(--space-4), env(safe-area-inset-left, 0px)) max(var(--space-4), env(safe-area-inset-right, 0px)); }
   .nav-container .brand__name { font-size: var(--text-base); }
   .nav-container .brand__mark { width: 28px; height: 28px; }
+  .nav-auth { gap: var(--space-1); }
+}
+@media (max-width: 400px) {
+  /* The theme follows the system by default; the switch returns at 401px. */
+  .nav-auth .theme-cycle { display: none; }
 }
 
 /* Account menu (navbar, signed in on marketing pages). */
