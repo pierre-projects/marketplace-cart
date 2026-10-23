@@ -3,8 +3,9 @@ const CONDITIONS = ['New', 'Like New', 'Good', 'Fair', 'Poor'];
 // Mapping keywords (lowercase) → canonical condition
 // Order matters: check more specific terms first ("like new" before "new")
 const CONDITION_PATTERNS = [
-  { keywords: ['like new', 'likenew'], canonical: 'Like New' },
-  { keywords: ['new', 'brand new', 'sealed'], canonical: 'New' },
+  // "nwot" before "new": new without tags is Poshmark/Depop shorthand for barely used.
+  { keywords: ['like new', 'likenew', 'nwot', 'new without tags'], canonical: 'Like New' },
+  { keywords: ['new', 'brand new', 'sealed', 'nwt'], canonical: 'New' },
   { keywords: ['very good', 'excellent'], canonical: 'Good' },
   { keywords: ['good'], canonical: 'Good' },
   { keywords: ['fair', 'acceptable', 'decent'], canonical: 'Fair' },

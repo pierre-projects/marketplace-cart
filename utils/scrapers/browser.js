@@ -1,7 +1,7 @@
 const fs = require('fs');
 const puppeteer = require('puppeteer');
 const logger = require('../logger');
-const { ScrapeError, CODES } = require('./errors');
+const { ScrapeError, CODES, asScrapeError } = require('./errors');
 
 // Chromium is heavy; bound how many browser contexts can be live at once.
 const MAX_CONCURRENT_CONTEXTS = 2;
@@ -180,8 +180,80 @@ function makeRelease() {
   };
 }
 
+
+// --- Rendered page helper ---
+
+const NAVIGATION_TIMEOUT_MS = 25000;
+// page.evaluate has no timeout of its own; a wedged renderer would hold a slot.
+const EVALUATE_TIMEOUT_MS = 15000;
+// Client-rendered sites inject their JSON-LD after the first paint.
+const SETTLE_SELECTOR_TIMEOUT_MS = 8000;
+const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+function withTimeout(promise, ms) {
+  let timer;
+  const timeout = new Promise((resolve, reject) => {
+    timer = setTimeout(() => reject(new ScrapeError(CODES.TIMEOUT)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+/**
+ * Load `url` in a fresh, isolated context and return `evaluateFn(arg)` run in
+ * the page. Owns the whole lifecycle — slot, context, timeouts, cleanup — so a
+ * scraper only describes what to read. Facebook predates this and keeps its own
+ * copy of the same steps.
+ *
+ * `waitFor` is an optional selector to wait for before evaluating; not finding
+ * it is not an error, the page is read as it stands.
+ */
+async function renderPage(url, evaluateFn, arg, { waitFor } = {}) {
+  const releaseSlot = await acquireContextSlot();
+  let ctx;
+  try {
+    const browser = await getBrowser();
+    ctx = await browser.createBrowserContext();
+  } catch (err) {
+    releaseSlot();
+    throw asScrapeError(err, CODES.BROWSER_UNAVAILABLE);
+  }
+
+  try {
+    const page = await ctx.newPage();
+    await page.setUserAgent(USER_AGENT);
+    await page.setViewport({ width: 1280, height: 900 });
+
+    await page.setRequestInterception(true);
+    page.on('request', req => {
+      if (['image', 'stylesheet', 'font', 'media'].includes(req.resourceType())) req.abort();
+      else req.continue();
+    });
+
+    let response;
+    try {
+      response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAVIGATION_TIMEOUT_MS });
+    } catch (err) {
+      throw new ScrapeError(CODES.TIMEOUT, undefined, { cause: err });
+    }
+
+    const status = response?.status();
+    if (status === 404 || status === 410) throw new ScrapeError(CODES.NOT_FOUND);
+    if (status === 401 || status === 403 || status === 429) throw new ScrapeError(CODES.BLOCKED);
+
+    if (waitFor) {
+      await page.waitForSelector(waitFor, { timeout: SETTLE_SELECTOR_TIMEOUT_MS }).catch(() => {});
+    }
+
+    return await withTimeout(page.evaluate(evaluateFn, arg), EVALUATE_TIMEOUT_MS);
+  } finally {
+    await ctx.close().catch(err => logger.error('Browser: context close failed:', err.message));
+    releaseSlot();
+  }
+}
+
 module.exports = {
   getBrowser,
+  renderPage,
   closeBrowser,
   acquireContextSlot,
   // Exposed for the harness: resolution has four branches but only one is live
