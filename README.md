@@ -4,9 +4,9 @@ Save listings from secondhand marketplaces into collections, see what the pile a
 share it. Paste an OfferUp or Facebook Marketplace link; the app scrapes the title, price, photos,
 condition, location and availability in the background and files it away.
 
-> **A note on wording.** The UI calls them **collections**. The routes are still `/categories`, and
-> the Mongoose model is still `Category` — renaming URLs would break saved links for no user-visible
-> gain.
+> **A note on wording.** Collections live at `/collections`; old `/categories/...` links redirect
+> there with a 308. The Mongoose model is still `Category` (and its MongoDB collection
+> `categories`) — renaming stored data would buy nothing a user can see.
 
 ## Features
 
@@ -226,7 +226,7 @@ MarketplaceCart/
 │   ├── auth.js                   # register / login / logout
 │   ├── items.js                  # preview, prefill, manual, edit, add, unsave, assign
 │   ├── listings.js               # all saved items
-│   ├── categories.js             # collections CRUD, sharing, membership
+│   ├── collections.js            # collections CRUD, sharing, membership
 │   └── settings.js               # appearance
 ├── services/
 │   ├── itemService.js            # scraped upserts, manual items, item access
@@ -251,7 +251,7 @@ MarketplaceCart/
 ├── views/
 │   ├── layouts/main.ejs          # shell: sidebar or navbar, no-flash theme script
 │   ├── partials/                 # sidebar, item card, stats panel, empty state, modals
-│   ├── auth/  categories/  items/  listings/
+│   ├── auth/  collections/  items/  listings/
 │   ├── dashboard.ejs  settings.ejs  index.ejs  error.ejs
 ├── public/
 │   ├── css/                      # tokens -> base -> components -> pages
@@ -301,22 +301,22 @@ stylesheets load, so there is no flash on navigation.
 | PUT | `/items/:id` | Save edits to a manual listing you own |
 | POST | `/items/add` | Attach an existing item to collections |
 | DELETE | `/items/:id/saved` | Remove an item from the current user's Saved items |
-| POST | `/items/:id/assign-categories` | Replace an item's collection membership |
+| POST | `/items/:id/assign-collections` | Replace an item's collection membership |
 
 ### Collections
 | Method | Route | Description |
 |---|---|---|
-| GET | `/categories` | All collections |
-| POST | `/categories/create` | Create one |
-| GET | `/categories/:id` | View one |
-| POST | `/categories/:id/edit` | Rename (owner only) |
-| DELETE | `/categories/:id` | Delete (items survive) |
-| POST | `/categories/:id/add-item` | Add an item (owner/editor) |
-| POST | `/categories/:id/remove-item` | Remove an item |
-| POST | `/categories/:id/share` | Share with a user by email |
-| POST | `/categories/:id/visibility` | Public / private |
-| POST | `/categories/:id/update-role` | Change a collaborator's role |
-| POST | `/categories/:id/remove-user` | Revoke access |
+| GET | `/collections` | All collections |
+| POST | `/collections/create` | Create one |
+| GET | `/collections/:id` | View one |
+| POST | `/collections/:id/edit` | Rename (owner only) |
+| DELETE | `/collections/:id` | Delete (items survive) |
+| POST | `/collections/:id/add-item` | Add an item (owner/editor) |
+| POST | `/collections/:id/remove-item` | Remove an item |
+| POST | `/collections/:id/share` | Share with a user by email |
+| POST | `/collections/:id/visibility` | Public / private |
+| POST | `/collections/:id/update-role` | Change a collaborator's role |
+| POST | `/collections/:id/remove-user` | Revoke access |
 
 All routes except the landing page, auth, and public collections require a session.
 

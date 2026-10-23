@@ -59,7 +59,7 @@ initCollectionCreate();
     const btn = renameForm.querySelector('button');
     btn.disabled = true;
     btn.textContent = 'Saving...';
-    postForm(`/categories/${currentCategoryId}/edit`, { name: nameInput.value });
+    postForm(`/collections/${currentCategoryId}/edit`, { name: nameInput.value });
   });
 
   deleteBtn.addEventListener('click', showDeleteConfirm);
@@ -68,6 +68,6 @@ initCollectionCreate();
   deleteConfirmBtn.addEventListener('click', () => {
     deleteConfirmBtn.disabled = true;
     deleteConfirmBtn.textContent = 'Deleting...';
-    postForm(`/categories/${currentCategoryId}?_method=DELETE`);
+    postForm(`/collections/${currentCategoryId}?_method=DELETE`);
   });
 })();

@@ -176,7 +176,7 @@ Export category contents as CSV or PDF for insurance documentation, inventory tr
 **Implementation:**
 - CSV: Use `json2csv` library
 - PDF: Use `puppeteer` (already installed) or `pdfkit`
-- Download endpoint: `GET /categories/:id/export?format=csv`
+- Download endpoint: `GET /collections/:id/export?format=csv`
 
 ---
 

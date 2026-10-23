@@ -28,7 +28,7 @@ const {
 } = require('../utils/httpResponses');
 const logger = require('../utils/logger');
 
-const pageOf = (req) => `/categories/${req.params.id}`;
+const pageOf = (req) => `/collections/${req.params.id}`;
 
 /**
  * Wrap a form-posting handler: an HttpError from the service becomes a flash
@@ -46,13 +46,13 @@ function formAction(fallback, failureMessage, handler) {
   });
 }
 
-// GET /categories
+// GET /collections
 router.get('/', ensureAuthenticated, asyncHandler(async (req, res) => {
   const { mine, shared } = await collections.loadCollectionsFor(req.user._id);
 
-  return res.render('categories/index', {
+  return res.render('collections/index', {
     title: 'Collections',
-    currentPage: 'categories',
+    currentPage: 'collections',
     categories: mine,
     sharedCategories: shared,
     // Cards used to count items in EJS. Computing here means a card and the
@@ -62,17 +62,17 @@ router.get('/', ensureAuthenticated, asyncHandler(async (req, res) => {
   });
 }));
 
-// POST /categories/create
+// POST /collections/create
 router.post('/create', ensureAuthenticated, validateCategory, formAction(
-  (req) => getSafeReturnToPath(req.body.returnTo, '/categories'),
+  (req) => getSafeReturnToPath(req.body.returnTo, '/collections'),
   'Could not create collection right now.',
   async (req, res) => {
     await collections.createCategory(req.user._id, req.body.name);
-    return res.redirect(getSafeReturnToPath(req.body.returnTo, '/categories'));
+    return res.redirect(getSafeReturnToPath(req.body.returnTo, '/collections'));
   }
 ));
 
-// GET /categories/:id (view one category; public collections need no account)
+// GET /collections/:id (view one category; public collections need no account)
 router.get('/:id', validateObjectId(), asyncHandler(async (req, res) => {
   const userId = req.user?._id;
   let view;
@@ -81,7 +81,7 @@ router.get('/:id', validateObjectId(), asyncHandler(async (req, res) => {
   } catch (err) {
     if (!(err instanceof HttpError)) throw err;
     return renderHtmlError(req, res, err.status, err.message, {
-      actionHref: '/categories',
+      actionHref: '/collections',
       actionLabel: 'Back to collections'
     });
   }
@@ -91,9 +91,9 @@ router.get('/:id', validateObjectId(), asyncHandler(async (req, res) => {
     ? await collections.loadCollectionsFor(userId)
     : { mine: [] };
 
-  return res.render('categories/show', {
+  return res.render('collections/show', {
     title: category.name,
-    currentPage: 'categories',
+    currentPage: 'collections',
     category,
     categories,
     // Newest first, like every other item grid. Passed separately rather than
@@ -108,30 +108,30 @@ router.get('/:id', validateObjectId(), asyncHandler(async (req, res) => {
   });
 }));
 
-// POST /categories/:id/edit
+// POST /collections/:id/edit
 router.post('/:id/edit', ensureAuthenticated, validateObjectId(), validateCategory, formAction(
-  // Renaming from a collection page used to bounce you to /categories. The
+  // Renaming from a collection page used to bounce you to /collections. The
   // caller says where it came from; getSafeReturnToPath refuses anything that
   // could leave this origin.
-  (req) => getSafeReturnToPath(req.body.returnTo, '/categories'),
+  (req) => getSafeReturnToPath(req.body.returnTo, '/collections'),
   'Could not rename collection right now.',
   async (req, res) => {
     await collections.renameCategory(req.params.id, req.user._id, req.body.name);
-    return res.redirect(getSafeReturnToPath(req.body.returnTo, '/categories'));
+    return res.redirect(getSafeReturnToPath(req.body.returnTo, '/collections'));
   }
 ));
 
-// DELETE /categories/:id
+// DELETE /collections/:id
 router.delete('/:id', ensureAuthenticated, validateObjectId(), formAction(
-  () => '/categories',
+  () => '/collections',
   'Could not delete collection right now.',
   async (req, res) => {
     await collections.deleteCategory(req.params.id, req.user._id);
-    return res.redirect('/categories');
+    return res.redirect('/collections');
   }
 ));
 
-// POST /categories/:id/share
+// POST /collections/:id/share
 router.post('/:id/share', ensureAuthenticated, validateObjectId(), validateShare, formAction(
   pageOf,
   'Could not share collection right now.',
@@ -142,7 +142,7 @@ router.post('/:id/share', ensureAuthenticated, validateObjectId(), validateShare
   }
 ));
 
-// POST /categories/:id/visibility — JSON for the toggle, redirect without JS
+// POST /collections/:id/visibility — JSON for the toggle, redirect without JS
 router.post('/:id/visibility', ensureAuthenticated, validateObjectId(), asyncHandler(async (req, res) => {
   const json = wantsJson(req);
   try {
@@ -158,7 +158,7 @@ router.post('/:id/visibility', ensureAuthenticated, validateObjectId(), asyncHan
   }
 }));
 
-// POST /categories/:id/remove-item
+// POST /collections/:id/remove-item
 router.post('/:id/remove-item', ensureAuthenticated, validateObjectId(), validateItemId, formAction(
   pageOf,
   'Server error while removing item.',
@@ -168,7 +168,7 @@ router.post('/:id/remove-item', ensureAuthenticated, validateObjectId(), validat
   }
 ));
 
-// POST /categories/:id/update-role
+// POST /collections/:id/update-role
 router.post('/:id/update-role', ensureAuthenticated, validateObjectId(), validateMemberRole, formAction(
   pageOf,
   'Could not update access right now.',
@@ -178,7 +178,7 @@ router.post('/:id/update-role', ensureAuthenticated, validateObjectId(), validat
   }
 ));
 
-// POST /categories/:id/remove-user
+// POST /collections/:id/remove-user
 router.post('/:id/remove-user', ensureAuthenticated, validateObjectId(), validateMemberId, formAction(
   pageOf,
   'Could not remove user right now.',
@@ -188,7 +188,7 @@ router.post('/:id/remove-user', ensureAuthenticated, validateObjectId(), validat
   }
 ));
 
-// POST /categories/:id/add-item — the item already exists (scraped during
+// POST /collections/:id/add-item — the item already exists (scraped during
 // preview, or created manually); the form only names it.
 router.post('/:id/add-item', ensureAuthenticated, validateObjectId(), formAction(
   pageOf,

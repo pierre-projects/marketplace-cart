@@ -4,7 +4,7 @@
   <!-- Page Header -->
   <div class="page-head">
     <div class="page-head__main">
-      <a href="/categories" class="back-link">&larr; Collections</a>
+      <a href="/collections" class="back-link">&larr; Collections</a>
 
       <%
         // Owners edit the title in place. Everyone else gets a plain heading —
@@ -64,8 +64,8 @@
   <% if (canEdit) { %>
     <%- include('../partials/add-listing-modal', {
       categories,
-      returnTo: `/categories/${category._id}`,
-      formAction: `/categories/${category._id}/add-item`,
+      returnTo: `/collections/${category._id}`,
+      formAction: `/collections/${category._id}/add-item`,
       lockedCategoryId: String(category._id),
       lockCategorySelection: true
     }) %>
@@ -115,13 +115,13 @@
           <div class="collection-settings-section__head">
             <h3 id="settingsNameHeading">Name</h3>
           </div>
-          <form action="/categories/<%= category._id %>/edit" method="POST" class="collection-settings-form">
+          <form action="/collections/<%= category._id %>/edit" method="POST" class="collection-settings-form">
             <%- csrfField %>
             <div class="collection-settings-input-row">
               <label class="sr-only" for="settingsRename">Collection name</label>
               <input type="text" id="settingsRename" name="name" value="<%= category.name %>"
                      required maxlength="60">
-              <input type="hidden" name="returnTo" value="/categories/<%= category._id %>">
+              <input type="hidden" name="returnTo" value="/collections/<%= category._id %>">
               <button type="submit" class="btn btn--primary">Save</button>
             </div>
           </form>
@@ -131,7 +131,7 @@
           <div class="collection-settings-section__head">
             <h3 id="settingsVisibilityHeading">Visibility</h3>
           </div>
-          <form action="/categories/<%= category._id %>/visibility" method="POST" class="collection-settings-visibility-form">
+          <form action="/collections/<%= category._id %>/visibility" method="POST" class="collection-settings-visibility-form">
             <%- csrfField %>
             <label class="collection-settings-toggle">
               <input type="checkbox" name="isPublic" value="true"
@@ -151,7 +151,7 @@
           <div class="collection-settings-section__head">
             <h3 id="settingsShareHeading">Share</h3>
           </div>
-          <form action="/categories/<%= category._id %>/share" method="POST" class="share-form">
+          <form action="/collections/<%= category._id %>/share" method="POST" class="share-form">
             <%- csrfField %>
             <label class="sr-only" for="settingsShareEmail">User email</label>
             <input type="email" id="settingsShareEmail" name="email" placeholder="User email" required>
@@ -174,7 +174,7 @@
               <% category.usersAdded.forEach(entry => { %>
                 <li class="shared-user-row">
                   <span class="shared-user-name"><%= entry.user.username %></span>
-                  <form action="/categories/<%= category._id %>/update-role" method="POST" class="role-form">
+                  <form action="/collections/<%= category._id %>/update-role" method="POST" class="role-form">
                     <%- csrfField %>
                     <input type="hidden" name="userId" value="<%= entry.user._id %>">
                     <select name="newRole" data-autosubmit>
@@ -182,7 +182,7 @@
                       <option value="editor" <%= entry.role === 'editor' ? 'selected' : '' %>>Editor</option>
                     </select>
                   </form>
-                  <form action="/categories/<%= category._id %>/remove-user" method="POST">
+                  <form action="/collections/<%= category._id %>/remove-user" method="POST">
                     <%- csrfField %>
                     <input type="hidden" name="userId" value="<%= entry.user._id %>">
                     <button type="submit" class="remove-user-btn"
@@ -204,7 +204,7 @@
               <p class="danger-row__title">Delete this collection</p>
               <p class="danger-warning">Items stay in Saved items.</p>
             </div>
-            <form action="/categories/<%= category._id %>?_method=DELETE" method="POST">
+            <form action="/collections/<%= category._id %>?_method=DELETE" method="POST">
               <%- csrfField %>
               <button type="submit" class="btn btn--danger"
                       data-confirm="Delete this collection? The items stay in Saved items.">
@@ -219,4 +219,4 @@
   </dialog>
 <% } %>
 
-<script type="module" src="/js/pages/category-show.js"></script>
+<script type="module" src="/js/pages/collection.js"></script>

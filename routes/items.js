@@ -173,8 +173,8 @@ router.delete('/:id/saved', ensureAuthenticated, validateObjectId(), asyncHandle
   }
 }));
 
-// POST /items/:id/assign-categories — set which of your collections hold it
-router.post('/:id/assign-categories', ensureAuthenticated, validateObjectId(), asyncHandler(async (req, res) => {
+// POST /items/:id/assign-collections — set which of your collections hold it
+router.post('/:id/assign-collections', ensureAuthenticated, validateObjectId(), asyncHandler(async (req, res) => {
   try {
     await items.assertItemAccessible(req.user._id, req.params.id);
     await collections.assignItemToOwnCategories(req.user._id, req.params.id, req.body.categoryIds);

@@ -102,7 +102,7 @@
 
         <% if (categoryId && user && (isOwner || (addedBy && addedBy._id.toString() === user._id.toString()))) { %>
           <hr class="kebab-divider">
-          <form method="POST" action="/categories/<%= categoryId %>/remove-item">
+          <form method="POST" action="/collections/<%= categoryId %>/remove-item">
             <%- csrfField %>
             <input type="hidden" name="itemId" value="<%= item._id %>">
             <button type="submit" class="kebab-action kebab-action--danger" role="menuitem"

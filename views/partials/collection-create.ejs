@@ -1,7 +1,7 @@
 <%
   const collectionCreateReturnTo = typeof returnTo === 'string' && returnTo.trim()
     ? returnTo
-    : '/categories';
+    : '/collections';
   const collectionCreateInputId = typeof inputId === 'string' && inputId.trim()
     ? inputId
     : 'newCollectionName';
@@ -36,7 +36,7 @@
     </div>
   <% } %>
 
-  <form class="collection-create__form" action="/categories/create" method="POST">
+  <form class="collection-create__form" action="/collections/create" method="POST">
     <%- csrfField %>
     <input type="hidden" name="returnTo" value="<%= collectionCreateReturnTo %>">
     <label for="<%= collectionCreateInputId %>">Collection name</label>
