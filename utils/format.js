@@ -1,6 +1,6 @@
 /**
  * Presentation formatters shared by the server (via app.locals) and, in a
- * mirrored form, by the client.
+ * mirrored form, by the client (public/js/lib/format.js).
  *
  * These exist so a bare number can never be rendered as currency again —
  * `$<%= price.toFixed(2) %>` appeared in five templates and produced "$25.00"
@@ -49,7 +49,7 @@ function plural(count, singular, pluralForm) {
   return `${n} ${n === 1 ? singular : (pluralForm || singular + 's')}`;
 }
 
-/** Marketplace name -> badge modifier class. */
+/** Marketplace name -> badge modifier class. Anything not scraped is neutral. */
 function platformClass(platform) {
   const key = String(platform || '').toLowerCase();
   if (key.includes('offerup')) return 'badge--offerup';
@@ -59,6 +59,7 @@ function platformClass(platform) {
 
 /** Hostname of a listing URL, for the outbound link label. */
 function hostLabel(link) {
+  if (!link) return '';
   try {
     return new URL(link).hostname.replace(/^www\./, '');
   } catch (err) {

@@ -1,4 +1,3 @@
-// models/Users.js
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
@@ -7,6 +6,15 @@ const UserSchema = new mongoose.Schema({
   email:    { type: String, required: true, unique: true },
   password: { type: String, required: true }
 });
+
+// A User document reaches views, logs and JSON in several places. The hash
+// must never come along with it.
+const stripPassword = (doc, ret) => {
+  delete ret.password;
+  return ret;
+};
+UserSchema.set('toJSON', { transform: stripPassword });
+UserSchema.set('toObject', { transform: stripPassword });
 
 // Hash password before saving
 UserSchema.pre('save', async function (next) {

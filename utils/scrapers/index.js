@@ -3,32 +3,77 @@ const { ScrapeError, CODES } = require('./errors');
 const offerupScraper = require('./offerup');
 const facebookScraper = require('./facebook');
 
-// Single source of truth for which marketplaces are supported and what they
-// are called. detectPlatform used to keep its own list, which claimed eBay and
-// Mercari support that no scraper here could deliver.
+// Single source of truth for which marketplaces are scraped and what they are
+// called. A URL matches on its parsed hostname (exactly, or a subdomain of it)
+// and then its path. These used to be unanchored regexes tested against the
+// whole string, so `http://169.254.169.254/?facebook.com/marketplace/` counted
+// as Facebook and the server fetched it.
 const scrapers = [
-  { pattern: /offerup\.com\/item/, platform: 'OfferUp', scraper: offerupScraper },
-  { pattern: /facebook\.com\/marketplace/, platform: 'Facebook Marketplace', scraper: facebookScraper },
+  { hosts: ['offerup.com'], path: /^\/item\//, platform: 'OfferUp', scraper: offerupScraper },
+  { hosts: ['facebook.com'], path: /^\/marketplace\//, platform: 'Facebook Marketplace', scraper: facebookScraper },
   // Future scrapers: add the entry here and detectPlatform picks it up too.
-  // { pattern: /ebay\.com\/itm/, platform: 'eBay', scraper: require('./ebay') },
-  // { pattern: /mercari\.com\//, platform: 'Mercari', scraper: require('./mercari') },
 ];
 
-function findEntry(url) {
-  return scrapers.find(s => s.pattern.test(url)) || null;
+// Display names for sites that are saved manually rather than scraped, so the
+// marketplace breakdown reads "eBay" instead of "www.ebay.com".
+const KNOWN_SITES = [
+  [['ebay.com', 'ebay.ca', 'ebay.co.uk'], 'eBay'],
+  [['craigslist.org'], 'Craigslist'],
+  [['mercari.com'], 'Mercari'],
+  [['poshmark.com'], 'Poshmark'],
+  [['depop.com'], 'Depop'],
+  [['etsy.com'], 'Etsy'],
+  [['amazon.com', 'amazon.ca', 'amazon.co.uk'], 'Amazon'],
+  [['nextdoor.com'], 'Nextdoor'],
+  [['kijiji.ca'], 'Kijiji'],
+  [['vinted.com', 'vinted.co.uk'], 'Vinted'],
+  [['walmart.com'], 'Walmart'],
+  [['ikea.com'], 'IKEA'],
+  [['wayfair.com'], 'Wayfair'],
+  [['offerup.com'], 'OfferUp'],
+  [['facebook.com'], 'Facebook Marketplace'],
+];
+
+/** A parsed http(s) URL, or null. Credentials in the URL are refused. */
+function parseListingUrl(raw) {
+  if (typeof raw !== 'string' && !(raw instanceof URL)) return null;
+  try {
+    const url = new URL(String(raw).trim());
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+    if (url.username || url.password) return null;
+    return url;
+  } catch (err) {
+    return null;
+  }
 }
 
-function getScraper(url) {
-  return findEntry(url)?.scraper || null;
+function hostMatches(hostname, host) {
+  const h = hostname.toLowerCase();
+  return h === host || h.endsWith(`.${host}`);
+}
+
+function findEntry(raw) {
+  const url = parseListingUrl(raw);
+  if (!url) return null;
+  return scrapers.find(s => s.hosts.some(h => hostMatches(url.hostname, h)) && s.path.test(url.pathname)) || null;
 }
 
 function isSupported(url) {
   return findEntry(url) !== null;
 }
 
-/** Display name for a link, derived from the same registry that scrapes it. */
-function detectPlatform(url) {
-  return findEntry(url)?.platform || 'Unknown';
+/**
+ * Display name for a link: the scraper's name when there is one, else a known
+ * site name, else the bare hostname. 'Unknown' only when there is no usable URL.
+ */
+function detectPlatform(raw) {
+  const entry = findEntry(raw);
+  if (entry) return entry.platform;
+
+  const url = parseListingUrl(raw);
+  if (!url) return 'Unknown';
+  const known = KNOWN_SITES.find(([hosts]) => hosts.some(h => hostMatches(url.hostname, h)));
+  return known ? known[1] : url.hostname.replace(/^www\./, '');
 }
 
 async function scrapeItem(url) {
@@ -47,4 +92,4 @@ async function scrapeItem(url) {
   }
 }
 
-module.exports = { scrapeItem, getScraper, isSupported, detectPlatform };
+module.exports = { scrapeItem, isSupported, detectPlatform, parseListingUrl };

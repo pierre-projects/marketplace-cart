@@ -4,7 +4,7 @@
  * Progressive enhancement only. With JS off both forms still post and
  * authenticate exactly as before — nothing here is required to sign in.
  */
-document.addEventListener('DOMContentLoaded', () => {
+{
   // ---- password reveal ------------------------------------------------------
 
   document.querySelectorAll('[data-password-toggle]').forEach((toggle) => {
@@ -41,4 +41,4 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 0);
     });
   });
-});
+}

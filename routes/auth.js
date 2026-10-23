@@ -1,122 +1,98 @@
 const express = require('express');
-const User = require('../models/User');
 const passport = require('passport');
+const User = require('../models/User');
+const { authLimiter } = require('../middleware/rateLimit');
+const logger = require('../utils/logger');
 const router = express.Router();
 
+const USERNAME_RE = /^[\w.-]{3,30}$/;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MIN_PASSWORD = 8;
+
+function renderRegister(res, status, formData, errorMessage) {
+  return res.status(status).render('auth/register', {
+    title: 'Create account',
+    currentPage: 'register',
+    formData,
+    errorMessage
+  });
+}
+
+/** First problem with a registration, or null. */
+function registrationError({ username, email, password }) {
+  if (!username || !email || !password) return 'Username, email, and password are required.';
+  if (!USERNAME_RE.test(username)) return 'Usernames are 3–30 letters, numbers, dots, dashes or underscores.';
+  if (!EMAIL_RE.test(email) || email.length > 254) return 'Enter a valid email address.';
+  if (password.length < MIN_PASSWORD) return `Passwords must be at least ${MIN_PASSWORD} characters.`;
+  if (password.length > 72) return 'Passwords must be at most 72 characters.'; // bcrypt's limit
+  return null;
+}
 
 // Show the register form (GET)
-router.get('/register', (req, res) => {
-    res.render('auth/register', {
-        title: 'Create account',
-        currentPage: 'register',
-        formData: {},
-        errorMessage: null
-    });
-});
+router.get('/register', (req, res) => renderRegister(res, 200, {}, null));
 
-//  Handle user registration (POST)
-router.post('/register', async (req, res) => {
-    try {
-        const username = req.body.username?.trim();
-        const email = req.body.email?.trim().toLowerCase();
-        const { password } = req.body;
+// Handle user registration (POST)
+router.post('/register', authLimiter, async (req, res) => {
+  const username = String(req.body.username || '').trim();
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const password = typeof req.body.password === 'string' ? req.body.password : '';
+  const formData = { username, email };
 
-        console.log('Registering user:', { username, email });
+  const problem = registrationError({ username, email, password });
+  if (problem) return renderRegister(res, 400, formData, problem);
 
-        if (!username || !email || !password) {
-            return res.status(400).render('auth/register', {
-                title: 'Create account',
-                currentPage: 'register',
-                formData: { username: username || '', email: email || '' },
-                errorMessage: 'Username, email, and password are required.'
-            });
-        }
-
-        // Check if the username or email already exists
-        let existingUser = await User.findOne({ $or: [{ email }, { username }] });
-        console.log('User already exists check:', existingUser);
-
-        if (existingUser) {
-            return res.status(409).render('auth/register', {
-                title: 'Create account',
-                currentPage: 'register',
-                formData: { username, email },
-                errorMessage: 'An account with that username or email already exists. Try signing in instead.'
-            });
-        }
-
-        // Create and save new user
-        const newUser = new User({ 
-            username, 
-            email, 
-            password 
-        });
-
-        await newUser.save();
-
-        req.flash('success_msg', 'Registration successful! You can now sign in.');
-
-        console.log('New user registered:', newUser);
-
-        res.redirect('/auth/login'); // Redirect after successful registration
-    } catch (err) {
-        console.error('Error registering user:', err);
-        return res.status(500).render('auth/register', {
-            title: 'Create account',
-            currentPage: 'register',
-            formData: {
-                username: req.body.username?.trim() || '',
-                email: req.body.email?.trim().toLowerCase() || ''
-            },
-            errorMessage: 'We could not complete registration right now. Please try again.'
-        });
+  try {
+    const existingUser = await User.exists({ $or: [{ email }, { username }] });
+    if (existingUser) {
+      return renderRegister(res, 409, formData, 'An account with that username or email already exists. Try signing in instead.');
     }
+
+    await User.create({ username, email, password });
+    logger.info('New user registered:', username);
+
+    req.flash('success_msg', 'Registration successful! You can now sign in.');
+    return res.redirect('/auth/login');
+  } catch (err) {
+    if (err.code === 11000) {
+      return renderRegister(res, 409, formData, 'An account with that username or email already exists. Try signing in instead.');
+    }
+    logger.error('Error registering user:', err.message);
+    return renderRegister(res, 500, formData, 'We could not complete registration right now. Please try again.');
+  }
 });
 
-
-
-
-//  Show the login form
+// Show the login form
 router.get('/login', (req, res) => {
-    res.render('auth/login', { title: 'Sign in', currentPage: 'login' });
+  res.render('auth/login', { title: 'Sign in', currentPage: 'login' });
 });
 
-
-router.post('/login', (req, res, next) => {
-    passport.authenticate('local', (err, user, info) => {
-        if (err) {
-            console.error('Error during authentication:', err);
-            req.flash('error_msg', 'We could not process your sign-in right now. Please try again.');
-            return res.redirect('/auth/login');
-        }
-        if (!user) {
-            console.log('Authentication failed:', info.message);
-            req.flash('error_msg', info.message);
-            return res.redirect('/auth/login');
-        }
-        req.logIn(user, (err) => {
-            if (err) {
-                console.error('Login error:', err);
-                return next(err);
-            }
-            console.log('User authenticated successfully:', user)
-
-            return res.redirect('/dashboard');
-        });
-    })(req, res, next);
-});
-
-
-
-//  Logout Route
-router.get('/logout', (req, res) => {
-    req.logout(function(err) {
-        if (err) {
-            return next(err);
-        }
-        res.redirect('/');
+router.post('/login', authLimiter, (req, res, next) => {
+  passport.authenticate('local', (err, user, info) => {
+    if (err) {
+      logger.error('Error during authentication:', err.message);
+      req.flash('error_msg', 'We could not process your sign-in right now. Please try again.');
+      return res.redirect('/auth/login');
+    }
+    if (!user) {
+      req.flash('error_msg', info?.message || 'Incorrect email or password.');
+      return res.redirect('/auth/login');
+    }
+    // A new session id on sign-in, so a session id planted before login is
+    // worthless after it.
+    return req.logIn(user, (loginErr) => {
+      if (loginErr) return next(loginErr);
+      return res.redirect('/dashboard');
     });
+  })(req, res, next);
 });
 
+// Logout. POST, not GET: a GET could be triggered by any page that embeds an
+// image pointing here.
+router.post('/logout', (req, res, next) => {
+  req.logout((err) => {
+    if (err) return next(err);
+    return res.redirect('/');
+  });
+});
 
 module.exports = router;

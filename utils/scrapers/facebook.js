@@ -1,8 +1,19 @@
-const { getBrowser, acquireContextSlot } = require('../browser');
+const { getBrowser, acquireContextSlot } = require('./browser');
 const logger = require('../logger');
 const { ScrapeError, CODES, asScrapeError } = require('./errors');
 
 const NAVIGATION_TIMEOUT_MS = 25000;
+// page.evaluate has no timeout of its own. A wedged renderer would otherwise
+// hold a worker slot, and the shutdown drain, forever.
+const EVALUATE_TIMEOUT_MS = 15000;
+
+function withTimeout(promise, ms) {
+  let timer;
+  const timeout = new Promise((resolve, reject) => {
+    timer = setTimeout(() => reject(new ScrapeError(CODES.TIMEOUT)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
 
 /**
  * Facebook Marketplace Scraper
@@ -266,7 +277,7 @@ async function scrape(url) {
 
     // Single evaluate: extract scripts, meta, and images in one IPC call
     // Script caps: max 10 scripts, 300KB each, skip tiny ones
-    const pageData = await page.evaluate((lid) => {
+    const pageData = await withTimeout(page.evaluate((lid) => {
       const MAX_SCRIPT_SIZE = 300000;
       const MAX_SCRIPTS = 10;
 
@@ -298,7 +309,7 @@ async function scrape(url) {
         .filter(src => src && src.startsWith('https') && !src.includes('emoji'));
 
       return { scripts, meta, images };
-    }, listingId);
+    }, listingId), EVALUATE_TIMEOUT_MS);
 
     // Multi-candidate extraction, scoring, and merging
     const candidates = extractCandidatesFromScripts({ scripts: pageData.scripts, listingId });

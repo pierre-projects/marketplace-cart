@@ -1,0 +1,79 @@
+<main class="container settings-page" id="main">
+  <%- include('../partials/flash-alert') %>
+
+  <div class="page-head">
+    <div>
+      <h1>Edit listing</h1>
+      <p class="page-head__sub">
+        Added manually<%= item.platform && item.platform !== 'Other' ? ` from ${item.platform}` : '' %>.
+        Only you can change these details.
+      </p>
+    </div>
+  </div>
+
+  <section class="settings-section">
+    <form class="manual-form" method="POST" action="/items/<%= item._id %>?_method=PUT">
+      <%- csrfField %>
+      <input type="hidden" name="returnTo" value="<%= returnTo %>">
+
+      <div class="field">
+        <label class="field__label" for="editTitle">Title</label>
+        <input class="field__control" type="text" name="title" id="editTitle" maxlength="300" required value="<%= item.title %>">
+      </div>
+
+      <div class="manual-form__row">
+        <div class="field">
+          <label class="field__label" for="editPrice">Price</label>
+          <input class="field__control" type="text" inputmode="decimal" name="price" id="editPrice"
+                 placeholder="0 for free, blank if unknown"
+                 value="<%= item.price === null || item.price === undefined ? '' : item.price %>">
+        </div>
+        <div class="field">
+          <label class="field__label" for="editCondition">Condition</label>
+          <select class="field__control" name="condition" id="editCondition">
+            <option value="">Not stated</option>
+            <% conditions.forEach(c => { %>
+              <option value="<%= c %>" <%= item.condition === c ? 'selected' : '' %>><%= c %></option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="editLink">Link <span class="field__optional">(optional)</span></label>
+        <input class="field__control" type="url" name="link" id="editLink" value="<%= item.link || '' %>">
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="editImages">Photo links <span class="field__optional">(one per line)</span></label>
+        <textarea class="field__control" name="imageLinks" id="editImages" rows="3"><%= (item.imageLinks || []).join('\n') %></textarea>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="editLocation">Location</label>
+        <input class="field__control" type="text" name="location" id="editLocation" maxlength="200" value="<%= item.location || '' %>">
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="editDescription">Description</label>
+        <textarea class="field__control" name="description" id="editDescription" rows="4" maxlength="5000"><%= item.description || '' %></textarea>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="editNotes">Your notes</label>
+        <textarea class="field__control" name="notes" id="editNotes" rows="3" maxlength="2000"><%= item.notes || '' %></textarea>
+      </div>
+
+      <label class="checkbox-item">
+        <input type="hidden" name="available" value="false">
+        <input type="checkbox" name="available" value="true" <%= item.available !== false ? 'checked' : '' %>>
+        <span>Still available</span>
+      </label>
+
+      <div class="modal-actions">
+        <a class="btn btn--secondary" href="<%= returnTo %>">Cancel</a>
+        <button type="submit" class="btn btn--primary">Save changes</button>
+      </div>
+    </form>
+  </section>
+</main>

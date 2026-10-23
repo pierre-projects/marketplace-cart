@@ -65,6 +65,10 @@ function asScrapeError(err, fallbackCode = CODES.PARSE_FAILED) {
 
 /** Classify an axios failure into a ScrapeError code. */
 function classifyAxiosError(err) {
+  // safeFetch refused the destination. Retrying reaches the same address.
+  if (err.code === 'EBLOCKED') {
+    return new ScrapeError(CODES.UNSUPPORTED, undefined, { cause: err });
+  }
   if (err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT' || /timeout/i.test(err.message || '')) {
     return new ScrapeError(CODES.TIMEOUT, undefined, { cause: err });
   }

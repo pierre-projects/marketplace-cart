@@ -26,4 +26,3 @@ router.get('/', ensureAuthenticated, (req, res) => {
 });
 
 module.exports = router;
-module.exports.ACCENTS = ACCENTS;

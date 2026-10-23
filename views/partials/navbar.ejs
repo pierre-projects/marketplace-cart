@@ -58,7 +58,10 @@
               <button type="button" class="theme-toggle__opt" data-theme-value="dark"   aria-pressed="false">Dark</button>
             </div>
 
-            <a href="/auth/logout" class="account-signout-btn" role="menuitem">Sign out</a>
+            <form method="POST" action="/auth/logout">
+              <%- csrfField %>
+              <button type="submit" class="account-signout-btn" role="menuitem">Sign out</button>
+            </form>
           </div>
         </div>
       <% } else { %>

@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * One-shot migration for the Phase 1-3 schema changes.
+ * Repairs existing data so the current schema and its indexes can build.
  *
  *   node scripts/migrate.js            # dry run — reports, writes nothing
  *   node scripts/migrate.js --apply    # perform the migration
  *
- * The new unique indexes (Item.link, Category{user,name}) cannot build over
+ * The unique indexes (scraped Item.link, Category{user,name}) cannot build over
  * existing duplicates, so the data has to be reconciled before syncIndexes runs.
  * Every step is idempotent: running this twice is safe.
  *
@@ -33,11 +33,28 @@ function report(step, count, detail = '') {
 // ---------------------------------------------------------------------------
 
 /**
- * Item.link is now unique. Merge duplicate links onto one survivor and repoint
+ * Items saved before manual listings existed are all scraped. The partial
+ * unique index on link covers only `source: 'scraped'`, so they must say so —
+ * and this must run before the link dedupe below, which only looks at them.
+ */
+async function backfillItemSource() {
+  const filter = { source: { $exists: false } };
+  const count = await Item.countDocuments(filter);
+  if (APPLY && count > 0) {
+    await Item.updateMany(filter, { $set: { source: 'scraped' } });
+  }
+  report('Items backfilled with source', count);
+  return count;
+}
+
+/**
+ * Scraped Item.link is unique. Merge duplicate links onto one survivor and repoint
  * every category reference at it before the index is built.
  */
 async function dedupeItemsByLink() {
   const groups = await Item.aggregate([
+    // Manual items may share a link — each belongs to its own user.
+    { $match: { source: { $ne: 'manual' }, link: { $type: 'string' } } },
     { $group: { _id: '$link', ids: { $push: '$_id' }, count: { $sum: 1 } } },
     { $match: { count: { $gt: 1 } } }
   ]);
@@ -210,7 +227,11 @@ async function dedupeCategoryNames() {
   return renamed;
 }
 
-/** Build the new indexes once the data can satisfy them. */
+/**
+ * Build the schema's indexes once the data can satisfy them. syncIndexes also
+ * drops indexes the schema no longer declares — notably the old global
+ * `link_1` unique index, replaced by the partial `link_scraped_unique`.
+ */
 async function syncIndexes() {
   if (!APPLY) {
     console.log('  · Index sync: skipped in dry run');
@@ -239,6 +260,7 @@ async function main() {
 
   // Order matters: item-level dedupe must finish before category entries are
   // collapsed, and everything must settle before the unique indexes are built.
+  await backfillItemSource();
   await dedupeItemsByLink();
   await dedupeCategoryItems();
   await normalizeConditions();

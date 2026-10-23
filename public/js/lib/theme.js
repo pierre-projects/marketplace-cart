@@ -7,9 +7,10 @@
  * maths in JS.
  *
  * The initial stamp happens in an inline script in the layout <head>; this file
- * only handles switching after load.
+ * only handles switching after load. Loaded once, by app.js — settings.ejs
+ * used to load it a second time, which bound every control twice.
  */
-document.addEventListener('DOMContentLoaded', () => {
+export function initTheme() {
   const root = document.documentElement;
 
   function read(key, fallback) {
@@ -137,4 +138,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     syncAccent(read('accent', 'default'));
   }
-});
+}

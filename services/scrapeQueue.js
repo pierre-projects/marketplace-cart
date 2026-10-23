@@ -1,8 +1,8 @@
 const ScrapeJob = require('../models/ScrapeJob');
 const logger = require('../utils/logger');
-const { scrapeItem } = require('../utils/scrapers');
+const { scrapeItem, detectPlatform } = require('../utils/scrapers');
 const { asScrapeError } = require('../utils/scrapers/errors');
-const { upsertItemByLink, normalizeItemData, detectPlatform } = require('./itemService');
+const { upsertItemByLink, normalizeItemData } = require('./itemService');
 
 /**
  * In-process scrape queue.
@@ -18,14 +18,26 @@ const { upsertItemByLink, normalizeItemData, detectPlatform } = require('./itemS
 
 const MAX_CONCURRENT_JOBS = 2;
 const MAX_ATTEMPTS = 3;
-const IDLE_POLL_MS = 1500;
-// A job still 'running' after this long belongs to a dead process.
+// Idle polling backs off from MIN to MAX while the queue stays empty, and
+// snaps back on the next enqueue (kick). It used to poll Mongo every 1.5s
+// forever. Polling at all — rather than relying on kick() — is what picks up
+// retries whose backoff gate has passed.
+const IDLE_POLL_MIN_MS = 1500;
+const IDLE_POLL_MAX_MS = 15000;
+// A job still 'running' after this long belongs to a dead process, or to a
+// failure write that itself failed.
 const STALE_RUNNING_MS = 5 * 60 * 1000;
+const RECLAIM_EVERY_MS = 60 * 1000;
+// Shutdown waits this long for in-flight scrapes, then lets them go; the
+// stale-job reclaim requeues anything left 'running'.
+const STOP_TIMEOUT_MS = 30 * 1000;
 
 let running = false;
 let activeJobs = 0;
 let timer = null;
 let kickPending = false;
+let idleDelay = IDLE_POLL_MIN_MS;
+let lastReclaimAt = 0;
 
 // --- Public API ---
 
@@ -62,16 +74,20 @@ function start() {
     .finally(() => schedule(0));
 }
 
-/** Stop accepting new work and wait for in-flight jobs to finish. */
-async function stop() {
+/** Stop accepting new work and wait (bounded) for in-flight jobs to finish. */
+async function stop({ timeoutMs = STOP_TIMEOUT_MS } = {}) {
   running = false;
   if (timer) {
     clearTimeout(timer);
     timer = null;
   }
 
-  while (activeJobs > 0) {
+  const deadline = Date.now() + timeoutMs;
+  while (activeJobs > 0 && Date.now() < deadline) {
     await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  if (activeJobs > 0) {
+    logger.error(`Scrape queue: stopped with ${activeJobs} job(s) still running; they will be reclaimed on next boot`);
   }
   logger.debug('Scrape queue: worker stopped');
 }
@@ -81,6 +97,7 @@ async function stop() {
  * client polling forever. Put them back in the queue on boot.
  */
 async function reclaimStaleJobs() {
+  lastReclaimAt = Date.now();
   const cutoff = new Date(Date.now() - STALE_RUNNING_MS);
   const res = await ScrapeJob.updateMany(
     { status: 'running', $or: [{ startedAt: { $lt: cutoff } }, { startedAt: null }] },
@@ -97,6 +114,7 @@ async function reclaimStaleJobs() {
 function kick() {
   if (!running || kickPending) return;
   kickPending = true;
+  idleDelay = IDLE_POLL_MIN_MS;
   schedule(0);
 }
 
@@ -106,12 +124,28 @@ function schedule(delay) {
   timer = setTimeout(() => {
     timer = null;
     kickPending = false;
-    tick().catch(err => logger.error('Scrape queue: tick failed:', err.message));
+    // A failed tick (Mongo briefly unreachable, say) must not end the loop.
+    // It used to: nothing rescheduled, and queued retries sat until the next
+    // enqueue happened to kick the worker.
+    tick().catch(err => {
+      logger.error('Scrape queue: tick failed:', err.message);
+      schedule(nextIdleDelay());
+    });
   }, delay);
+}
+
+function nextIdleDelay() {
+  const delay = idleDelay;
+  idleDelay = Math.min(idleDelay * 2, IDLE_POLL_MAX_MS);
+  return delay;
 }
 
 async function tick() {
   if (!running) return;
+
+  if (Date.now() - lastReclaimAt >= RECLAIM_EVERY_MS) {
+    await reclaimStaleJobs().catch(err => logger.error('Scrape queue: reclaim failed:', err.message));
+  }
 
   let claimedAny = false;
   while (running && activeJobs < MAX_CONCURRENT_JOBS) {
@@ -129,7 +163,9 @@ async function tick() {
       });
   }
 
-  schedule(claimedAny ? 0 : IDLE_POLL_MS);
+  if (claimedAny) idleDelay = IDLE_POLL_MIN_MS;
+  // At the concurrency cap the finishing job reschedules; otherwise poll.
+  if (activeJobs < MAX_CONCURRENT_JOBS) schedule(claimedAny ? 0 : nextIdleDelay());
 }
 
 /**
