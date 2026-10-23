@@ -12,6 +12,10 @@ condition, location and availability in the background and files it away.
 
 - **Paste a link, get a listing** — OfferUp and Facebook Marketplace, with title, price, images,
   condition, location and whether it is still live.
+- **Any other site, or no link at all** — eBay, Craigslist, Mercari, a shop page, a listing seen
+  in a group chat. Paste the link and the form is prefilled from the page's own preview metadata
+  (OpenGraph / schema.org) when it can be read; check it, edit it, save it. Manual listings are
+  yours alone and stay editable.
 - **Scraping runs in the background** — the request returns immediately with a job id and the modal
   shows live status, so a slow Facebook page never blocks the page.
 - **Collections** — group saved items by room, project, or trip. An item can live in several at
@@ -50,7 +54,7 @@ cd MarketplaceCart
 npm install
 ```
 
-Create a `.env` in the project root:
+Copy `.env.example` to `.env` in the project root (`config/env.js` validates it at startup):
 
 ```
 PORT=5000
@@ -63,6 +67,7 @@ SESSION_SECRET=change_this_to_something_random
 ```bash
 npm run dev     # node --watch, restarts on server-side changes
 npm start       # plain node
+npm test        # unit tests (node --test, no database needed)
 ```
 
 Then open http://localhost:5000.
@@ -122,7 +127,7 @@ Two consequences worth knowing:
   the worker already saved and attaches it to your collections. A preview you abandon leaves an Item
   that no collection references.
   `services/maintenance.js` sweeps those every 6 hours, ignoring anything from the last hour.
-- **Re-adding a link refreshes it.** `Item.link` is unique, so a second save updates price and
+- **Re-adding a link refreshes it.** A scraped `Item.link` is unique, so a second save updates price and
   availability on the existing document instead of creating a duplicate.
 
 ### The queue
@@ -134,9 +139,10 @@ Two consequences worth knowing:
 | Backoff | 2s, 4s, 8s |
 | Retried codes | `NETWORK`, `TIMEOUT` only |
 | Job record lifetime | 24h (TTL index) |
-| Client poll interval / ceiling | 1s / 90s |
+| Client poll interval / ceiling | 1s → 3s backoff / 90s |
 
-Jobs left `running` by a crash are reclaimed at boot. Enqueueing a link that is already queued for
+Jobs left `running` by a crash are reclaimed at boot and every minute after. An idle worker backs
+off from 1.5s to 15s between polls. Enqueueing a link that is already queued for
 you returns the **same** job rather than scraping twice.
 
 ### When a scrape fails
@@ -165,54 +171,98 @@ The user sees a plain-language message; the server log carries the underlying ca
   stored verbatim.
 - **`addedAt`** — when *you* asked to save the link, taken from the job's creation time, so a slow
   or retried scrape does not push the item to the top of "Date saved".
-- **`link`** — unique across the collection, which is what makes re-adding a refresh.
+- **`link`** — unique among scraped items, which is what makes re-adding a refresh. Optional for
+  manual items.
+- **`source`** — `scraped` (shared, one document per link, content comes from the marketplace) or
+  `manual` (owned by one user via `owner`, content typed by them, only they can edit it).
+
+## Manual listings
+
+```
+paste a link ──► POST /items/preview
+                    │
+      supported? ───┴── no ──► 400 { code: UNSUPPORTED } ──► manual form
+                                                                │
+                                       POST /items/prefill ◄────┘  (best effort, never fails)
+                                                                │
+                                        you edit ──► POST /items/manual
+```
+
+Prefill fetches the page through `utils/safeFetch.js`, which resolves the hostname and refuses
+private, loopback, link-local and cloud-metadata addresses on every redirect hop, with an 8s timeout
+and a 2 MB cap. A failed scrape of a supported marketplace also offers "Add it manually".
+
+## Security
+
+- **Collections:** every write checks the caller's role through `services/permissions.js`. The
+  default collection is resolved on the server, never taken from the form.
+- **CSRF:** a per-session token, sent as `_csrf` in forms and `X-CSRF-Token` from `lib/api.js`.
+- **Headers:** Helmet with a CSP; the one inline script (the theme stamp) runs under a nonce, so
+  views use `data-confirm` / `data-autosubmit` instead of inline handlers.
+- **Rate limits:** sign-in/registration and preview/prefill, per IP.
+- **Sessions:** `httpOnly`, `sameSite=lax`, `secure` in production. Logout is a POST.
+- **Scraped URLs** match the registry by parsed hostname and path, not a substring.
 
 ## Project structure
 
 ```
 MarketplaceCart/
-├── config/passport.js            # Local strategy
+├── config/
+│   ├── env.js                    # every env var, validated once at boot
+│   └── passport.js               # Local strategy
 ├── middleware/
 │   ├── authMiddleware.js         # ensureAuthenticated
-│   └── validation.js             # express-validator rules
+│   ├── csrf.js                   # session token check
+│   ├── errorHandlers.js          # 404 + last-resort handler
+│   ├── rateLimit.js              # auth and scrape limits
+│   └── validation.js             # express-validator rules, ObjectId params
 ├── models/
 │   ├── User.js
-│   ├── Items.js                  # unique link, nullable price, condition enum
+│   ├── Items.js                  # source scraped|manual, partial unique link, owner
 │   ├── Category.js               # collections, sharing roles, isDefault
 │   └── ScrapeJob.js              # queue records, 24h TTL
 ├── routes/
 │   ├── index.js                  # landing + dashboard
 │   ├── auth.js                   # register / login / logout
-│   ├── items.js                  # preview, job status, add, delete, assign
+│   ├── items.js                  # preview, prefill, manual, edit, add, unsave, assign
 │   ├── listings.js               # all saved items
 │   ├── categories.js             # collections CRUD, sharing, membership
 │   └── settings.js               # appearance
 ├── services/
-│   ├── itemService.js            # upsert by link, normalisation, platform detection
-│   ├── categoryService.js        # stats, platform breakdown, ordering, card stats
+│   ├── itemService.js            # scraped upserts, manual items, item access
+│   ├── categoryService.js        # every collection read/write, permission-checked
+│   ├── categoryStats.js          # pure: stats, platform breakdown, ordering, card stats
+│   ├── permissions.js            # owner / editor / viewer / public
 │   ├── scrapeQueue.js            # background worker: claim, retry, reclaim
 │   └── maintenance.js            # sweeps abandoned previews
 ├── utils/
-│   ├── browser.js                # Chrome resolution + context semaphore
+│   ├── format.js                 # money, relative dates, plural, platform helpers
+│   ├── safeFetch.js              # SSRF-safe GET for user-supplied URLs
 │   ├── conditionMap.js           # raw condition -> canonical or null
 │   ├── httpResponses.js          # safe redirects, flash errors, error pages
 │   ├── logger.js
 │   └── scrapers/
 │       ├── index.js              # URL -> scraper registry
 │       ├── errors.js             # ScrapeError contract
-│       ├── offerup.js            # axios + cheerio
-│       └── facebook.js           # Puppeteer + anchored __bbox extraction
-├── lib/format.js                 # money, relative dates, plural, platform helpers
+│       ├── browser.js            # Chrome resolution + context semaphore
+│       ├── offerup.js            # safeFetch + cheerio
+│       ├── facebook.js           # Puppeteer + anchored __bbox extraction
+│       └── generic.js            # OpenGraph/JSON-LD prefill for any site
 ├── views/
 │   ├── layouts/main.ejs          # shell: sidebar or navbar, no-flash theme script
 │   ├── partials/                 # sidebar, item card, stats panel, empty state, modals
-│   ├── auth/  categories/  listings/
+│   ├── auth/  categories/  items/  listings/
 │   ├── dashboard.ejs  settings.ejs  index.ejs  error.ejs
 ├── public/
 │   ├── css/                      # tokens -> base -> components -> pages
-│   ├── js/                       # dashboard, listings, categories, stats-panel, theme-toggle, toast
+│   ├── js/app.js                 # every page: theme, account menu, form behaviours
+│   ├── js/pages/                 # one ES module per page
+│   ├── js/lib/                   # api, dialog, disclosure, toast, item cards, add-listing…
 │   └── images/marketplaces/      # OfferUp and Facebook marks
-├── scripts/migrate.js            # data repair, dry-run by default
+├── scripts/
+│   ├── migrate.js                # data repair, dry-run by default
+│   └── scrape-once.js            # node scripts/scrape-once.js <url>
+├── test/                         # node --test
 ├── server.js                     # boots after Mongo connects; starts queue + maintenance
 └── package.json
 ```
@@ -230,7 +280,7 @@ stylesheets load, so there is no flash on navigation.
 | POST | `/auth/register` | Create account |
 | GET | `/auth/login` | Login page |
 | POST | `/auth/login` | Authenticate (uses **email**, not username) |
-| GET | `/auth/logout` | Log out |
+| POST | `/auth/logout` | Log out |
 
 ### Pages
 | Method | Route | Description |
@@ -245,7 +295,11 @@ stylesheets load, so there is no flash on navigation.
 |---|---|---|
 | POST | `/items/preview` | Enqueue a scrape → `202 {jobId}` |
 | GET | `/items/jobs/:id` | Poll job status → `queued`/`running`/`done`/`failed` |
-| POST | `/items/add` | Attach an already-scraped item to collections |
+| POST | `/items/prefill` | Best-effort details for any URL (manual form) |
+| POST | `/items/manual` | Create a manual listing |
+| GET | `/items/:id/edit` | Edit a manual listing you own |
+| PUT | `/items/:id` | Save edits to a manual listing you own |
+| POST | `/items/add` | Attach an existing item to collections |
 | DELETE | `/items/:id/saved` | Remove an item from the current user's Saved items |
 | POST | `/items/:id/assign-categories` | Replace an item's collection membership |
 
@@ -286,8 +340,8 @@ All routes except the landing page, auth, and public collections require a sessi
 
    Return `price: null` when there is no readable price — do not substitute `0`, which means free.
 
-2. Register the URL pattern in `utils/scrapers/index.js`.
-3. Add the platform name to `detectPlatform()` in `services/itemService.js`.
+2. Register `{ hosts, path, platform, scraper }` in `utils/scrapers/index.js`. `detectPlatform`
+   reads the same entry. Fetch with `utils/safeFetch.js`, not axios directly.
 
 Condition normalisation, the item model, the queue, and the whole frontend work unchanged.
 

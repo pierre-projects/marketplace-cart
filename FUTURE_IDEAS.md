@@ -8,7 +8,9 @@ A collection of feature ideas and enhancements for MarketplaceCart.
 
 **Priority: High**
 
-Currently only OfferUp is supported via the scraper registry pattern (`utils/scrapers/`). Adding more platforms would dramatically increase usefulness.
+OfferUp and Facebook Marketplace are scraped; any other site can already be saved as a manual
+listing, prefilled from its OpenGraph/JSON-LD metadata (`utils/scrapers/generic.js`). A dedicated
+scraper adds automatic refresh and richer fields.
 
 **Platforms to add:**
 - **eBay** - Structured product pages, well-documented

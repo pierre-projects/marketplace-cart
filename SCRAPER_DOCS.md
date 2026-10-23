@@ -227,7 +227,7 @@ would fall through to the meta tag and then to `0`, collapsing both states.
 
 ## Browser lifecycle
 
-**File:** `utils/browser.js`
+**File:** `utils/scrapers/browser.js`
 
 ### Resolving a Chrome
 
@@ -382,7 +382,7 @@ production belongs at `error`.
 | `utils/scrapers/errors.js` | `ScrapeError`, codes, retry policy |
 | `utils/scrapers/offerup.js` | axios + cheerio |
 | `utils/scrapers/facebook.js` | Puppeteer + anchored `__bbox` extraction |
-| `utils/browser.js` | Chrome resolution, launch memo, context semaphore |
+| `utils/scrapers/browser.js` | Chrome resolution, launch memo, context semaphore |
 | `utils/conditionMap.js` | Raw condition → canonical or `null` |
 | `routes/items.js` | `/preview`, `/jobs/:id`, `/add` |
-| `public/js/dashboard.js` | Enqueue and poll from the modal |
+| `public/js/lib/add-listing.js` | Enqueue and poll from the modal |
