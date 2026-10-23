@@ -3,7 +3,6 @@ const { ScrapeError, CODES } = require('./errors');
 const offerupScraper = require('./offerup');
 const facebookScraper = require('./facebook');
 const craigslistScraper = require('./craigslist');
-const ebayScraper = require('./ebay');
 const poshmarkScraper = require('./poshmark');
 const mercariScraper = require('./mercari');
 const depopScraper = require('./depop');
@@ -19,7 +18,9 @@ const scrapers = [
   // Postings only, in both URL shapes: the regional /<area>/<cat>/d/<slug>/<id>.html
   // and the newer www.craigslist.org/view/d/<slug>/<token>. Search pages don't match.
   { hosts: ['craigslist.org'], path: /^\/view\/d\/[^/]+\/[^/]+\/?$|\/\d+\.html$/, platform: 'Craigslist', scraper: craigslistScraper },
-  { hosts: ['ebay.com', 'ebay.ca', 'ebay.co.uk'], path: /^\/itm\//, platform: 'eBay', scraper: ebayScraper },
+  // eBay is deliberately absent: it answers 403 to every non-browser client
+  // and to headless Chrome, so registering it turned a working manual-form
+  // path into a guaranteed BLOCKED error. ebay.js is kept for if that changes.
   { hosts: ['poshmark.com', 'poshmark.ca'], path: /^\/listing\//, platform: 'Poshmark', scraper: poshmarkScraper },
   { hosts: ['mercari.com'], path: /^\/(us\/)?item\//, platform: 'Mercari', scraper: mercariScraper },
   { hosts: ['depop.com'], path: /^\/products\//, platform: 'Depop', scraper: depopScraper },

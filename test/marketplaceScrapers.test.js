@@ -15,8 +15,6 @@ test('registry routes the new marketplaces by host and listing path', () => {
   const cases = [
     ['https://sfbay.craigslist.org/sfc/fuo/d/san-francisco-oak-dresser/7712345678.html', 'Craigslist'],
     ['https://www.craigslist.org/view/d/san-jose-white-3x3-ikea-kallax-shelf/4xePze61CW4x7bHjRH967q', 'Craigslist'],
-    ['https://www.ebay.com/itm/256123456789', 'eBay'],
-    ['https://www.ebay.co.uk/itm/256123456789?hash=x', 'eBay'],
     ['https://poshmark.com/listing/Levis-501-6512abcdef0123456789abcd', 'Poshmark'],
     ['https://www.mercari.com/us/item/m12345678901/', 'Mercari'],
     ['https://www.depop.com/products/seller-vintage-jacket-1a2b/', 'Depop'],
@@ -30,9 +28,8 @@ test('registry routes the new marketplaces by host and listing path', () => {
 test('registry refuses non-listing pages and look-alikes for the new sites', () => {
   assert.equal(isSupported('https://sfbay.craigslist.org/search/fua?query=dresser'), false);
   assert.equal(isSupported('https://www.craigslist.org/view/d/'), false);
-  assert.equal(isSupported('https://www.ebay.com/sch/i.html?_nkw=lamp'), false);
-  assert.equal(isSupported('https://ebay.com.evil.example/itm/1'), false);
-  assert.equal(isSupported('https://evil.example/www.ebay.com/itm/1'), false);
+  assert.equal(isSupported('https://poshmark.com.evil.example/listing/1'), false);
+  assert.equal(isSupported('https://evil.example/www.depop.com/products/1'), false);
   assert.equal(isSupported('https://poshmark.com/closet/someone'), false);
   assert.equal(isSupported('https://www.mercari.com/search/?keyword=lamp'), false);
   assert.equal(isSupported('https://www.depop.com/someseller/'), false);
@@ -68,6 +65,13 @@ test('Craigslist marks removed postings unavailable and keeps a missing price nu
   assert.equal(item.price, null);
 });
 
+test('eBay stays manual-only: unsupported for scraping, still named', () => {
+  assert.equal(isSupported('https://www.ebay.com/itm/256123456789'), false);
+  assert.equal(detectPlatform('https://www.ebay.com/itm/256123456789'), 'eBay');
+});
+
+// ebay.js is unregistered but kept; its extractor is still tested so it is
+// ready if eBay stops blocking.
 test('eBay reads Product JSON-LD first', () => {
   const html = `<html><head><meta property="og:title" content="Ignored | eBay">${jsonLd({
     '@context': 'https://schema.org', '@type': 'Product', name: 'Herman Miller Aeron chair',

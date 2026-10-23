@@ -23,7 +23,6 @@ services/scrapeQueue.js
       ▼
 utils/scrapers/index.js  ──► offerup.js     (axios + cheerio)
                          ├─► craigslist.js  (safeFetch + cheerio)
-                         ├─► ebay.js        (safeFetch + cheerio, JSON-LD first)
                          ├─► poshmark.js    (safeFetch + cheerio, JSON-LD first)
                          ├─► mercari.js     (Puppeteer via renderPage)
                          ├─► depop.js       (Puppeteer via renderPage)
@@ -104,7 +103,6 @@ const scrapers = [
   { hosts: ['offerup.com'], path: /^\/item\//, platform: 'OfferUp', scraper: offerupScraper },
   { hosts: ['facebook.com'], path: /^\/marketplace\//, platform: 'Facebook Marketplace', scraper: facebookScraper },
   { hosts: ['craigslist.org'], path: /^\/view\/d\/[^/]+\/[^/]+\/?$|\/\d+\.html$/, platform: 'Craigslist', scraper: craigslistScraper },
-  { hosts: ['ebay.com', 'ebay.ca', 'ebay.co.uk'], path: /^\/itm\//, platform: 'eBay', scraper: ebayScraper },
   { hosts: ['poshmark.com', 'poshmark.ca'], path: /^\/listing\//, platform: 'Poshmark', scraper: poshmarkScraper },
   { hosts: ['mercari.com'], path: /^\/(us\/)?item\//, platform: 'Mercari', scraper: mercariScraper },
   { hosts: ['depop.com'], path: /^\/products\//, platform: 'Depop', scraper: depopScraper },
@@ -112,7 +110,7 @@ const scrapers = [
 ```
 
 A URL matches on its parsed hostname (exactly, or a subdomain) and then its path, so a look-alike
-host (`ebay.com.evil.example`) or a site name smuggled into a path or query never matches.
+host (`poshmark.com.evil.example`) or a site name smuggled into a path or query never matches.
 
 | Export | Purpose |
 |---|---|
@@ -181,10 +179,15 @@ Network and HTTP failures go through `classifyAxiosError`; a missing title after
 
 ---
 
-## Structured-data scrapers: Craigslist, eBay, Poshmark
+## Structured-data scrapers: Craigslist, Poshmark (and the unregistered eBay)
 
-**Files:** `utils/scrapers/{craigslist,ebay,poshmark}.js` · safeFetch + cheerio · no browser ·
+**Files:** `utils/scrapers/{craigslist,poshmark,ebay}.js` · safeFetch + cheerio · no browser ·
 15s timeout, 6MB cap (eBay item pages run past safeFetch's 2MB default)
+
+**eBay is not in the registry.** It answers `403` to every non-browser client (its homepage
+included) and to headless Chrome, so a registered eBay turned a working manual-form path into a
+guaranteed `BLOCKED`. eBay links therefore go to the manual form. `ebay.js` and its fixture tests
+are kept so it can be re-registered with one line if that changes.
 
 All three fetch through `fetchHtml` in `utils/scrapers/structured.js`, which classifies failures
 with `classifyAxiosError` and also recognises **bot-challenge pages** (eBay's "Pardon Our
@@ -468,7 +471,7 @@ production belongs at `error`.
 | `utils/scrapers/offerup.js` | axios + cheerio |
 | `utils/scrapers/facebook.js` | Puppeteer + anchored `__bbox` extraction |
 | `utils/scrapers/craigslist.js` | safeFetch + cheerio, posting markup |
-| `utils/scrapers/ebay.js` | safeFetch + cheerio, JSON-LD first |
+| `utils/scrapers/ebay.js` | safeFetch + cheerio, JSON-LD first — **unregistered** |
 | `utils/scrapers/poshmark.js` | safeFetch + cheerio, JSON-LD first |
 | `utils/scrapers/mercari.js` | Puppeteer via `renderPage` |
 | `utils/scrapers/depop.js` | Puppeteer via `renderPage` |

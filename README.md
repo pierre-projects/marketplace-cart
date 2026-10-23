@@ -1,8 +1,7 @@
 # MarketplaceCart
 
 Save listings from secondhand marketplaces into collections, see what the pile actually costs, and
-share it. Paste a link from OfferUp, Facebook Marketplace, eBay, Craigslist, Poshmark, Mercari or
-Depop; the app scrapes the title, price, photos,
+share it. Paste a link from OfferUp, Facebook Marketplace, Craigslist, Poshmark, Mercari or Depop; the app scrapes the title, price, photos,
 condition, location and availability in the background and files it away.
 
 > **A note on wording.** Collections live at `/collections`; old `/categories/...` links redirect
@@ -11,9 +10,9 @@ condition, location and availability in the background and files it away.
 
 ## Features
 
-- **Paste a link, get a listing** — OfferUp, Facebook Marketplace, eBay, Craigslist, Poshmark,
-  Mercari and Depop, with title, price, images, condition, location and whether it is still live.
-- **Any other site, or no link at all** — Etsy, Kijiji, Nextdoor, a shop page, a listing seen
+- **Paste a link, get a listing** — OfferUp, Facebook Marketplace, Craigslist, Poshmark, Mercari
+  and Depop, with title, price, images, condition, location and whether it is still live.
+- **Any other site, or no link at all** — eBay, Etsy, Kijiji, Nextdoor, a shop page, a listing seen
   in a group chat. Paste the link and the form is prefilled from the page's own preview metadata
   (OpenGraph / schema.org) when it can be read; check it, edit it, save it. Manual listings are
   yours alone and stay editable.
@@ -36,7 +35,7 @@ condition, location and availability in the background and files it away.
 - **Database** — MongoDB with Mongoose 8
 - **Views** — EJS with `express-ejs-layouts`
 - **Auth** — Passport (local strategy), sessions in MongoDB via `connect-mongo`
-- **Scraping** — axios + cheerio (OfferUp, eBay, Craigslist, Poshmark), Puppeteer (Facebook
+- **Scraping** — axios + cheerio (OfferUp, Craigslist, Poshmark), Puppeteer (Facebook
   Marketplace, Mercari, Depop)
 
 ## Getting started
@@ -87,7 +86,7 @@ exists on disk wins:
 3. Chrome installed on the system
 
 If none resolve, those scrapes fail with a `BROWSER_UNAVAILABLE` error naming the fix, and are
-**not** retried — no amount of backoff installs a browser. OfferUp, eBay, Craigslist and Poshmark are
+**not** retried — no amount of backoff installs a browser. OfferUp, Craigslist and Poshmark are
 unaffected; they never launch a browser.
 
 ### Repairing existing data
@@ -250,7 +249,7 @@ MarketplaceCart/
 │       ├── structured.js         # fetchHtml, challenge detection, JSON-LD/OG helpers
 │       ├── offerup.js            # safeFetch + cheerio
 │       ├── craigslist.js         # safeFetch + cheerio, posting markup
-│       ├── ebay.js               # safeFetch + cheerio, JSON-LD first
+│       ├── ebay.js               # unregistered: eBay blocks automated clients
 │       ├── poshmark.js           # safeFetch + cheerio, JSON-LD first
 │       ├── mercari.js            # Puppeteer via renderPage
 │       ├── depop.js              # Puppeteer via renderPage
