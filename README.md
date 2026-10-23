@@ -11,17 +11,11 @@ and files it away. Links from anywhere else (eBay included) go through a prefill
 
 ## Showcase
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="public/images/landing/app-dashboard-dark.webp">
-  <img src="public/images/landing/app-dashboard-light.webp" alt="Dashboard: cart total, value by marketplace, and recently saved listings" width="100%">
-</picture>
+<img src="public/images/landing/app-dashboard-light.webp" alt="Dashboard: cart total, value by marketplace, and recently saved listings" width="100%">
 
 **Dashboard.** The cart total, where the money is going per marketplace, and what you saved last.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="public/images/landing/app-saved-dark.webp">
-  <img src="public/images/landing/app-saved-light.webp" alt="Saved items: searchable, filterable grid of listings from several marketplaces" width="100%">
-</picture>
+<img src="public/images/landing/app-saved-light.webp" alt="Saved items: searchable, filterable grid of listings from several marketplaces" width="100%">
 
 **Saved items.** Every listing in one grid, with search, filters, sorting and the marketplace on each
 card.
@@ -29,24 +23,18 @@ card.
 <table>
   <tr>
     <td width="38%" valign="top">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="public/images/landing/app-manual-dark.webp">
-        <img src="public/images/landing/app-manual-light.webp" alt="Save an item: the manual form prefilled from a pasted link" width="100%">
-      </picture>
+      <img src="public/images/landing/app-manual-light.webp" alt="Save an item: the manual form prefilled from a pasted link" width="100%">
       <p><b>Any other site.</b> Paste a link and the form is filled from the page's own metadata;
       check it and save.</p>
     </td>
     <td width="62%" valign="top">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="public/images/landing/app-breakdown-dark.webp">
-        <img src="public/images/landing/app-breakdown-light.webp" alt="Collection total with a donut breakdown by marketplace" width="100%">
-      </picture>
+      <img src="public/images/landing/app-breakdown-light.webp" alt="Collection total with a donut breakdown by marketplace" width="100%">
       <p><b>Per-collection totals.</b> Each collection keeps its own total and marketplace split.</p>
     </td>
   </tr>
 </table>
 
-Screenshots follow your GitHub theme (light or dark). They are real captures of the app; see
+These are real captures of the app; see
 [`public/images/landing/CREDITS.md`](public/images/landing/CREDITS.md) for how they were taken and
 where the listing photos come from.
 
