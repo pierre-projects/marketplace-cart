@@ -8,9 +8,19 @@
  *
  * Note the selector: cards render as `.card`. An earlier version of this file
  * queried `.item-card`, matched nothing, and silently disabled the entire
- * toolbar — hence the selector assertion in the test harness.
+ * toolbar.
  */
-document.addEventListener('DOMContentLoaded', () => {
+import { initAddListing } from '../lib/add-listing.js';
+import { initItemCards } from '../lib/item-cards.js';
+import { registerDisclosure } from '../lib/disclosure.js';
+
+initAddListing();
+initItemCards();
+registerDisclosure({
+  root: '.toolbar__filters', trigger: '#filtersToggle', panel: '#filtersPanel', rootOpenClass: null, useHidden: true,
+});
+
+(function initFilters() {
   const grid = document.querySelector('.item-list');
   const cards = Array.from(document.querySelectorAll('.card'));
   if (!grid || cards.length === 0) return;
@@ -18,8 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('searchInput');
   const searchClear = document.getElementById('searchClear');
   const sortSelect = document.getElementById('sortSelect');
-  const filtersToggle = document.getElementById('filtersToggle');
-  const filtersPanel = document.getElementById('filtersPanel');
   const filtersCount = document.getElementById('filtersCount');
   const filtersClear = document.getElementById('filtersClear');
   const conditionBoxes = Array.from(document.querySelectorAll('[data-filter-condition]'));
@@ -183,26 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   conditionBoxes.concat(platformBoxes).forEach(b => b.addEventListener('change', readBoxes));
 
-  filtersToggle.addEventListener('click', () => {
-    const open = filtersPanel.hasAttribute('hidden');
-    filtersPanel.toggleAttribute('hidden', !open);
-    filtersToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-  });
-
-  document.addEventListener('click', (e) => {
-    if (filtersPanel.hasAttribute('hidden')) return;
-    if (e.target.closest('#filtersPanel') || e.target.closest('#filtersToggle')) return;
-    filtersPanel.setAttribute('hidden', '');
-    filtersToggle.setAttribute('aria-expanded', 'false');
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !filtersPanel.hasAttribute('hidden')) {
-      filtersPanel.setAttribute('hidden', '');
-      filtersToggle.setAttribute('aria-expanded', 'false');
-      filtersToggle.focus();
-    }
-  });
+  // The filters panel opens and closes through the shared disclosure above.
 
   function reset() {
     state.q = '';
@@ -227,4 +216,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
   readUrl();
   update(false);
-});
+})();
