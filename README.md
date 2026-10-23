@@ -1,7 +1,8 @@
 # MarketplaceCart
 
 Save listings from secondhand marketplaces into collections, see what the pile actually costs, and
-share it. Paste an OfferUp or Facebook Marketplace link; the app scrapes the title, price, photos,
+share it. Paste a link from OfferUp, Facebook Marketplace, eBay, Craigslist, Poshmark, Mercari or
+Depop; the app scrapes the title, price, photos,
 condition, location and availability in the background and files it away.
 
 > **A note on wording.** Collections live at `/collections`; old `/categories/...` links redirect
@@ -10,9 +11,9 @@ condition, location and availability in the background and files it away.
 
 ## Features
 
-- **Paste a link, get a listing** — OfferUp and Facebook Marketplace, with title, price, images,
-  condition, location and whether it is still live.
-- **Any other site, or no link at all** — eBay, Craigslist, Mercari, a shop page, a listing seen
+- **Paste a link, get a listing** — OfferUp, Facebook Marketplace, eBay, Craigslist, Poshmark,
+  Mercari and Depop, with title, price, images, condition, location and whether it is still live.
+- **Any other site, or no link at all** — Etsy, Kijiji, Nextdoor, a shop page, a listing seen
   in a group chat. Paste the link and the form is prefilled from the page's own preview metadata
   (OpenGraph / schema.org) when it can be read; check it, edit it, save it. Manual listings are
   yours alone and stay editable.
@@ -35,7 +36,8 @@ condition, location and availability in the background and files it away.
 - **Database** — MongoDB with Mongoose 8
 - **Views** — EJS with `express-ejs-layouts`
 - **Auth** — Passport (local strategy), sessions in MongoDB via `connect-mongo`
-- **Scraping** — axios + cheerio (OfferUp), Puppeteer (Facebook Marketplace)
+- **Scraping** — axios + cheerio (OfferUp, eBay, Craigslist, Poshmark), Puppeteer (Facebook
+  Marketplace, Mercari, Depop)
 
 ## Getting started
 
@@ -43,7 +45,7 @@ condition, location and availability in the background and files it away.
 
 - **Node.js ≥ 20.11** — `node --watch` is used by `npm run dev` and is only stable from 20.11.
 - **MongoDB**, local or Atlas.
-- **A Chrome**, only if you want Facebook Marketplace listings. See [Chrome](#chrome) below —
+- **A Chrome**, only if you want Facebook Marketplace, Mercari or Depop listings. See [Chrome](#chrome) below —
   usually there is nothing to do.
 
 ### Install
@@ -77,16 +79,16 @@ does **not** restart the server — save the file and refresh the browser.
 
 ### Chrome
 
-Only the Facebook scraper needs a browser. It is resolved in this order, and the first one that
+Only the Facebook, Mercari and Depop scrapers need a browser. It is resolved in this order, and the first one that
 exists on disk wins:
 
 1. `PUPPETEER_EXECUTABLE_PATH`, if you set it
 2. Puppeteer's own downloaded Chrome (`npx puppeteer browsers install chrome`)
 3. Chrome installed on the system
 
-If none resolve, Facebook scrapes fail with a `BROWSER_UNAVAILABLE` error naming the fix, and are
-**not** retried — no amount of backoff installs a browser. OfferUp is unaffected; it never launches
-a browser.
+If none resolve, those scrapes fail with a `BROWSER_UNAVAILABLE` error naming the fix, and are
+**not** retried — no amount of backoff installs a browser. OfferUp, eBay, Craigslist and Poshmark are
+unaffected; they never launch a browser.
 
 ### Repairing existing data
 
@@ -244,8 +246,14 @@ MarketplaceCart/
 │   └── scrapers/
 │       ├── index.js              # URL -> scraper registry
 │       ├── errors.js             # ScrapeError contract
-│       ├── browser.js            # Chrome resolution + context semaphore
+│       ├── browser.js            # Chrome resolution, context semaphore, renderPage
+│       ├── structured.js         # fetchHtml, challenge detection, JSON-LD/OG helpers
 │       ├── offerup.js            # safeFetch + cheerio
+│       ├── craigslist.js         # safeFetch + cheerio, posting markup
+│       ├── ebay.js               # safeFetch + cheerio, JSON-LD first
+│       ├── poshmark.js           # safeFetch + cheerio, JSON-LD first
+│       ├── mercari.js            # Puppeteer via renderPage
+│       ├── depop.js              # Puppeteer via renderPage
 │       ├── facebook.js           # Puppeteer + anchored __bbox extraction
 │       └── generic.js            # OpenGraph/JSON-LD prefill for any site
 ├── views/

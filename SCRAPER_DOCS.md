@@ -21,8 +21,13 @@ services/scrapeQueue.js
       │  atomic claim: findOneAndUpdate({ status: 'queued', nextAttemptAt: <= now })
       │  deduped: an existing queued/running job for this link + user is reused
       ▼
-utils/scrapers/index.js  ──► offerup.js  (axios + cheerio)
-                         └─► facebook.js (Puppeteer)
+utils/scrapers/index.js  ──► offerup.js     (axios + cheerio)
+                         ├─► craigslist.js  (safeFetch + cheerio)
+                         ├─► ebay.js        (safeFetch + cheerio, JSON-LD first)
+                         ├─► poshmark.js    (safeFetch + cheerio, JSON-LD first)
+                         ├─► mercari.js     (Puppeteer via renderPage)
+                         ├─► depop.js       (Puppeteer via renderPage)
+                         └─► facebook.js    (Puppeteer)
       │
       ▼
 services/itemService.js  upsertItemByLink()   ◄── the Item is written HERE
@@ -96,16 +101,24 @@ Each error carries a `userMessage` safe to render, while the server log gets the
 
 ```js
 const scrapers = [
-  { pattern: /offerup\.com\/item/,      platform: 'OfferUp',              scraper: offerupScraper },
-  { pattern: /facebook\.com\/marketplace/, platform: 'Facebook Marketplace', scraper: facebookScraper },
+  { hosts: ['offerup.com'], path: /^\/item\//, platform: 'OfferUp', scraper: offerupScraper },
+  { hosts: ['facebook.com'], path: /^\/marketplace\//, platform: 'Facebook Marketplace', scraper: facebookScraper },
+  { hosts: ['craigslist.org'], path: /^\/view\/d\/[^/]+\/[^/]+\/?$|\/\d+\.html$/, platform: 'Craigslist', scraper: craigslistScraper },
+  { hosts: ['ebay.com', 'ebay.ca', 'ebay.co.uk'], path: /^\/itm\//, platform: 'eBay', scraper: ebayScraper },
+  { hosts: ['poshmark.com', 'poshmark.ca'], path: /^\/listing\//, platform: 'Poshmark', scraper: poshmarkScraper },
+  { hosts: ['mercari.com'], path: /^\/(us\/)?item\//, platform: 'Mercari', scraper: mercariScraper },
+  { hosts: ['depop.com'], path: /^\/products\//, platform: 'Depop', scraper: depopScraper },
 ];
 ```
+
+A URL matches on its parsed hostname (exactly, or a subdomain) and then its path, so a look-alike
+host (`ebay.com.evil.example`) or a site name smuggled into a path or query never matches.
 
 | Export | Purpose |
 |---|---|
 | `scrapeItem(url)` | Route to a scraper and run it; throws `UNSUPPORTED` if none matches |
 | `getScraper(url)` | The scraper module, or `null` |
-| `isSupported(url)` | Whether any pattern matches — used to reject links before enqueuing |
+| `isSupported(url)` | Whether any entry matches — used to reject links before enqueuing |
 | `detectPlatform(url)` | Display name from the same registry |
 
 ### Interface
@@ -165,6 +178,50 @@ the first when there are several (usually the seller avatar)
 
 Network and HTTP failures go through `classifyAxiosError`; a missing title after parsing throws
 `PARSE_FAILED`. Nothing is swallowed.
+
+---
+
+## Structured-data scrapers: Craigslist, eBay, Poshmark
+
+**Files:** `utils/scrapers/{craigslist,ebay,poshmark}.js` · safeFetch + cheerio · no browser ·
+15s timeout, 6MB cap (eBay item pages run past safeFetch's 2MB default)
+
+All three fetch through `fetchHtml` in `utils/scrapers/structured.js`, which classifies failures
+with `classifyAxiosError` and also recognises **bot-challenge pages** (eBay's "Pardon Our
+Interruption", Cloudflare's "Just a moment…", PerimeterX). Those answer `200`, so without the
+check they parsed as a listing with no title and were reported as `PARSE_FAILED`, which is the
+wrong code and points whoever debugs it at the extractor. They now throw `BLOCKED`.
+
+Each module exports a pure `_internals.extract(html, url)` that the tests run against fixtures.
+
+| Site | Primary source | Fallbacks | Unavailable when |
+|---|---|---|---|
+| Craigslist | `#titletextonly`, `.price`, `#postingbody` (QR boilerplate stripped), `.attrgroup` "condition:" | `og:*`, `geo.placename` | "This posting has been deleted / expired / flagged" |
+| eBay | Product JSON-LD (incl. `ProductGroup` variations) | `.x-item-title`, `.x-price-primary`, `og:*` | offer `availability` is OutOfStock/SoldOut, or "This listing has ended" |
+| Poshmark | Product JSON-LD (incl. `@graph`) | `h1`, `.listing__description`, `og:*` | offer `availability`, or the listing's own `sold-tag` badge |
+
+Craigslist publishes no Product JSON-LD, but its posting markup has been stable for years and is
+the same under both URL shapes (`/<area>/<cat>/d/<slug>/<id>.html` and `/view/d/<slug>/<token>`). A
+removed posting with no title throws `NOT_FOUND`, not `PARSE_FAILED`.
+
+Prices follow the Facebook rule: `null` means "no price found" and is kept apart from a real `0`.
+
+---
+
+## Rendered scrapers: Mercari, Depop
+
+**Files:** `utils/scrapers/{mercari,depop}.js` · Puppeteer via `renderPage` · needs Chrome
+
+Both sites render client-side behind Cloudflare, so a plain GET returns either an app shell or a
+challenge. `renderPage(url, collectPageMetadata, options)` in `browser.js` loads the page in its own
+context and runs `collectPageMetadata` in it. That function returns the JSON-LD script texts, every
+meta tag, the first `h1`, and whether a site-specific sold selector or sold phrase is present.
+`fromPageMetadata` then builds the item with the same pure helpers the HTTP scrapers use.
+
+`collectPageMetadata` runs **inside Chromium** as serialized source. It must stay self-contained:
+no closures over module scope and no requires. A test checks that it parses on its own.
+
+A title that is still "Just a moment…" means the challenge never cleared, and it throws `BLOCKED`.
 
 ---
 
@@ -256,6 +313,15 @@ they are bounded independently of queue concurrency.
 
 `closeBrowser()` runs from the server's shutdown hooks.
 
+### renderPage
+
+`renderPage(url, evaluateFn, arg, { waitFor })` wraps the whole page lifecycle for scrapers that
+only need to read a rendered DOM: slot, context, UA and viewport, blocking images/fonts/media,
+navigation timeout → `TIMEOUT`, HTTP 404/410 → `NOT_FOUND`, 401/403/429 → `BLOCKED`, an optional
+selector wait (missing is not an error), and an evaluate timeout. A browser that will not start is
+`BROWSER_UNAVAILABLE`. Mercari and Depop use it. Facebook predates it and still keeps its own copy
+of the same steps.
+
 ---
 
 ## Condition normalizer
@@ -325,39 +391,58 @@ accepted `cached*` fields posted back from the browser; that path is gone.
 
 ## Adding a scraper
 
-**1.** Create `utils/scrapers/newsite.js`:
+**1.** Create `utils/scrapers/newsite.js`. For a site that publishes JSON-LD or OpenGraph, the
+helpers in `structured.js` do most of the work:
 
 ```js
-const { ScrapeError, CODES, classifyAxiosError } = require('./errors');
+const cheerio = require('cheerio');
+const { ScrapeError, CODES, asScrapeError } = require('./errors');
+const { fetchHtml, findProductJsonLd, readOffer, productImages, cleanImages, metaReader } = require('./structured');
 
-async function scrape(url) {
-  let html;
-  try {
-    ({ data: html } = await axios.get(url, { timeout: 15000 }));
-  } catch (err) {
-    throw classifyAxiosError(err);
-  }
-
-  // ...extract...
-  if (!title) throw new ScrapeError(CODES.PARSE_FAILED);
-
-  return { title, price, description, condition, location, imageLinks, available };
+function extract(html, url) {
+  const $ = cheerio.load(html);
+  const product = findProductJsonLd($);
+  const offer = readOffer(product);
+  return {
+    title: product?.name || metaReader($)('og:title'),
+    price: offer.price,                     // null when unknown, never 0
+    description: product?.description || null,
+    condition: offer.conditionRaw,          // normalised later by conditionMap
+    location: '',
+    imageLinks: cleanImages(productImages(product), url),
+    available: offer.available !== false,
+  };
 }
 
-module.exports = { scrape };
+async function scrape(url) {
+  const html = await fetchHtml(url, 'NewSite');   // throws classified ScrapeErrors
+  try {
+    const item = extract(html, url);
+    if (!item.title) throw new ScrapeError(CODES.PARSE_FAILED);
+    return item;
+  } catch (err) {
+    throw asScrapeError(err);
+  }
+}
+
+module.exports = { scrape, _internals: { extract } };
 ```
 
-**2.** Register it — this is the only place the marketplace is named:
+For a client-rendered site, call `renderPage(url, collectPageMetadata, options)` and pass the
+result to `fromPageMetadata` (see `mercari.js`).
+
+**2.** Register it. This is the only place the marketplace is named:
 
 ```js
 const scrapers = [
   // ...
-  { pattern: /newsite\.com\/listing/, platform: 'NewSite', scraper: require('./newsite') },
+  { hosts: ['newsite.com'], path: /^\/listing\//, platform: 'NewSite', scraper: require('./newsite') },
 ];
 ```
 
-**3.** There is no step three. `detectPlatform`, `isSupported`, the queue, the condition normalizer,
-the item model, and the entire frontend pick it up from the registry.
+**3.** Add a fixture test for `_internals.extract`. Nothing else needs changing: `detectPlatform`,
+`isSupported`, the queue, the condition normalizer, the item model, and the entire frontend pick it
+up from the registry.
 
 ---
 
@@ -382,7 +467,13 @@ production belongs at `error`.
 | `utils/scrapers/errors.js` | `ScrapeError`, codes, retry policy |
 | `utils/scrapers/offerup.js` | axios + cheerio |
 | `utils/scrapers/facebook.js` | Puppeteer + anchored `__bbox` extraction |
-| `utils/scrapers/browser.js` | Chrome resolution, launch memo, context semaphore |
+| `utils/scrapers/craigslist.js` | safeFetch + cheerio, posting markup |
+| `utils/scrapers/ebay.js` | safeFetch + cheerio, JSON-LD first |
+| `utils/scrapers/poshmark.js` | safeFetch + cheerio, JSON-LD first |
+| `utils/scrapers/mercari.js` | Puppeteer via `renderPage` |
+| `utils/scrapers/depop.js` | Puppeteer via `renderPage` |
+| `utils/scrapers/structured.js` | `fetchHtml`, challenge detection, JSON-LD/OG helpers |
+| `utils/scrapers/browser.js` | Chrome resolution, launch memo, context semaphore, `renderPage` |
 | `utils/conditionMap.js` | Raw condition → canonical or `null` |
 | `routes/items.js` | `/preview`, `/jobs/:id`, `/add` |
 | `public/js/lib/add-listing.js` | Enqueue and poll from the modal |
